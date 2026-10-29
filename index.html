@@ -225,6 +225,7 @@
 
       <!-- THANH CÔNG CỤ -->
       <div class="flex items-center flex-wrap gap-2 text-xs font-bold">
+        <button onclick="openClassManager()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm flex items-center gap-1.5 transition-all active:scale-95" title="Quản lý nhiều trường và lớp học">🏫 Quản lý lớp</button>
         <button onclick="exportClassDataToFile()" class="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-sm flex items-center gap-1.5 transition-all active:scale-95" title="Tải file dữ liệu lớp về máy tính an toàn">
           <span>📥 Sao Lưu Lớp</span>
         </button>
@@ -355,7 +356,9 @@
             <button onclick="filterStudentsByTeam('Tổ 4')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-600 hover:bg-pink-50">Tổ 4</button>
           </div>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
+          <button onclick="downloadStudentTemplate()" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors">📄 Tải file mẫu</button>
+          <label class="px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors">📤 Nhập danh sách<input type="file" accept=".csv,.txt,.json" class="hidden" onchange="handleStudentListUpload(event)"></label>
           <button onclick="exportClassDataToFile()" class="px-3 py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors">
             📥 Xuất File Chia Sẻ
           </button>
@@ -977,6 +980,40 @@
       <div class="flex justify-end gap-2 pt-2 border-t border-purple-100">
         <button onclick="closeParentReplyModal()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold hover:bg-gray-200">Hủy</button>
         <button onclick="saveParentReply()" class="px-5 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl text-xs font-black shadow hover:scale-105 active:scale-95 transition-all">GỬI LỜI NHẮN CHO CÔ 💬</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUẢN LÝ NHIỀU TRƯỜNG / LỚP -->
+  <div id="classManagerModal" class="fixed inset-0 z-[70] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
+    <div class="bg-white rounded-3xl w-full max-w-5xl max-h-[92vh] overflow-y-auto shadow-2xl border-4 border-emerald-100">
+      <div class="sticky top-0 z-10 bg-white p-5 border-b border-emerald-100 flex items-center justify-between gap-3 rounded-t-2xl">
+        <div><h2 class="text-xl font-black text-emerald-700">🏫 Quản lý trường và lớp học</h2><p class="text-xs text-gray-500 mt-1">Mỗi lớp có dữ liệu riêng. Tạo lớp mới không làm mất lớp đang có.</p></div>
+        <button onclick="closeClassManager()" class="text-gray-500 hover:text-red-600 text-2xl font-black" aria-label="Đóng">×</button>
+      </div>
+      <div class="p-5 grid grid-cols-1 lg:grid-cols-5 gap-5">
+        <div class="lg:col-span-2 space-y-4">
+          <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 space-y-3">
+            <h3 class="font-black text-emerald-800">➕ Thêm trường</h3>
+            <label class="block text-xs font-bold text-gray-600">Tên trường<input id="newSchoolName" class="mt-1 w-full p-2.5 rounded-xl border border-emerald-200 text-sm" placeholder="Nhập tên trường" /></label>
+            <label class="block text-xs font-bold text-gray-600">Địa phương / đơn vị (không bắt buộc)<input id="newSchoolLocation" class="mt-1 w-full p-2.5 rounded-xl border border-emerald-200 text-sm" placeholder="Xã, phường, tỉnh..." /></label>
+            <button onclick="createSchool()" class="w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-black">Lưu trường mới</button>
+          </div>
+          <div class="p-4 rounded-2xl bg-pink-50 border border-pink-100 space-y-3">
+            <h3 class="font-black text-pink-700">➕ Tạo lớp học</h3>
+            <label class="block text-xs font-bold text-gray-600">Trường<select id="newClassSchool" class="mt-1 w-full p-2.5 rounded-xl border border-pink-200 bg-white text-sm"></select></label>
+            <label class="block text-xs font-bold text-gray-600">Tên lớp<input id="newClassName" class="mt-1 w-full p-2.5 rounded-xl border border-pink-200 text-sm" placeholder="Ví dụ: 1A1, 4A1..." /></label>
+            <label class="block text-xs font-bold text-gray-600">Giáo viên chủ nhiệm<input id="newClassTeacher" class="mt-1 w-full p-2.5 rounded-xl border border-pink-200 text-sm" placeholder="Họ và tên giáo viên" /></label>
+            <label class="block text-xs font-bold text-gray-600">Năm học<input id="newClassYear" class="mt-1 w-full p-2.5 rounded-xl border border-pink-200 text-sm" value="2026-2027" /></label>
+            <button onclick="createClass()" class="w-full px-4 py-2.5 bg-pink-600 hover:bg-pink-700 text-white rounded-xl text-sm font-black">Tạo lớp trống</button>
+            <p class="text-[11px] text-pink-700">Lớp mới không tự thêm học sinh mẫu và không ghi đè dữ liệu lớp khác.</p>
+          </div>
+        </div>
+        <div class="lg:col-span-3 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2"><h3 class="font-black text-gray-800">📚 Danh sách lớp học</h3><input id="classManagerSearch" oninput="renderClassManagerList()" class="p-2 rounded-xl border border-gray-200 text-xs" placeholder="Tìm trường hoặc lớp..." /></div>
+          <div id="classManagerList" class="space-y-3"></div>
+          <div class="text-[11px] text-gray-500 bg-amber-50 border border-amber-100 rounded-xl p-3">Lưu ý: dữ liệu hiện được lưu trên trình duyệt này. Hãy thường xuyên bấm “Sao Lưu Lớp” để dự phòng.</div>
+        </div>
       </div>
     </div>
   </div>
@@ -1641,37 +1678,332 @@
       }
     }
 
+    // QUẢN LÝ NHIỀU TRƯỜNG / LỚP - TƯƠNG THÍCH DỮ LIỆU V4.9
+    const MULTI_CLASS_KEY = 'lophanhphuc_multi_classes_v1';
+    const MULTI_SCHOOLS_KEY = 'lophanhphuc_schools_v1';
+    let schools = [];
+    let classRecords = [];
+    let activeClassId = '';
+
+    function makeId(prefix) {
+      return prefix + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+    }
+    function cloneData(value) {
+      try { return JSON.parse(JSON.stringify(value)); } catch (e) { return value; }
+    }
+    function getActiveClassRecord() {
+      return classRecords.find(c => c.id === activeClassId) || null;
+    }
+    function currentClassSnapshot() {
+      return {
+        className: currentClassName, teacherName: currentTeacherName,
+        students: cloneData(students), criteriaPos: cloneData(customCriteriaPos),
+        criteriaNeg: cloneData(customCriteriaNeg), rewards: cloneData(customRewards),
+        customBaseUrl: customBaseUrl
+      };
+    }
+    function persistClassRegistry() {
+      try {
+        localStorage.setItem(MULTI_CLASS_KEY, JSON.stringify(classRecords));
+        localStorage.setItem(MULTI_SCHOOLS_KEY, JSON.stringify(schools));
+        localStorage.setItem('lophanhphuc_active_class_id', activeClassId);
+      } catch (e) {
+        console.error('Không thể lưu danh sách trường/lớp:', e);
+        showToast('Bộ nhớ trình duyệt có thể đã đầy. Hãy sao lưu dữ liệu và giảm dung lượng ảnh.');
+      }
+    }
+    function saveActiveClassSnapshot() {
+      const active = getActiveClassRecord();
+      if (active) active.data = currentClassSnapshot();
+      persistClassRegistry();
+      try {
+        localStorage.setItem('lophanhphuc_class_name', currentClassName);
+        localStorage.setItem('lophanhphuc_teacher_name', currentTeacherName);
+        localStorage.setItem('lophanhphuc_students_v4', JSON.stringify(students));
+        localStorage.setItem('lophanhphuc_crit_pos_v4', JSON.stringify(customCriteriaPos));
+        localStorage.setItem('lophanhphuc_crit_neg_v4', JSON.stringify(customCriteriaNeg));
+        localStorage.setItem('lophanhphuc_rewards_v4', JSON.stringify(customRewards));
+        localStorage.setItem('lophanhphuc_base_url', customBaseUrl || '');
+      } catch (e) { console.error(e); }
+    }
+    function loadClassSnapshot(record) {
+      const d = record && record.data ? record.data : {};
+      currentClassName = d.className || record.className || 'Lớp mới';
+      currentTeacherName = d.teacherName || record.teacherName || '';
+      students = Array.isArray(d.students) ? cloneData(d.students) : [];
+      customCriteriaPos = Array.isArray(d.criteriaPos) ? cloneData(d.criteriaPos) : cloneData(DEFAULT_CRITERIA_POS);
+      customCriteriaNeg = Array.isArray(d.criteriaNeg) ? cloneData(d.criteriaNeg) : cloneData(DEFAULT_CRITERIA_NEG);
+      customRewards = Array.isArray(d.rewards) ? cloneData(d.rewards) : cloneData(DEFAULT_REWARDS);
+      customBaseUrl = d.customBaseUrl || '';
+      saveActiveClassSnapshot();
+    }
+    const DEFAULT_CRITERIA_POS = [
+      { id: 'pos_1', icon: '🗣️', name: 'Phát biểu hay', points: 5 },
+      { id: 'pos_2', icon: '📝', name: 'Bài tập đầy đủ & sạch đẹp', points: 5 },
+      { id: 'pos_3', icon: '🤝', name: 'Giúp đỡ bạn bè', points: 3 },
+      { id: 'pos_4', icon: '📈', name: 'Tiến bộ rõ rệt', points: 8 },
+      { id: 'pos_5', icon: '🧹', name: 'Giữ gìn vệ sinh lớp', points: 3 },
+      { id: 'pos_6', icon: '🌟', name: 'Việc tốt & gương sáng', points: 10 }
+    ];
+    const DEFAULT_CRITERIA_NEG = [
+      { id: 'neg_1', icon: '🎒', name: 'Quên đồ dùng học tập', points: -2 },
+      { id: 'neg_2', icon: '⏳', name: 'Chưa hoàn thành bài', points: -3 },
+      { id: 'neg_3', icon: '🤫', name: 'Mất trật tự trong giờ', points: -2 },
+      { id: 'neg_4', icon: '⏰', name: 'Đi học muộn', points: -2 }
+    ];
+    const DEFAULT_REWARDS = [
+      { id: 'rew_1', name: 'Bút chì 2B măng non', flowers: 10, icon: '✏️' },
+      { id: 'rew_2', name: 'Gọt bút chì phi hành gia', flowers: 15, icon: '🚀' },
+      { id: 'rew_3', name: 'Bộ thước kẻ dẻo sắc màu', flowers: 20, icon: '📏' },
+      { id: 'rew_4', name: 'Vở ô ly bài học hay', flowers: 25, icon: '📓' },
+      { id: 'rew_5', name: 'Hộp bút Chibi thông minh', flowers: 35, icon: '🎨' },
+      { id: 'rew_6', name: 'Huy hiệu Ong Vàng Danh Dự', flowers: 50, icon: '🎖️' }
+    ];
+
     function loadInitialData() {
       try {
+        const savedSchools = localStorage.getItem(MULTI_SCHOOLS_KEY);
+        const savedClasses = localStorage.getItem(MULTI_CLASS_KEY);
+        if (savedSchools && savedClasses) {
+          schools = JSON.parse(savedSchools) || [];
+          classRecords = JSON.parse(savedClasses) || [];
+        }
+        if (!Array.isArray(schools)) schools = [];
+        if (!Array.isArray(classRecords)) classRecords = [];
+
+        if (classRecords.length) {
+          activeClassId = localStorage.getItem('lophanhphuc_active_class_id') || classRecords[0].id;
+          if (!classRecords.some(c => c.id === activeClassId)) activeClassId = classRecords[0].id;
+          loadClassSnapshot(getActiveClassRecord());
+          return;
+        }
+
+        // Lần đầu nâng cấp: lấy nguyên dữ liệu v4.9 làm lớp đầu tiên, không ghi đè danh sách.
         const savedClassName = localStorage.getItem('lophanhphuc_class_name');
         if (savedClassName) currentClassName = savedClassName;
-
         const savedTeacherName = localStorage.getItem('lophanhphuc_teacher_name');
         if (savedTeacherName) currentTeacherName = savedTeacherName;
-
         const savedStudents = localStorage.getItem('lophanhphuc_students_v4');
-        students = savedStudents ? JSON.parse(savedStudents) : [...INITIAL_STUDENTS_LIST];
-
+        students = savedStudents ? JSON.parse(savedStudents) : cloneData(INITIAL_STUDENTS_LIST);
         const savedPos = localStorage.getItem('lophanhphuc_crit_pos_v4');
         if (savedPos) customCriteriaPos = JSON.parse(savedPos);
-
         const savedNeg = localStorage.getItem('lophanhphuc_crit_neg_v4');
         if (savedNeg) customCriteriaNeg = JSON.parse(savedNeg);
-
         const savedRewards = localStorage.getItem('lophanhphuc_rewards_v4');
         if (savedRewards) customRewards = JSON.parse(savedRewards);
-
         const savedBaseUrl = localStorage.getItem('lophanhphuc_base_url');
         if (savedBaseUrl) customBaseUrl = savedBaseUrl;
+
+        const school = { id: makeId('school'), name: 'Trường của tôi', location: '' };
+        schools = [school];
+        activeClassId = makeId('class');
+        classRecords = [{ id: activeClassId, schoolId: school.id, className: currentClassName, teacherName: currentTeacherName, year: '2026-2027', createdAt: new Date().toISOString(), data: currentClassSnapshot() }];
+        persistClassRegistry();
       } catch (e) {
-        students = [...INITIAL_STUDENTS_LIST];
+        console.error('Lỗi nạp dữ liệu:', e);
+        // Nếu dữ liệu đa lớp lỗi, không tự ghi đè khóa v4.9; ưu tiên phục hồi dữ liệu cũ.
+        try {
+          currentClassName = localStorage.getItem('lophanhphuc_class_name') || currentClassName;
+          currentTeacherName = localStorage.getItem('lophanhphuc_teacher_name') || currentTeacherName;
+          const old = localStorage.getItem('lophanhphuc_students_v4');
+          students = old ? JSON.parse(old) : cloneData(INITIAL_STUDENTS_LIST);
+        } catch (_) { students = cloneData(INITIAL_STUDENTS_LIST); }
+        if (!classRecords.length) {
+          const school = { id: makeId('school'), name: 'Trường của tôi', location: '' };
+          schools = [school]; activeClassId = makeId('class');
+          classRecords = [{ id: activeClassId, schoolId: school.id, className: currentClassName, teacherName: currentTeacherName, year: '2026-2027', data: currentClassSnapshot() }];
+          persistClassRegistry();
+        }
       }
     }
 
     function saveStudentsToStorage() {
-      try {
-        localStorage.setItem('lophanhphuc_students_v4', JSON.stringify(students));
-      } catch (e) {}
+      try { localStorage.setItem('lophanhphuc_students_v4', JSON.stringify(students)); } catch (e) {}
+      saveActiveClassSnapshot();
+    }
+
+    function openClassManager() {
+      renderClassManagerList();
+      document.getElementById('classManagerModal').classList.remove('hidden');
+    }
+    function closeClassManager() { document.getElementById('classManagerModal').classList.add('hidden'); }
+    function renderClassManagerList() {
+      const list = document.getElementById('classManagerList');
+      const schoolSelect = document.getElementById('newClassSchool');
+      if (!list || !schoolSelect) return;
+      schoolSelect.innerHTML = schools.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+      const q = (document.getElementById('classManagerSearch')?.value || '').trim().toLocaleLowerCase('vi');
+      const rows = classRecords.filter(c => {
+        const school = schools.find(s => s.id === c.schoolId);
+        return `${c.className} ${c.teacherName} ${c.year} ${school?.name || ''}`.toLocaleLowerCase('vi').includes(q);
+      });
+      if (!rows.length) { list.innerHTML = '<div class="p-5 text-center text-gray-500 bg-gray-50 rounded-2xl">Chưa có lớp phù hợp.</div>'; return; }
+      list.innerHTML = rows.map(c => {
+        const school = schools.find(s => s.id === c.schoolId);
+        const count = Array.isArray(c.data?.students) ? c.data.students.length : 0;
+        const active = c.id === activeClassId;
+        return `<div class="p-4 rounded-2xl border ${active ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200 bg-white'} flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="min-w-0"><div class="font-black text-gray-800">${escapeHtml(c.className)} ${active ? '<span class="text-emerald-700 text-xs">• ĐANG DÙNG</span>' : ''}</div><div class="text-xs text-gray-500 mt-1">🏫 ${escapeHtml(school?.name || 'Chưa gán trường')} · 👩‍🏫 ${escapeHtml(c.teacherName || 'Chưa cập nhật')} · 📅 ${escapeHtml(c.year || '')}</div><div class="text-xs font-bold text-pink-600 mt-1">${count} học sinh</div></div>
+          <div class="flex flex-wrap gap-2 shrink-0">${active ? '' : `<button onclick="switchActiveClass('${c.id}')" class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold">Mở lớp</button>`}<button onclick="editManagedClass('${c.id}')" class="px-3 py-2 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold">Sửa</button><button onclick="deleteManagedClass('${c.id}')" class="px-3 py-2 rounded-lg bg-red-100 text-red-700 text-xs font-bold">Xóa</button></div>
+        </div>`;
+      }).join('');
+    }
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    }
+    function createSchool() {
+      const name = document.getElementById('newSchoolName').value.trim();
+      const location = document.getElementById('newSchoolLocation').value.trim();
+      if (!name) { showToast('Vui lòng nhập tên trường.'); return; }
+      if (schools.some(s => s.name.trim().toLocaleLowerCase('vi') === name.toLocaleLowerCase('vi') && s.location === location)) {
+        showToast('Trường này đã có trong danh sách.'); return;
+      }
+      schools.push({ id: makeId('school'), name, location, createdAt: new Date().toISOString() });
+      document.getElementById('newSchoolName').value = '';
+      document.getElementById('newSchoolLocation').value = '';
+      persistClassRegistry(); renderClassManagerList(); showToast('Đã thêm trường mới.');
+    }
+    function createClass() {
+      const schoolId = document.getElementById('newClassSchool').value;
+      const className = document.getElementById('newClassName').value.trim();
+      const teacherName = document.getElementById('newClassTeacher').value.trim();
+      const year = document.getElementById('newClassYear').value.trim() || '2026-2027';
+      if (!schoolId || !className) { showToast('Vui lòng chọn trường và nhập tên lớp.'); return; }
+      if (classRecords.some(c => c.schoolId === schoolId && c.className.toLocaleLowerCase('vi') === className.toLocaleLowerCase('vi') && c.year === year)) {
+        showToast('Lớp này đã tồn tại tại trường trong năm học đã chọn.'); return;
+      }
+      const id = makeId('class');
+      const data = { className, teacherName, students: [], criteriaPos: cloneData(DEFAULT_CRITERIA_POS), criteriaNeg: cloneData(DEFAULT_CRITERIA_NEG), rewards: cloneData(DEFAULT_REWARDS), customBaseUrl: '' };
+      classRecords.push({ id, schoolId, className, teacherName, year, createdAt: new Date().toISOString(), data });
+      persistClassRegistry();
+      document.getElementById('newClassName').value = ''; document.getElementById('newClassTeacher').value = '';
+      renderClassManagerList();
+      if (confirm(`Đã tạo lớp ${className} trống. Bạn có muốn chuyển sang lớp mới ngay không?`)) switchActiveClass(id);
+      showToast(`Đã tạo lớp ${className}; dữ liệu lớp hiện tại vẫn được giữ nguyên.`);
+    }
+    function switchActiveClass(id) {
+      if (!classRecords.some(c => c.id === id)) return;
+      saveActiveClassSnapshot();
+      activeClassId = id;
+      loadClassSnapshot(getActiveClassRecord());
+      currentFilteredTeam = 'ALL'; currentSearchText = '';
+      const search = document.getElementById('studentSearchInput'); if (search) search.value = '';
+      updateClassTeacherDisplay(); renderAllViews(); renderClassManagerList();
+      showToast(`Đã chuyển sang ${currentClassName}.`);
+    }
+    function editManagedClass(id) {
+      const c = classRecords.find(x => x.id === id); if (!c) return;
+      const name = prompt('Tên lớp:', c.className); if (name === null) return;
+      const cleanName = name.trim(); if (!cleanName) { alert('Tên lớp không được để trống.'); return; }
+      const teacher = prompt('Giáo viên chủ nhiệm:', c.teacherName || ''); if (teacher === null) return;
+      const year = prompt('Năm học:', c.year || '2026-2027'); if (year === null) return;
+      if (id === activeClassId) { currentClassName = cleanName; currentTeacherName = teacher.trim(); }
+      c.className = cleanName; c.teacherName = teacher.trim(); c.year = year.trim();
+      if (c.data) { c.data.className = c.className; c.data.teacherName = c.teacherName; }
+      saveActiveClassSnapshot(); updateClassTeacherDisplay(); renderClassManagerList();
+      showToast('Đã cập nhật thông tin lớp.');
+    }
+    function deleteManagedClass(id) {
+      const c = classRecords.find(x => x.id === id); if (!c) return;
+      if (classRecords.length <= 1) { alert('Phải giữ lại ít nhất một lớp.'); return; }
+      const count = Array.isArray(c.data?.students) ? c.data.students.length : 0;
+      if (!confirm(`Xóa lớp ${c.className} có ${count} học sinh? Thao tác này không thể tự hoàn tác. Nên sao lưu trước.`)) return;
+      if (id === activeClassId) {
+        const other = classRecords.find(x => x.id !== id);
+        saveActiveClassSnapshot(); activeClassId = other.id;
+        classRecords = classRecords.filter(x => x.id !== id);
+        loadClassSnapshot(getActiveClassRecord()); updateClassTeacherDisplay(); renderAllViews();
+      } else classRecords = classRecords.filter(x => x.id !== id);
+      persistClassRegistry(); renderClassManagerList(); showToast('Đã xóa lớp được chọn.');
+    }
+
+    function downloadStudentTemplate() {
+      const csv = '\uFEFFSTT,Mã học sinh,Họ và tên,Giới tính,Tổ,Bàn,Điểm hoa\r\n1,HS01,Nguyễn Văn A,Nam,Tổ 1,1,10\r\n';
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob); const a = document.createElement('a');
+      a.href = url; a.download = 'Mau_danh_sach_hoc_sinh.csv'; a.click(); URL.revokeObjectURL(url);
+      showToast('Đã tải file mẫu CSV. Xóa dòng ví dụ trước khi nhập danh sách thật.');
+    }
+    function parseCSV(text) {
+      const rows = []; let row = [], cell = '', quoted = false;
+      text = text.replace(/^\uFEFF/, '');
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (ch === '"' && quoted && text[i + 1] === '"') { cell += '"'; i++; }
+        else if (ch === '"') quoted = !quoted;
+        else if (ch === ',' && !quoted) { row.push(cell.trim()); cell = ''; }
+        else if ((ch === '\n' || ch === '\r') && !quoted) {
+          if (ch === '\r' && text[i + 1] === '\n') i++;
+          row.push(cell.trim()); if (row.some(v => v !== '')) rows.push(row); row = []; cell = '';
+        } else cell += ch;
+      }
+      row.push(cell.trim()); if (row.some(v => v !== '')) rows.push(row);
+      return rows;
+    }
+    function handleStudentListUpload(event) {
+      const file = event.target.files && event.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const content = String(e.target.result || '');
+          if (/\.json$/i.test(file.name)) {
+            const parsed = JSON.parse(content); const arr = Array.isArray(parsed) ? parsed : parsed.students;
+            if (!Array.isArray(arr)) throw new Error('JSON không có danh sách students.');
+            importStudentRows(arr.map(s => ({ id: s.id || s.maHocSinh || s['Mã học sinh'], name: s.name || s.hoTen || s['Họ và tên'], gender: s.gender || s['Giới tính'], team: s.team || s['Tổ'], desk: s.desk || s['Bàn'], flowers: s.flowers ?? s['Điểm hoa'] })));
+          } else {
+            const rows = parseCSV(content); if (rows.length < 2) throw new Error('File chưa có dòng dữ liệu học sinh.');
+            const headers = rows[0].map(h => h.toLocaleLowerCase('vi').replace(/\s+/g, ' ').trim());
+            const findCol = aliases => headers.findIndex(h => aliases.includes(h));
+            const idCol = findCol(['mã học sinh','mã hs','ma hoc sinh','ma hs','id']);
+            const nameCol = findCol(['họ và tên','họ tên','ho va ten','ho ten','tên học sinh','ten hoc sinh']);
+            const genderCol = findCol(['giới tính','gioi tinh']); const teamCol = findCol(['tổ','to']);
+            const deskCol = findCol(['bàn','ban']); const flowersCol = findCol(['điểm hoa','diem hoa','hoa']);
+            if (idCol < 0 || nameCol < 0) throw new Error('Không nhận diện được cột bắt buộc. Cần có “Mã học sinh” và “Họ và tên”. Hãy dùng file mẫu.');
+            const data = rows.slice(1).map(r => ({ id: r[idCol] || '', name: r[nameCol] || '', gender: genderCol >= 0 ? r[genderCol] : '', team: teamCol >= 0 ? r[teamCol] : '', desk: deskCol >= 0 ? r[deskCol] : '', flowers: flowersCol >= 0 ? r[flowersCol] : '' }));
+            importStudentRows(data);
+          }
+        } catch (err) { alert('Không thể nhập danh sách: ' + (err.message || 'File không hợp lệ.')); }
+      };
+      reader.onerror = () => alert('Không đọc được file. Vui lòng thử lại.');
+      reader.readAsText(file, 'UTF-8'); event.target.value = '';
+    }
+    function importStudentRows(rows) {
+      const cleaned = []; const errors = []; const seen = new Set();
+      rows.forEach((raw, i) => {
+        const id = String(raw.id || '').trim(); const name = String(raw.name || '').trim();
+        if (!id && !name) return;
+        if (!id || !name) { errors.push(`Dòng ${i + 2}: thiếu mã hoặc họ tên`); return; }
+        const key = id.toLocaleLowerCase('vi');
+        if (seen.has(key)) { errors.push(`Dòng ${i + 2}: mã ${id} bị trùng trong file`); return; }
+        seen.add(key);
+        const genderRaw = String(raw.gender || '').trim().toLowerCase();
+        const gender = genderRaw.includes('nam') && !genderRaw.includes('nữ') ? 'Nam' : (genderRaw.includes('nữ') || genderRaw.includes('nu') ? 'Nữ' : 'Nữ');
+        const teamRaw = String(raw.team || 'Tổ 1').trim(); const team = /^tổ\s*[1-4]$/i.test(teamRaw) ? teamRaw.replace(/tổ/i, 'Tổ') : 'Tổ 1';
+        const desk = Math.max(1, parseInt(raw.desk, 10) || Math.floor(cleaned.length / 2) + 1);
+        const flowers = Math.max(0, parseInt(raw.flowers, 10) || 0);
+        cleaned.push({ id, name, gender, team, desk, flowers });
+      });
+      if (!cleaned.length) { alert('Không có dòng học sinh hợp lệ để nhập.\n' + errors.slice(0, 8).join('\n')); return; }
+      const existing = new Set(students.map(s => String(s.id).toLocaleLowerCase('vi')));
+      const duplicates = cleaned.filter(s => existing.has(s.id.toLocaleLowerCase('vi')));
+      const additions = cleaned.filter(s => !existing.has(s.id.toLocaleLowerCase('vi')));
+      let message = `Xem trước nhập vào lớp ${currentClassName}:\n- Dòng hợp lệ: ${cleaned.length}\n- Học sinh mới sẽ thêm: ${additions.length}\n- Mã đã tồn tại trong lớp (bỏ qua): ${duplicates.length}\n- Dòng lỗi/trùng trong file: ${errors.length}\n\nMặc định chỉ bổ sung, không xóa và không ghi đè học sinh cũ.`;
+      if (duplicates.length) message += '\n\nMã đã tồn tại: ' + duplicates.slice(0, 10).map(s => s.id).join(', ');
+      if (errors.length) message += '\n\nLỗi: ' + errors.slice(0, 8).join('; ');
+      if (!confirm(message + '\n\nBạn xác nhận bổ sung học sinh mới?')) return;
+      students.push(...additions);
+      saveStudentsToStorage(); renderAllViews();
+      alert(`Đã nhập thành công ${additions.length} học sinh mới. Bỏ qua ${duplicates.length} mã trùng; ${errors.length} dòng lỗi.`);
+    }
+    function deleteStudent(id) {
+      const student = students.find(s => String(s.id) === String(id)); if (!student) { showToast('Không tìm thấy học sinh trong lớp hiện tại.'); return; }
+      if (!confirm(`Bạn có chắc muốn xóa học sinh “${student.name}” (mã ${student.id}) khỏi ${currentClassName}?\n\nThao tác này sẽ xóa học sinh khỏi danh sách lớp hiện tại.`)) return;
+      students = students.filter(s => String(s.id) !== String(id));
+      if (selectedHonorStudentIds && selectedHonorStudentIds.delete) selectedHonorStudentIds.delete(id);
+      if (wheelWinnerStudent && String(wheelWinnerStudent.id) === String(id)) wheelWinnerStudent = null;
+      if (targetUploadStudentId === id) { targetUploadStudentId = null; pendingUploadDataUrl = null; }
+      saveStudentsToStorage(); renderAllViews();
+      showToast(`Đã xóa học sinh ${student.name}.`);
     }
 
     function switchAuthTab(mode) {
@@ -1736,6 +2068,9 @@
       currentTeacherName = newTeacher;
       localStorage.setItem('lophanhphuc_class_name', currentClassName);
       localStorage.setItem('lophanhphuc_teacher_name', currentTeacherName);
+      const activeRecord = getActiveClassRecord();
+      if (activeRecord) { activeRecord.className = currentClassName; activeRecord.teacherName = currentTeacherName; if (activeRecord.data) { activeRecord.data.className = currentClassName; activeRecord.data.teacherName = currentTeacherName; } }
+      saveActiveClassSnapshot();
       updateClassTeacherDisplay();
       closeEditClassTeacherModal();
       showToast(`Đã lưu thông tin: ${currentClassName} – GV: ${currentTeacherName} ✨`);
@@ -1988,6 +2323,7 @@
                 <button onclick="triggerAvatarUpload('${s.id}')" class="px-2.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-xs font-bold transition-all">
                   📷 Đổi ảnh
                 </button>
+                <button onclick="deleteStudent('${s.id}')" class="px-2.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition-all" title="Xóa học sinh">🗑️ Xóa</button>
               </div>
             </td>
           </tr>
@@ -2131,7 +2467,12 @@
     function exportClassDataToFile() {
       const exportBundle = {
         app: "LopHanhPhuc",
-        version: "4.9",
+        version: "5.0",
+        classId: activeClassId,
+        school: (schools.find(x => x.id === getActiveClassRecord()?.schoolId) || {}).name || '',
+        schoolId: getActiveClassRecord()?.schoolId || '',
+        schoolList: schools,
+        classList: classRecords,
         className: currentClassName,
         teacherName: currentTeacherName,
         exportDate: new Date().toISOString(),
@@ -2160,6 +2501,7 @@
         try {
           const imported = JSON.parse(evt.target.result);
           if (imported.students && Array.isArray(imported.students)) {
+            if (!confirm(`File có ${imported.students.length} học sinh. Nạp file này sẽ thay danh sách học sinh của lớp đang mở (${currentClassName}). Bạn đã sao lưu và muốn tiếp tục?`)) { e.target.value = ''; return; }
             students = imported.students;
             saveStudentsToStorage();
           }
