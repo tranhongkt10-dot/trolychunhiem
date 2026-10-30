@@ -40,6 +40,292 @@
       box-shadow: 0 4px 14px rgba(236, 72, 153, 0.35);
     }
   </style>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script>
+    // ============================================================
+    // CẤU HÌNH FIREBASE: thay các giá trị YOUR_* bằng thông tin dự án
+    // Firebase của cô. ADMIN_EMAIL phải khớp với firestore.rules.
+    // ============================================================
+    const FIREBASE_CONFIG = {
+      apiKey: "YOUR_FIREBASE_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_FIREBASE_APP_ID"
+    };
+    const ADMIN_EMAIL = "THAY_BANG_EMAIL_CUA_CO_LE_THI_VIET_ANH@example.com".toLowerCase().trim();
+
+    // App data được tách theo UID. Firebase SDK vẫn dùng localStorage gốc của trình duyệt.
+    const appStorage = {
+      _uid() { return sessionStorage.getItem('lhp_active_uid') || 'guest'; },
+      _prefix() { return 'lhp_user_' + this._uid() + '::'; },
+      getItem(key) { return localStorage.getItem(this._prefix() + key); },
+      setItem(key, value) {
+        const stringValue = String(value);
+        localStorage.setItem(this._prefix() + key, stringValue);
+        if (window.secureAuth && window.secureAuth.cloudReady && window.secureAuth.user) window.secureAuth.queueWrite(key, stringValue);
+      },
+      removeItem(key) {
+        localStorage.removeItem(this._prefix() + key);
+        if (window.secureAuth && window.secureAuth.cloudReady && window.secureAuth.user) window.secureAuth.queueDelete(key);
+      },
+      clear() {
+        const prefix = this._prefix();
+        const keys = [];
+        for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith(prefix)) keys.push(k); }
+        keys.forEach(k => localStorage.removeItem(k));
+      }
+    };
+
+    (function initializeSecureAuth() {
+      const originalAddEventListener = window.addEventListener.bind(window);
+      let queuedDomReadyCallbacks = [];
+      let domReady = document.readyState === 'interactive' || document.readyState === 'complete';
+      let appReleased = false;
+      let bootingUid = '';
+      let firebaseReady = false;
+      window.addEventListener = function(type, listener, options) {
+        if (type === 'DOMContentLoaded' && !appReleased) { queuedDomReadyCallbacks.push(listener); return; }
+        return originalAddEventListener(type, listener, options);
+      };
+      originalAddEventListener('DOMContentLoaded', () => { domReady = true; maybeReleaseApp(); }, { once: true });
+
+      const status = (message, isError = false) => {
+        const el = document.getElementById('authStatusMessage');
+        if (el) { el.textContent = message; el.className = 'text-xs font-bold min-h-5 ' + (isError ? 'text-red-600' : 'text-emerald-700'); }
+      };
+      const configReady = FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.startsWith('YOUR_') && FIREBASE_CONFIG.projectId && !FIREBASE_CONFIG.projectId.startsWith('YOUR_');
+      const pendingWrites = new Set();
+      const profileRef = uid => firebase.firestore().collection('users').doc(uid);
+      const dataCollection = uid => firebase.firestore().collection('userData').doc(uid).collection('items');
+      const prefixFor = uid => 'lhp_user_' + uid + '::';
+      const encodeKey = key => encodeURIComponent(key).replace(/\./g, '%2E');
+
+      function maybeReleaseApp() {
+        if (!domReady || appReleased || !window.secureAuth || !window.secureAuth.user || !window.secureAuth.cloudReady) return;
+        appReleased = true;
+        const callbacks = queuedDomReadyCallbacks.slice(); queuedDomReadyCallbacks = [];
+        const evt = new Event('DOMContentLoaded');
+        callbacks.forEach(listener => { try { if (typeof listener === 'function') listener.call(document, evt); else if (listener && listener.handleEvent) listener.handleEvent(evt); } catch (err) { console.error('Lỗi khởi tạo ứng dụng:', err); } });
+        const welcome = document.getElementById('welcomeScreen'); if (welcome) welcome.classList.add('hidden');
+        const badge = document.getElementById('accountBadge');
+        if (badge) badge.textContent = (window.secureAuth.profile?.displayName || window.secureAuth.user.email) + (window.secureAuth.isAdmin ? ' • QUẢN TRỊ' : ' • GIÁO VIÊN');
+        const adminBtn = document.getElementById('adminPanelButton'); if (adminBtn) adminBtn.classList.toggle('hidden', !window.secureAuth.isAdmin);
+      }
+
+      async function syncProfile(user) {
+        const ref = profileRef(user.uid);
+        const snap = await ref.get();
+        if (!snap.exists) {
+          const isAdminEmail = (user.email || '').toLowerCase() === ADMIN_EMAIL && user.emailVerified === true;
+          const profile = { uid: user.uid, email: user.email || '', displayName: user.displayName || (isAdminEmail ? 'Cô Lê Thị Việt Anh' : 'Giáo viên'), role: isAdminEmail ? 'admin' : 'teacher', createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+          await ref.set(profile);
+          return { ...profile, createdAt: new Date().toISOString() };
+        }
+        return snap.data();
+      }
+
+      async function readAndPrepareUserData(user, profile) {
+        const col = dataCollection(user.uid);
+        const snap = await col.get();
+        const prefix = prefixFor(user.uid);
+        const localKeys = [];
+        for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith(prefix)) localKeys.push(k); }
+        if (!snap.empty) {
+          localKeys.forEach(k => localStorage.removeItem(k));
+          snap.forEach(doc => {
+            const item = doc.data();
+            if (item && typeof item.key === 'string' && typeof item.value === 'string') localStorage.setItem(prefix + item.key, item.value);
+          });
+          return;
+        }
+        // Chuyển dữ liệu v4.9 cũ sang tài khoản quản trị lần đầu, nếu đang có dữ liệu chưa phân vùng.
+        const legacyKeys = [];
+        for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('lophanhphuc_')) legacyKeys.push(k); }
+        const isAdminEmail = (user.email || '').toLowerCase() === ADMIN_EMAIL && user.emailVerified === true;
+        if (isAdminEmail && legacyKeys.length) {
+          for (const key of legacyKeys) {
+            const value = localStorage.getItem(key);
+            if (value !== null) {
+              localStorage.setItem(prefix + key, value);
+              await col.doc(encodeKey(key)).set({ key, value, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+            }
+          }
+        } else if (localKeys.length) {
+          // Khôi phục cache cục bộ nếu Firestore chưa có bản ghi.
+          for (const fullKey of localKeys) {
+            const key = fullKey.slice(prefix.length), value = localStorage.getItem(fullKey);
+            if (value !== null) await col.doc(encodeKey(key)).set({ key, value, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+          }
+        }
+      }
+
+      window.secureAuth = {
+        user: null, profile: null, isAdmin: false, cloudReady: false, mode: 'login', registrationInProgress: false,
+        db: null, auth: null,
+        async handleSubmit(event) {
+          if (event) event.preventDefault();
+          if (!configReady || !firebaseReady) { status('Chưa cấu hình Firebase. Hãy làm theo README_SETUP_VI.md trước khi đăng nhập.', true); return; }
+          const email = (document.getElementById('authEmailInput').value || '').trim().toLowerCase();
+          const password = document.getElementById('authPasswordInput').value || '';
+          const teacherName = (document.getElementById('authTeacherNameInput')?.value || '').trim();
+          const confirmPassword = document.getElementById('authConfirmPasswordInput')?.value || '';
+          if (this.mode === 'register') {
+            this.registrationInProgress = true;
+            if (!teacherName) { this.registrationInProgress = false; status('Vui lòng nhập họ và tên giáo viên.', true); return; }
+            if (password.length < 8) { this.registrationInProgress = false; status('Mật khẩu phải có ít nhất 8 ký tự.', true); return; }
+            if (password !== confirmPassword) { this.registrationInProgress = false; status('Mật khẩu nhập lại chưa khớp.', true); return; }
+            try {
+              const credential = await this.auth.createUserWithEmailAndPassword(email, password);
+              await credential.user.updateProfile({ displayName: teacherName });
+              await credential.user.sendEmailVerification();
+              this.registrationInProgress = false;
+              await this.auth.signOut();
+              status('Đã tạo tài khoản. Hãy mở email để xác minh, sau đó quay lại đăng nhập. Kiểm tra cả thư mục Spam/Thư rác.');
+            } catch (err) { this.registrationInProgress = false; status(this.friendlyError(err), true); }
+            return;
+          }
+          try {
+            const credential = await this.auth.signInWithEmailAndPassword(email, password);
+            if (!credential.user.emailVerified) {
+              await this.auth.signOut();
+              status('Email chưa được xác minh. Hãy mở email xác minh trước khi đăng nhập.', true);
+              return;
+            }
+            status('Đăng nhập thành công. Đang tải dữ liệu riêng của tài khoản…');
+          } catch (err) { status(this.friendlyError(err), true); }
+        },
+        async resetPassword() {
+          if (!configReady || !firebaseReady) { status('Chưa cấu hình Firebase. Hãy làm theo README_SETUP_VI.md.', true); return; }
+          const email = (document.getElementById('authEmailInput').value || '').trim().toLowerCase();
+          if (!email) { status('Nhập email tài khoản trước, rồi bấm Quên mật khẩu.', true); return; }
+          try { await this.auth.sendPasswordResetEmail(email); status('Đã gửi email đặt lại mật khẩu. Hãy kiểm tra hộp thư và thư mục Spam.'); }
+          catch (err) { status(this.friendlyError(err), true); }
+        },
+        async changePassword() {
+          if (!this.user) { alert('Vui lòng đăng nhập trước.'); return; }
+          const current = prompt('Nhập mật khẩu hiện tại để xác minh:'); if (current === null) return;
+          const next = prompt('Nhập mật khẩu mới (ít nhất 8 ký tự):'); if (next === null) return;
+          const confirmNext = prompt('Nhập lại mật khẩu mới:'); if (confirmNext === null) return;
+          if (next.length < 8) { alert('Mật khẩu mới phải có ít nhất 8 ký tự.'); return; }
+          if (next !== confirmNext) { alert('Mật khẩu nhập lại không khớp.'); return; }
+          try {
+            const credential = firebase.auth.EmailAuthProvider.credential(this.user.email, current);
+            await this.user.reauthenticateWithCredential(credential);
+            await this.user.updatePassword(next);
+            alert('Đã đổi mật khẩu thành công.');
+          } catch (err) { alert(this.friendlyError(err)); }
+        },
+        async queueWrite(key, value) {
+          if (!this.user || !this.cloudReady) return;
+          const task = dataCollection(this.user.uid).doc(encodeKey(key)).set({ key, value: String(value), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(err => { console.error(err); status('Không đồng bộ được dữ liệu lên máy chủ. Hãy kiểm tra kết nối và sao lưu lớp.', true); });
+          pendingWrites.add(task); task.finally(() => pendingWrites.delete(task));
+          return task;
+        },
+        async queueDelete(key) {
+          if (!this.user || !this.cloudReady) return;
+          const task = dataCollection(this.user.uid).doc(encodeKey(key)).delete().catch(err => { console.error(err); status('Không đồng bộ được thao tác xóa lên máy chủ.', true); });
+          pendingWrites.add(task); task.finally(() => pendingWrites.delete(task));
+          return task;
+        },
+        async logout() {
+          if (!this.user) { status('Vui lòng đăng nhập bằng tài khoản giáo viên.'); return; }
+          try {
+            await Promise.allSettled(Array.from(pendingWrites));
+            const uid = this.user.uid;
+            await this.auth.signOut();
+            const prefix = prefixFor(uid), keys = [];
+            for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith(prefix)) keys.push(k); }
+            keys.forEach(k => localStorage.removeItem(k));
+            sessionStorage.removeItem('lhp_active_uid'); sessionStorage.removeItem('lhp_teacher_name'); sessionStorage.removeItem('lhp_class_name'); sessionStorage.removeItem('lhp_cloud_ready_uid');
+            location.reload();
+          } catch (err) { alert(this.friendlyError(err)); }
+        },
+        async openAdminPanel() {
+          if (!this.isAdmin) { alert('Tài khoản không có quyền quản trị.'); return; }
+          const modal = document.getElementById('adminAccountsModal');
+          const list = document.getElementById('adminAccountsList');
+          modal.classList.remove('hidden'); modal.classList.add('flex'); list.innerHTML = '<p class="text-sm text-slate-500">Đang tải danh sách tài khoản…</p>';
+          try {
+            const snap = await firebase.firestore().collection('users').get();
+            if (snap.empty) { list.innerHTML = '<p class="text-sm text-slate-500">Chưa có tài khoản nào.</p>'; return; }
+            list.innerHTML = '';
+            snap.forEach(doc => {
+              const p = doc.data(); const row = document.createElement('div');
+              row.className = 'p-3 border border-slate-200 rounded-xl flex items-start justify-between gap-3';
+              const info = document.createElement('div'); info.className = 'min-w-0';
+              const name = document.createElement('p'); name.className = 'font-black text-sm text-slate-800'; name.textContent = p.displayName || 'Giáo viên';
+              const email = document.createElement('p'); email.className = 'text-xs text-slate-600 break-all'; email.textContent = p.email || ''; 
+              const role = document.createElement('p'); role.className = 'text-[10px] font-bold text-purple-700 mt-1'; role.textContent = p.role === 'admin' ? 'QUẢN TRỊ VIÊN' : 'GIÁO VIÊN';
+              info.append(name, email, role); row.append(info); list.append(row);
+            });
+          } catch (err) { list.innerHTML = '<p class="text-sm text-red-600">Không tải được danh sách. Kiểm tra Firestore Security Rules.</p>'; console.error(err); }
+        },
+        closeAdminPanel() { const modal = document.getElementById('adminAccountsModal'); modal.classList.add('hidden'); modal.classList.remove('flex'); },
+        friendlyError(err) {
+          const code = err && err.code || '';
+          const map = {
+            'auth/invalid-email': 'Địa chỉ email không hợp lệ.',
+            'auth/user-not-found': 'Không tìm thấy tài khoản. Kiểm tra email hoặc đăng ký tài khoản mới.',
+            'auth/wrong-password': 'Mật khẩu không đúng.',
+            'auth/invalid-credential': 'Email hoặc mật khẩu không đúng.',
+            'auth/email-already-in-use': 'Email này đã được đăng ký.',
+            'auth/weak-password': 'Mật khẩu quá yếu; hãy dùng ít nhất 8 ký tự.',
+            'auth/too-many-requests': 'Có quá nhiều lần thử. Hãy chờ rồi thử lại.',
+            'auth/network-request-failed': 'Lỗi kết nối mạng. Hãy kiểm tra Internet.',
+            'permission-denied': 'Firestore từ chối quyền. Kiểm tra Security Rules và email quản trị.'
+          };
+          return map[code] || ('Không thực hiện được: ' + (err && err.message ? err.message : 'lỗi không xác định'));
+        }
+      };
+
+      async function handleAuthenticatedUser(user) {
+        if (!user) {
+          window.secureAuth.user = null; window.secureAuth.profile = null; window.secureAuth.isAdmin = false; window.secureAuth.cloudReady = false;
+          const badge = document.getElementById('accountBadge'); if (badge) badge.textContent = 'Chưa đăng nhập';
+          const adminBtn = document.getElementById('adminPanelButton'); if (adminBtn) adminBtn.classList.add('hidden');
+          return;
+        }
+        if (!user.emailVerified) { if (window.secureAuth.registrationInProgress) return; try { await window.secureAuth.auth.signOut(); } catch (_) {} status('Email chưa được xác minh. Hãy xác minh email trước khi sử dụng ứng dụng.', true); return; }
+        if (bootingUid === user.uid && window.secureAuth.cloudReady) return;
+        bootingUid = user.uid; window.secureAuth.user = user; window.secureAuth.cloudReady = false;
+        sessionStorage.setItem('lhp_active_uid', user.uid);
+        if (user.displayName) sessionStorage.setItem('lhp_teacher_name', user.displayName);
+        try {
+          const profile = await syncProfile(user);
+          window.secureAuth.profile = profile;
+          if (typeof currentTeacherName !== 'undefined' && profile.displayName) currentTeacherName = profile.displayName;
+          window.secureAuth.isAdmin = profile.role === 'admin' && (user.email || '').toLowerCase() === ADMIN_EMAIL && user.emailVerified === true;
+          await readAndPrepareUserData(user, profile);
+          window.secureAuth.cloudReady = true;
+          sessionStorage.setItem('lhp_cloud_ready_uid', user.uid);
+          status('Đã tải dữ liệu riêng và xác thực quyền truy cập.');
+          maybeReleaseApp();
+        } catch (err) {
+          console.error(err); window.secureAuth.cloudReady = false;
+          status('Không thể tải dữ liệu bảo mật. Kiểm tra cấu hình Firebase/Firestore Rules rồi tải lại trang. ' + (err.message || ''), true);
+          bootingUid = '';
+        }
+      }
+
+      if (!configReady) {
+        status('Ứng dụng cần cấu hình Firebase trước khi dùng. Mở README_SETUP_VI.md và thay FIREBASE_CONFIG + ADMIN_EMAIL.', true);
+        window.secureAuth.auth = null;
+        return;
+      }
+      try {
+        if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+        window.secureAuth.auth = firebase.auth(); window.secureAuth.db = firebase.firestore();
+        window.secureAuth.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.error);
+        firebaseReady = true;
+        window.secureAuth.auth.onAuthStateChanged(handleAuthenticatedUser);
+      } catch (err) { console.error(err); status('Không khởi tạo được Firebase. Kiểm tra cấu hình trong index.html.', true); }
+    })();
+  </script>
+
 </head>
 <body class="flex flex-col min-h-screen relative">
 
@@ -178,29 +464,37 @@
       </div>
 
       <form onsubmit="handleAuthSubmit(event)" class="space-y-2.5 text-left">
+        <div id="authTeacherNameWrap" class="hidden">
+          <label class="block text-[11px] font-black text-gray-600 uppercase mb-1">Họ và tên giáo viên</label>
+          <input type="text" id="authTeacherNameInput" autocomplete="name" placeholder="Nhập họ tên giáo viên" class="w-full px-3.5 py-2 rounded-xl border border-pink-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-pink-400" />
+        </div>
         <div>
-          <label class="block text-[11px] font-black text-gray-600 uppercase mb-1">Tài khoản / Email giáo viên</label>
-          <input type="text" id="authEmailInput" value="giaovien@tieuhoc.edu.vn" required placeholder="Nhập email..." class="w-full px-3.5 py-2 rounded-xl border border-pink-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-pink-400" />
+          <label class="block text-[11px] font-black text-gray-600 uppercase mb-1">Email giáo viên</label>
+          <input type="text" id="authEmailInput" value="" type="email" autocomplete="username" required placeholder="Nhập email..." class="w-full px-3.5 py-2 rounded-xl border border-pink-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-pink-400" />
         </div>
         <div>
           <label class="block text-[11px] font-black text-gray-600 uppercase mb-1">Mật khẩu</label>
           <div class="relative">
-            <input type="password" id="authPasswordInput" value="123456" required placeholder="Nhập mật khẩu..." class="w-full px-3.5 py-2 rounded-xl border border-pink-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-pink-400 pr-10" />
+            <input type="password" id="authPasswordInput" value="" autocomplete="current-password" required placeholder="Nhập mật khẩu..." class="w-full px-3.5 py-2 rounded-xl border border-pink-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-pink-400 pr-10" />
             <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-2 text-gray-400 hover:text-gray-600 text-xs">👁️</button>
           </div>
         </div>
+        <div id="authConfirmPasswordWrap" class="hidden">
+          <label class="block text-[11px] font-black text-gray-600 uppercase mb-1">Nhập lại mật khẩu</label>
+          <input type="password" id="authConfirmPasswordInput" autocomplete="new-password" placeholder="Nhập lại mật khẩu" class="w-full px-3.5 py-2 rounded-xl border border-pink-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-pink-400" />
+        </div>
 
-        <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl font-black text-xs sm:text-sm shadow-md hover:scale-[1.02] active:scale-95 transition-all mt-1">
-          🚀 ĐĂNG NHẬP VÀO LỚP HỌC
+        <button id="authSubmitButton" type="submit" class="w-full py-2.5 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl font-black text-xs sm:text-sm shadow-md hover:scale-[1.02] active:scale-95 transition-all mt-1">
+          🔐 ĐĂNG NHẬP AN TOÀN
         </button>
       </form>
 
       <div class="mt-3 pt-3 border-t border-pink-100 space-y-2">
-        <button onclick="enterClassroomInstant()" class="w-full py-2.5 bg-gradient-to-r from-amber-400 to-rose-400 text-white rounded-xl font-extrabold text-xs shadow-sm hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5">
-          <span>🌸 Trải Nghiệm Lớp Ngay (Không Cần Mật Khẩu)</span>
-        </button>
+        <button type="button" onclick="secureAuth.resetPassword()" class="text-xs font-bold text-purple-700 hover:text-pink-600">Quên mật khẩu? Gửi email đặt lại mật khẩu</button>
+        <p id="authStatusMessage" role="status" aria-live="polite" class="text-xs font-bold text-gray-600 min-h-5"></p>
       </div>
-      <p class="mt-3 text-[10px] text-gray-400 font-bold">Phiên bản Đồng hành Tiểu học v4.9 – Bản quyền thuộc về GVCN</p>
+      <p class="mt-3 text-[10px] text-gray-500 font-bold">Quản trị hệ thống: Cô Lê Thị Việt Anh</p>
+      <p class="mt-1 text-[10px] text-gray-400">Mỗi giáo viên có tài khoản và kho dữ liệu riêng. Không có chế độ vào lớp khi chưa đăng nhập.</p>
     </div>
   </div>
 
@@ -236,9 +530,10 @@
         <button onclick="openAddNewStudentModal()" class="px-3 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl shadow-sm flex items-center gap-1.5 transition-all active:scale-95">
           <span>👤+ Thêm Học Sinh</span>
         </button>
-        <button onclick="logoutToWelcomeScreen()" class="p-2 text-gray-500 hover:text-rose-500 hover:bg-pink-50 rounded-xl transition-all" title="Đăng xuất / Quay lại màn hình đăng nhập">
-          🚪
-        </button>
+        <span id="accountBadge" class="px-2 py-2 rounded-xl bg-slate-100 text-slate-700 text-[10px] font-black">Chưa đăng nhập</span>
+        <button onclick="secureAuth.changePassword()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm text-xs" title="Đổi mật khẩu tài khoản">🔑 Đổi mật khẩu</button>
+        <button id="adminPanelButton" onclick="secureAuth.openAdminPanel()" class="hidden px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-sm text-xs" title="Quản trị tài khoản giáo viên">👑 Quản trị</button>
+        <button onclick="logoutToWelcomeScreen()" class="p-2 text-gray-500 hover:text-rose-500 hover:bg-pink-50 rounded-xl transition-all" title="Đăng xuất tài khoản">🚪</button>
       </div>
     </div>
   </header>
@@ -1012,7 +1307,7 @@
         <div class="lg:col-span-3 space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2"><h3 class="font-black text-gray-800">📚 Danh sách lớp học</h3><input id="classManagerSearch" oninput="renderClassManagerList()" class="p-2 rounded-xl border border-gray-200 text-xs" placeholder="Tìm trường hoặc lớp..." /></div>
           <div id="classManagerList" class="space-y-3"></div>
-          <div class="text-[11px] text-gray-500 bg-amber-50 border border-amber-100 rounded-xl p-3">Lưu ý: dữ liệu hiện được lưu trên trình duyệt này. Hãy thường xuyên bấm “Sao Lưu Lớp” để dự phòng.</div>
+          <div class="text-[11px] text-gray-500 bg-amber-50 border border-amber-100 rounded-xl p-3">Dữ liệu được tách theo tài khoản và đồng bộ lên Firestore. Vẫn nên tải bản sao lưu định kỳ.</div>
         </div>
       </div>
     </div>
@@ -1020,6 +1315,20 @@
 
   <!-- INPUT FILE ẨN -->
   <input type="file" id="globalAvatarInput" accept="image/*" class="hidden" onchange="handleGlobalAvatarUpload(event)" />
+
+  <!-- HỘP THOẠI QUẢN TRỊ TÀI KHOẢN -->
+  <div id="adminAccountsModal" class="fixed inset-0 z-[80] hidden items-center justify-center bg-slate-900/60 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden">
+      <div class="p-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white flex items-center justify-between">
+        <div><h3 class="font-black text-lg">👑 Quản trị tài khoản giáo viên</h3><p class="text-xs opacity-90">Quản trị viên: Cô Lê Thị Việt Anh</p></div>
+        <button onclick="secureAuth.closeAdminPanel()" class="text-2xl px-2" aria-label="Đóng">×</button>
+      </div>
+      <div class="p-4 overflow-y-auto max-h-[65vh]">
+        <p class="text-xs text-slate-600 mb-3">Danh sách tài khoản chỉ hiển thị thông tin tài khoản; quản trị viên không mặc nhiên được đọc dữ liệu học sinh riêng của giáo viên.</p>
+        <div id="adminAccountsList" class="space-y-2"><p class="text-sm text-slate-500">Đang tải...</p></div>
+      </div>
+    </div>
+  </div>
 
   <!-- TOAST THÔNG BÁO -->
   <div id="toastNotification" class="fixed bottom-6 right-6 z-50 hidden bg-gray-900/90 backdrop-blur-md text-white px-5 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-2 border border-pink-400">
@@ -1029,50 +1338,11 @@
 
   <!-- SCRIPT JAVASCRIPT ĐỒNG BỘ 100% -->
   <script>
-    const INITIAL_STUDENTS_LIST = [
-      { id: "HS01", name: "Hoàng Thanh Mai", gender: "Nữ", team: "Tổ 1", desk: 1, flowers: 12 },
-      { id: "HS02", name: "Đoàn Đăng Khoa", gender: "Nam", team: "Tổ 1", desk: 1, flowers: 10 },
-      { id: "HS03", name: "Nguyễn Tất Hưng", gender: "Nam", team: "Tổ 1", desk: 2, flowers: 15 },
-      { id: "HS04", name: "Đặng Thị Quỳnh Anh", gender: "Nữ", team: "Tổ 1", desk: 2, flowers: 14 },
-      { id: "HS05", name: "Lê Văn Thanh", gender: "Nam", team: "Tổ 1", desk: 3, flowers: 9 },
-      { id: "HS06", name: "Lê Ngọc Ly Ny", gender: "Nữ", team: "Tổ 1", desk: 3, flowers: 11 },
-      { id: "HS07", name: "Trương Minh Đăng", gender: "Nam", team: "Tổ 1", desk: 4, flowers: 13 },
-      { id: "HS08", name: "Trần Bảo Ngọc", gender: "Nữ", team: "Tổ 1", desk: 4, flowers: 16 },
-      { id: "HS09", name: "Phạm Hùng Cường", gender: "Nam", team: "Tổ 1", desk: 5, flowers: 8 },
-      { id: "HS10", name: "Vũ Phương Linh", gender: "Nữ", team: "Tổ 1", desk: 5, flowers: 12 },
-      { id: "HS11", name: "Bùi Gia Huy", gender: "Nam", team: "Tổ 2", desk: 6, flowers: 14 },
-      { id: "HS12", name: "Đỗ Kim Ngân", gender: "Nữ", team: "Tổ 2", desk: 6, flowers: 15 },
-      { id: "HS13", name: "Ngô Quang Hải", gender: "Nam", team: "Tổ 2", desk: 7, flowers: 10 },
-      { id: "HS14", name: "Dương Thùy Chi", gender: "Nữ", team: "Tổ 2", desk: 7, flowers: 13 },
-      { id: "HS15", name: "Lý Tuấn Kiệt", gender: "Nam", team: "Tổ 2", desk: 8, flowers: 11 },
-      { id: "HS16", name: "Mai Ánh Tuyết", gender: "Nữ", team: "Tổ 2", desk: 8, flowers: 12 },
-      { id: "HS17", name: "Hồ Đức Phúc", gender: "Nam", team: "Tổ 2", desk: 9, flowers: 14 },
-      { id: "HS18", name: "Cao Ngọc Ánh", gender: "Nữ", team: "Tổ 2", desk: 9, flowers: 9 },
-      { id: "HS19", name: "Đinh Xuân Trường", gender: "Nam", team: "Tổ 2", desk: 10, flowers: 15 },
-      { id: "HS20", name: "Trịnh Thảo Nhi", gender: "Nữ", team: "Tổ 3", desk: 10, flowers: 13 },
-      { id: "HS21", name: "Phan Quốc Bảo", gender: "Nam", team: "Tổ 3", desk: 11, flowers: 12 },
-      { id: "HS22", name: "Võ Hà My", gender: "Nữ", team: "Tổ 3", desk: 11, flowers: 14 },
-      { id: "HS23", name: "Lâm Đình Trọng", gender: "Nam", team: "Tổ 3", desk: 12, flowers: 10 },
-      { id: "HS24", name: "Châu Mỹ Uyên", gender: "Nữ", team: "Tổ 3", desk: 12, flowers: 11 },
-      { id: "HS25", name: "Lương Thế Vinh", gender: "Nam", team: "Tổ 3", desk: 13, flowers: 16 },
-      { id: "HS26", name: "Quách Diệp Anh", gender: "Nữ", team: "Tổ 3", desk: 13, flowers: 12 },
-      { id: "HS27", name: "Tạ Minh Khang", gender: "Nam", team: "Tổ 3", desk: 14, flowers: 9 },
-      { id: "HS28", name: "Thái Bảo Châu", gender: "Nữ", team: "Tổ 3", desk: 14, flowers: 14 },
-      { id: "HS29", name: "Lê Nhật Nam", gender: "Nam", team: "Tổ 3", desk: 15, flowers: 11 },
-      { id: "HS30", name: "Nguyễn Thục Quyên", gender: "Nữ", team: "Tổ 4", desk: 15, flowers: 15 },
-      { id: "HS31", name: "Trần Anh Dũng", gender: "Nam", team: "Tổ 4", desk: 16, flowers: 13 },
-      { id: "HS32", name: "Phạm Diệu Linh", gender: "Nữ", team: "Tổ 4", desk: 16, flowers: 12 },
-      { id: "HS33", name: "Hoàng Công Khanh", gender: "Nam", team: "Tổ 4", desk: 17, flowers: 10 },
-      { id: "HS34", name: "Bùi Yến Nhi", gender: "Nữ", team: "Tổ 4", desk: 17, flowers: 14 },
-      { id: "HS35", name: "Đào Duy Anh", gender: "Nam", team: "Tổ 4", desk: 18, flowers: 11 },
-      { id: "HS36", name: "Hà Khánh An", gender: "Nữ", team: "Tổ 4", desk: 18, flowers: 16 },
-      { id: "HS37", name: "Phan Tấn Phát", gender: "Nam", team: "Tổ 4", desk: 19, flowers: 12 },
-      { id: "HS38", name: "Nguyễn Kiều Oanh", gender: "Nữ", team: "Tổ 4", desk: 19, flowers: 15 }
-    ];
+    const INITIAL_STUDENTS_LIST = [];
 
     let students = [];
-    let currentClassName = "Lớp 2A7";
-    let currentTeacherName = "LÊ THỊ VIỆT ANH";
+    let currentClassName = sessionStorage.getItem("lhp_class_name") || "Lớp của tôi";
+    let currentTeacherName = sessionStorage.getItem("lhp_teacher_name") || "Giáo viên";
     let currentFilteredTeam = "ALL";
     let currentSearchText = "";
     let targetUploadStudentId = null;
@@ -1158,6 +1428,7 @@
 
     // TRA CỨU TỪ TRANG CHỦ DÀNH CHO PHỤ HUYNH
     function handleWelcomeParentSearch() {
+      if (!window.secureAuth || !window.secureAuth.user) { alert('Vui lòng đăng nhập tài khoản giáo viên trước khi tra cứu dữ liệu lớp.'); return; }
       const input = document.getElementById('welcomeParentCodeInput').value.trim();
       if (!input) {
         alert('Vui lòng nhập mã con (Ví dụ: HS01 hoặc HP-HS01)!');
@@ -1175,6 +1446,7 @@
 
     // TRA CỨU MÃ NHANH DÀNH CHO PHỤ HUYNH KHI CẦN XEM BÉ KHÁC
     function handleParentQuickCodeSearch() {
+      if (!window.secureAuth || !window.secureAuth.user) { alert('Vui lòng đăng nhập tài khoản giáo viên trước khi tra cứu dữ liệu lớp.'); return; }
       const input = document.getElementById('parentQuickCodeInput').value.trim();
       if (!input) return;
       const cleanCode = input.replace(/^HP-/i, '').toUpperCase();
@@ -1269,7 +1541,7 @@
         val = val.replace(/\/+$/, ''); // Bỏ dấu gạch chéo cuối
       }
       customBaseUrl = val;
-      localStorage.setItem('lophanhphuc_base_url', customBaseUrl);
+      appStorage.setItem('lophanhphuc_base_url', customBaseUrl);
       closeSetBaseUrlModal();
       showToast('Đã lưu đường link web lớp học! Bây giờ nút sao chép link sẽ gửi đường link này.');
     }
@@ -1704,9 +1976,9 @@
     }
     function persistClassRegistry() {
       try {
-        localStorage.setItem(MULTI_CLASS_KEY, JSON.stringify(classRecords));
-        localStorage.setItem(MULTI_SCHOOLS_KEY, JSON.stringify(schools));
-        localStorage.setItem('lophanhphuc_active_class_id', activeClassId);
+        appStorage.setItem(MULTI_CLASS_KEY, JSON.stringify(classRecords));
+        appStorage.setItem(MULTI_SCHOOLS_KEY, JSON.stringify(schools));
+        appStorage.setItem('lophanhphuc_active_class_id', activeClassId);
       } catch (e) {
         console.error('Không thể lưu danh sách trường/lớp:', e);
         showToast('Bộ nhớ trình duyệt có thể đã đầy. Hãy sao lưu dữ liệu và giảm dung lượng ảnh.');
@@ -1717,13 +1989,13 @@
       if (active) active.data = currentClassSnapshot();
       persistClassRegistry();
       try {
-        localStorage.setItem('lophanhphuc_class_name', currentClassName);
-        localStorage.setItem('lophanhphuc_teacher_name', currentTeacherName);
-        localStorage.setItem('lophanhphuc_students_v4', JSON.stringify(students));
-        localStorage.setItem('lophanhphuc_crit_pos_v4', JSON.stringify(customCriteriaPos));
-        localStorage.setItem('lophanhphuc_crit_neg_v4', JSON.stringify(customCriteriaNeg));
-        localStorage.setItem('lophanhphuc_rewards_v4', JSON.stringify(customRewards));
-        localStorage.setItem('lophanhphuc_base_url', customBaseUrl || '');
+        appStorage.setItem('lophanhphuc_class_name', currentClassName);
+        appStorage.setItem('lophanhphuc_teacher_name', currentTeacherName);
+        appStorage.setItem('lophanhphuc_students_v4', JSON.stringify(students));
+        appStorage.setItem('lophanhphuc_crit_pos_v4', JSON.stringify(customCriteriaPos));
+        appStorage.setItem('lophanhphuc_crit_neg_v4', JSON.stringify(customCriteriaNeg));
+        appStorage.setItem('lophanhphuc_rewards_v4', JSON.stringify(customRewards));
+        appStorage.setItem('lophanhphuc_base_url', customBaseUrl || '');
       } catch (e) { console.error(e); }
     }
     function loadClassSnapshot(record) {
@@ -1762,8 +2034,8 @@
 
     function loadInitialData() {
       try {
-        const savedSchools = localStorage.getItem(MULTI_SCHOOLS_KEY);
-        const savedClasses = localStorage.getItem(MULTI_CLASS_KEY);
+        const savedSchools = appStorage.getItem(MULTI_SCHOOLS_KEY);
+        const savedClasses = appStorage.getItem(MULTI_CLASS_KEY);
         if (savedSchools && savedClasses) {
           schools = JSON.parse(savedSchools) || [];
           classRecords = JSON.parse(savedClasses) || [];
@@ -1772,26 +2044,26 @@
         if (!Array.isArray(classRecords)) classRecords = [];
 
         if (classRecords.length) {
-          activeClassId = localStorage.getItem('lophanhphuc_active_class_id') || classRecords[0].id;
+          activeClassId = appStorage.getItem('lophanhphuc_active_class_id') || classRecords[0].id;
           if (!classRecords.some(c => c.id === activeClassId)) activeClassId = classRecords[0].id;
           loadClassSnapshot(getActiveClassRecord());
           return;
         }
 
         // Lần đầu nâng cấp: lấy nguyên dữ liệu v4.9 làm lớp đầu tiên, không ghi đè danh sách.
-        const savedClassName = localStorage.getItem('lophanhphuc_class_name');
+        const savedClassName = appStorage.getItem('lophanhphuc_class_name');
         if (savedClassName) currentClassName = savedClassName;
-        const savedTeacherName = localStorage.getItem('lophanhphuc_teacher_name');
+        const savedTeacherName = appStorage.getItem('lophanhphuc_teacher_name');
         if (savedTeacherName) currentTeacherName = savedTeacherName;
-        const savedStudents = localStorage.getItem('lophanhphuc_students_v4');
+        const savedStudents = appStorage.getItem('lophanhphuc_students_v4');
         students = savedStudents ? JSON.parse(savedStudents) : cloneData(INITIAL_STUDENTS_LIST);
-        const savedPos = localStorage.getItem('lophanhphuc_crit_pos_v4');
+        const savedPos = appStorage.getItem('lophanhphuc_crit_pos_v4');
         if (savedPos) customCriteriaPos = JSON.parse(savedPos);
-        const savedNeg = localStorage.getItem('lophanhphuc_crit_neg_v4');
+        const savedNeg = appStorage.getItem('lophanhphuc_crit_neg_v4');
         if (savedNeg) customCriteriaNeg = JSON.parse(savedNeg);
-        const savedRewards = localStorage.getItem('lophanhphuc_rewards_v4');
+        const savedRewards = appStorage.getItem('lophanhphuc_rewards_v4');
         if (savedRewards) customRewards = JSON.parse(savedRewards);
-        const savedBaseUrl = localStorage.getItem('lophanhphuc_base_url');
+        const savedBaseUrl = appStorage.getItem('lophanhphuc_base_url');
         if (savedBaseUrl) customBaseUrl = savedBaseUrl;
 
         const school = { id: makeId('school'), name: 'Trường của tôi', location: '' };
@@ -1803,9 +2075,9 @@
         console.error('Lỗi nạp dữ liệu:', e);
         // Nếu dữ liệu đa lớp lỗi, không tự ghi đè khóa v4.9; ưu tiên phục hồi dữ liệu cũ.
         try {
-          currentClassName = localStorage.getItem('lophanhphuc_class_name') || currentClassName;
-          currentTeacherName = localStorage.getItem('lophanhphuc_teacher_name') || currentTeacherName;
-          const old = localStorage.getItem('lophanhphuc_students_v4');
+          currentClassName = appStorage.getItem('lophanhphuc_class_name') || currentClassName;
+          currentTeacherName = appStorage.getItem('lophanhphuc_teacher_name') || currentTeacherName;
+          const old = appStorage.getItem('lophanhphuc_students_v4');
           students = old ? JSON.parse(old) : cloneData(INITIAL_STUDENTS_LIST);
         } catch (_) { students = cloneData(INITIAL_STUDENTS_LIST); }
         if (!classRecords.length) {
@@ -1818,7 +2090,7 @@
     }
 
     function saveStudentsToStorage() {
-      try { localStorage.setItem('lophanhphuc_students_v4', JSON.stringify(students)); } catch (e) {}
+      try { appStorage.setItem('lophanhphuc_students_v4', JSON.stringify(students)); } catch (e) {}
       saveActiveClassSnapshot();
     }
 
@@ -2007,15 +2279,25 @@
     }
 
     function switchAuthTab(mode) {
+      if (window.secureAuth) window.secureAuth.mode = mode;
       const btnLog = document.getElementById('tabBtnLogin');
       const btnReg = document.getElementById('tabBtnRegister');
-      if (mode === 'login') {
-        btnLog.className = "flex-1 py-2 rounded-xl bg-white text-pink-600 shadow-sm";
-        btnReg.className = "flex-1 py-2 rounded-xl text-gray-500 hover:text-pink-600";
-      } else {
-        btnReg.className = "flex-1 py-2 rounded-xl bg-white text-pink-600 shadow-sm";
-        btnLog.className = "flex-1 py-2 rounded-xl text-gray-500 hover:text-pink-600";
-      }
+      const nameWrap = document.getElementById('authTeacherNameWrap');
+      const confirmWrap = document.getElementById('authConfirmPasswordWrap');
+      const submit = document.getElementById('authSubmitButton');
+      const reset = document.querySelector('[onclick="secureAuth.resetPassword()"]');
+      const isRegister = mode === 'register';
+      if (btnLog) btnLog.className = isRegister ? 'flex-1 py-2 rounded-xl text-gray-500 hover:text-pink-600' : 'flex-1 py-2 rounded-xl bg-white text-pink-600 shadow-sm';
+      if (btnReg) btnReg.className = isRegister ? 'flex-1 py-2 rounded-xl bg-white text-pink-600 shadow-sm' : 'flex-1 py-2 rounded-xl text-gray-500 hover:text-pink-600';
+      if (nameWrap) nameWrap.classList.toggle('hidden', !isRegister);
+      if (confirmWrap) confirmWrap.classList.toggle('hidden', !isRegister);
+      const nameInput = document.getElementById('authTeacherNameInput');
+      const confirmInput = document.getElementById('authConfirmPasswordInput');
+      if (nameInput) nameInput.required = isRegister;
+      if (confirmInput) confirmInput.required = isRegister;
+      if (submit) submit.innerText = isRegister ? '📝 TẠO TÀI KHOẢN GIÁO VIÊN' : '🔐 ĐĂNG NHẬP AN TOÀN';
+      if (reset) reset.classList.toggle('hidden', isRegister);
+      const status = document.getElementById('authStatusMessage'); if (status) status.textContent = '';
     }
 
     function togglePasswordVisibility() {
@@ -2025,17 +2307,15 @@
 
     function handleAuthSubmit(e) {
       e.preventDefault();
-      enterClassroomInstant();
+      if (window.secureAuth) window.secureAuth.handleSubmit(e);
     }
 
     function enterClassroomInstant() {
-      document.getElementById('welcomeScreen').classList.add('hidden');
-      renderAllViews();
-      showToast(`Chào mừng ${currentTeacherName} đã đến với ${currentClassName}! 🌸`);
+      alert('Vì lý do bảo mật dữ liệu học sinh, ứng dụng không cho phép vào lớp khi chưa đăng nhập.');
     }
 
     function logoutToWelcomeScreen() {
-      document.getElementById('welcomeScreen').classList.remove('hidden');
+      if (window.secureAuth) window.secureAuth.logout();
     }
 
     function updateClassTeacherDisplay() {
@@ -2066,8 +2346,8 @@
       }
       currentClassName = newClass;
       currentTeacherName = newTeacher;
-      localStorage.setItem('lophanhphuc_class_name', currentClassName);
-      localStorage.setItem('lophanhphuc_teacher_name', currentTeacherName);
+      appStorage.setItem('lophanhphuc_class_name', currentClassName);
+      appStorage.setItem('lophanhphuc_teacher_name', currentTeacherName);
       const activeRecord = getActiveClassRecord();
       if (activeRecord) { activeRecord.className = currentClassName; activeRecord.teacherName = currentTeacherName; if (activeRecord.data) { activeRecord.data.className = currentClassName; activeRecord.data.teacherName = currentTeacherName; } }
       saveActiveClassSnapshot();
@@ -2507,18 +2787,18 @@
           }
           if (imported.className) {
             currentClassName = imported.className;
-            localStorage.setItem('lophanhphuc_class_name', currentClassName);
+            appStorage.setItem('lophanhphuc_class_name', currentClassName);
           }
           if (imported.teacherName) {
             currentTeacherName = imported.teacherName;
-            localStorage.setItem('lophanhphuc_teacher_name', currentTeacherName);
+            appStorage.setItem('lophanhphuc_teacher_name', currentTeacherName);
           }
           if (imported.criteriaPos) customCriteriaPos = imported.criteriaPos;
           if (imported.criteriaNeg) customCriteriaNeg = imported.criteriaNeg;
           if (imported.rewards) customRewards = imported.rewards;
           if (imported.customBaseUrl) {
             customBaseUrl = imported.customBaseUrl;
-            localStorage.setItem('lophanhphuc_base_url', customBaseUrl);
+            appStorage.setItem('lophanhphuc_base_url', customBaseUrl);
           }
 
           updateClassTeacherDisplay();
@@ -2870,7 +3150,7 @@
         flowers: newFlowers,
         icon: newIcon
       });
-      localStorage.setItem('lophanhphuc_rewards_v4', JSON.stringify(customRewards));
+      appStorage.setItem('lophanhphuc_rewards_v4', JSON.stringify(customRewards));
       renderRewardItems();
       showToast(`Đã thêm món quà mới: ${newName}!`);
     }
@@ -3083,7 +3363,7 @@
       if (!newName) return;
       const newPoints = parseInt(prompt("Nhập số điểm cộng:", "5")) || 5;
       customCriteriaPos.push({ id: `pos_${Date.now()}`, icon: "⭐", name: newName, points: newPoints });
-      localStorage.setItem('lophanhphuc_crit_pos_v4', JSON.stringify(customCriteriaPos));
+      appStorage.setItem('lophanhphuc_crit_pos_v4', JSON.stringify(customCriteriaPos));
       renderHonorCriteriaButtons();
       showToast(`Đã thêm tiêu chí mới: ${newName} (+${newPoints} điểm)!`);
     }
