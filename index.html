@@ -168,7 +168,10 @@
         db: null, auth: null,
         async handleSubmit(event) {
           if (event) event.preventDefault();
-          if (!configReady || !firebaseReady) { status('Chưa cấu hình Firebase. Hãy làm theo README_SETUP_VI.md trước khi đăng nhập.', true); return; }
+          if (!firebase.apps.length) {
+  console.log("Firebase chưa khởi tạo, đang thử lại...");
+  firebase.initializeApp(FIREBASE_CONFIG);
+}
           const email = (document.getElementById('authEmailInput').value || '').trim().toLowerCase();
           const password = document.getElementById('authPasswordInput').value || '';
           const teacherName = (document.getElementById('authTeacherNameInput')?.value || '').trim();
