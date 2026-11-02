@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lớp Học Hạnh Phúc – Trợ lý chủ nhiệm</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./assets/css/styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -334,8 +334,7 @@
 
   <!-- AUDIO TIẾNG VỖ TAY -->
   <audio id="applauseAudioElement" preload="auto">
-    <source src="tieng_vo_tay_chao_mung_chuc_mung-www_tiengdong_com.mp3" type="audio/mpeg" />
-    <source src="https://tiengdong.com/wp-content/uploads/tieng-vo-tay-chao-mung-chuc-mung-www_tiengdong_com.mp3" type="audio/mpeg" />
+    <source src="./assets/audio/applause.mp3" type="audio/mpeg" />
   </audio>
 
   <!-- MÀN FLASH MÁY ẢNH -->
@@ -1828,18 +1827,15 @@
     }
 
     function fallbackPlayMp3Direct() {
-      const audioObj = new Audio('tieng_vo_tay_chao_mung_chuc_mung-www_tiengdong_com.mp3');
+      // Tệp âm thanh được đóng gói cùng dự án, hoạt động ổn định trên GitHub Pages.
+      const audioObj = new Audio('./assets/audio/applause.mp3');
+      audioObj.preload = 'auto';
       audioObj.volume = 1.0;
       audioObj.play().then(() => {
         showToast('👏 Tràng pháo tay chào mừng & chúc mừng vang dội!');
-      }).catch(() => {
-        const onlineAudio = new Audio('https://tiengdong.com/wp-content/uploads/tieng-vo-tay-chao-mung-chuc-mung-www_tiengdong_com.mp3');
-        onlineAudio.volume = 1.0;
-        onlineAudio.play().then(() => {
-          showToast('👏 Tràng pháo tay chào mừng & chúc mừng vang dội!');
-        }).catch(() => {
-          showToast('👏 Cả lớp cùng vỗ tay tuyên dương ròn rã!');
-        });
+      }).catch((error) => {
+        console.warn('Không thể phát tệp âm thanh vỗ tay:', error);
+        showToast('👏 Cả lớp cùng vỗ tay tuyên dương ròn rã!');
       });
     }
 
