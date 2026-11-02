@@ -1,0 +1,8 @@
+{
+  "name": "trolychunhiem",
+  "compatibility_date": "2024-11-02",
+  "assets": {
+    "directory": "./",
+    "not_found_handling": "single-page-application"
+  }
+}
