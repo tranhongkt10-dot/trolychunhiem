@@ -88,11 +88,72 @@
       let appReleased = false;
       let bootingUid = '';
       let firebaseReady = false;
+      const parentTokenFromUrl = (() => {
+        try {
+          const params = new URLSearchParams(window.location.search);
+          const token = params.get('ph') || '';
+          return /^[a-f0-9]{48}$/i.test(token) ? token : '';
+        } catch (_) { return ''; }
+      })();
+      const parentAccessRequested = !!parentTokenFromUrl;
+
       window.addEventListener = function(type, listener, options) {
         if (type === 'DOMContentLoaded' && !appReleased) { queuedDomReadyCallbacks.push(listener); return; }
         return originalAddEventListener(type, listener, options);
       };
       originalAddEventListener('DOMContentLoaded', () => { domReady = true; maybeReleaseApp(); }, { once: true });
+
+      if (parentAccessRequested) {
+        originalAddEventListener('DOMContentLoaded', async () => {
+          const welcome = document.getElementById('welcomeScreen');
+          if (welcome) welcome.classList.add('hidden');
+          const parentView = document.getElementById('parentDedicatedView');
+          if (parentView) parentView.classList.remove('hidden');
+          const quickSearch = document.getElementById('parentQuickCodeInput')?.parentElement;
+          if (quickSearch) quickSearch.classList.add('hidden');
+          const exitButton = document.querySelector('#parentDedicatedView button[onclick="exitParentDedicatedView()"]');
+          if (exitButton) exitButton.classList.add('hidden');
+          const title = document.getElementById('parentDedicatedStudentName');
+          if (title) title.textContent = 'Đang tải sổ liên lạc...';
+          try {
+            if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+            const db = firebase.firestore();
+            const snap = await db.collection('parentViews').doc(parentTokenFromUrl).get();
+            if (!snap.exists) throw new Error('Liên kết không tồn tại hoặc đã bị thu hồi.');
+            const data = snap.data() || {};
+            window.parentPortalSession = {
+              token: parentTokenFromUrl,
+              docRef: db.collection('parentViews').doc(parentTokenFromUrl),
+              data
+            };
+            document.getElementById('parentDedicatedStudentName').textContent = 'Bé: ' + (data.studentName || 'Học sinh');
+            document.getElementById('parentDedicatedClassInfo').textContent = (data.className || '') + ' • GVCN: ' + (data.teacherName || '');
+            document.getElementById('parentDedicatedCodeDisplay').textContent = 'Liên kết riêng';
+            document.getElementById('parentDedicatedAvatarImg').src = '';
+            const team = data.team || 'Chưa cập nhật tổ';
+            const teamEmoji = team === 'Tổ 1' ? '🐰' : team === 'Tổ 2' ? '🐻' : team === 'Tổ 3' ? '🐼' : '🦊';
+            document.getElementById('parentDedicatedTeamDisplay').textContent = teamEmoji + ' ' + team;
+            document.getElementById('parentDedicatedDeskDisplay').textContent = data.desk ? 'Bàn số ' + data.desk : 'Chưa xếp bàn';
+            const flowers = Number(data.flowers) || 0;
+            document.getElementById('parentDedicatedFlowerCount').textContent = '🌸 ' + flowers + ' Bông Hoa';
+            document.getElementById('parentDedicatedRankDisplay').textContent = flowers >= 14 ? '🏆 Xuất sắc' : flowers >= 11 ? '⭐ Chăm ngoan' : '🌱 Cố gắng';
+            document.getElementById('parentDedicatedTeacherNote').textContent = data.teacherNote || 'Cô giáo chưa gửi lời nhận xét.';
+            document.getElementById('parentDedicatedTeacherTime').textContent = data.teacherNoteTime || '';
+            document.getElementById('parentDedicatedReplyTextarea').value = data.parentReply || '';
+            const saveButton = document.querySelector('#parentDedicatedView button[onclick="saveParentDedicatedReply()"]');
+            if (saveButton) saveButton.disabled = false;
+          } catch (error) {
+            console.error('Không tải được sổ liên lạc phụ huynh:', error);
+            if (title) title.textContent = 'Không thể mở sổ liên lạc';
+            const note = document.getElementById('parentDedicatedTeacherNote');
+            if (note) note.textContent = error.message || 'Liên kết không hợp lệ hoặc chưa được cấp quyền.';
+            const reply = document.getElementById('parentDedicatedReplyTextarea');
+            if (reply) reply.disabled = true;
+            const saveButton = document.querySelector('#parentDedicatedView button[onclick="saveParentDedicatedReply()"]');
+            if (saveButton) saveButton.disabled = true;
+          }
+        }, { once: true });
+      }
 
       const status = (message, isError = false) => {
         const el = document.getElementById('authStatusMessage');
@@ -106,6 +167,7 @@
       const encodeKey = key => encodeURIComponent(key).replace(/\./g, '%2E');
 
       function maybeReleaseApp() {
+        if (parentAccessRequested) return;
         if (!domReady || appReleased || !window.secureAuth || !window.secureAuth.user || !window.secureAuth.cloudReady) return;
         appReleased = true;
         const callbacks = queuedDomReadyCallbacks.slice(); queuedDomReadyCallbacks = [];
@@ -1548,9 +1610,27 @@
       document.getElementById('parentDedicatedReplyTextarea').value = text;
     }
 
-    function saveParentDedicatedReply() {
-      if (!activeDedicatedStudent) return;
+    async function saveParentDedicatedReply() {
       const text = document.getElementById('parentDedicatedReplyTextarea').value.trim();
+      if (window.parentPortalSession) {
+        if (text.length > 1200) { alert('Lời nhắn tối đa 1.200 ký tự.'); return; }
+        try {
+          const now = new Date();
+          const timeText = now.toLocaleString('vi-VN');
+          await window.parentPortalSession.docRef.update({
+            parentReply: text,
+            parentReplyTime: timeText
+          });
+          window.parentPortalSession.data.parentReply = text;
+          window.parentPortalSession.data.parentReplyTime = timeText;
+          showToast('Đã gửi lời nhắn đến cô giáo. ❤️');
+        } catch (error) {
+          console.error('Không gửi được phản hồi phụ huynh:', error);
+          alert('Chưa gửi được lời nhắn. Vui lòng thử lại sau. ' + (error.message || ''));
+        }
+        return;
+      }
+      if (!activeDedicatedStudent) return;
       activeDedicatedStudent.parentReply = text || "Gia đình cảm ơn cô giáo nhiều ạ! Ở nhà bố mẹ sẽ cùng đồng hành với con. ❤️";
       const now = new Date();
       activeDedicatedStudent.parentReplyTime = `Hôm nay, ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -1599,47 +1679,77 @@
     }
 
     // SAO CHÉP ĐƯỜNG LINK THỰC TẾ CHO PHỤ HUYNH
-    function copyShareableLinkForParent(studentId) {
+    function createParentAccessToken() {
+      const bytes = new Uint8Array(24);
+      if (!window.crypto || !window.crypto.getRandomValues) throw new Error('Trình duyệt không hỗ trợ tạo mã liên kết bảo mật.');
+      window.crypto.getRandomValues(bytes);
+      return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function publishStudentParentView(student, token) {
+      if (!window.secureAuth?.user || !window.secureAuth.cloudReady) throw new Error('Cô cần đăng nhập tài khoản giáo viên trước.');
+      const db = firebase.firestore();
+      const ref = db.collection('parentViews').doc(token);
+      const data = {
+        teacherUid: window.secureAuth.user.uid,
+        studentName: String(student.name || 'Học sinh').slice(0, 120),
+        className: String(currentClassName || '').slice(0, 80),
+        teacherName: String(currentTeacherName || '').slice(0, 120),
+        team: String(student.team || ''),
+        desk: Math.max(0, Math.floor(Number(student.desk) || 0)),
+        flowers: Math.max(0, Math.floor(Number(student.flowers) || 0)),
+        teacherNote: String(student.teacherNote || '').slice(0, 1200),
+        teacherNoteTime: String(student.teacherNoteTime || '').slice(0, 80),
+        updatedAt: new Date().toISOString()
+      };
+      // merge để không ghi đè lời phản hồi mà phụ huynh đã gửi.
+      await ref.set(data, { merge: true });
+      return ref;
+    }
+
+    async function copyShareableLinkForParent(studentId) {
       const s = students.find(x => x.id === studentId);
       if (!s) return;
-
-      let parentDirectLink = "";
-
-      // 1. Nếu cô đã cấu hình link web thực tế (Tiiny.host, Netlify, web trường...)
-      if (customBaseUrl) {
-        parentDirectLink = `${customBaseUrl}/?ph=HP-${s.id}`;
-      } else {
-        // 2. Tự động kiểm tra URL hiện tại
-        let currentUrl = window.location.href.split('?')[0].split('#')[0];
-        
-        // Nếu đang chạy trên URL ảo "blob:" trong sandbox Gemini, nhắc nhở cô giáo
-        if (currentUrl.startsWith('blob:')) {
-          const userConfirm = confirm(
-            `⚠️ LƯU Ý CHO CÔ GIÁO:\n\nTrang web hiện đang mở ở chế độ xem trước nội bộ (chứa chữ "blob:"). Phụ huynh ở nhà KHÔNG MỞ ĐƯỢC đường link blob này.\n\n👉 GIẢI PHÁP:\n1. Bấm nút "OK" để cài đặt link web thật của lớp (khi cô đã đưa tệp index.html lên Tiiny.host, Netlify...)\n2. Hoặc phụ huynh chỉ cần mở tệp và gõ mã "HP-${s.id}" ở ô tra cứu ngoài trang chủ!\n\nCô có muốn bấm cài đặt link web ngay bây giờ không?`
-          );
-          if (userConfirm) {
-            openSetBaseUrlModal();
-            return;
-          }
-        }
-
-        // Làm sạch URL nếu bị lỗi trùng domain
-        if (currentUrl.includes('googhttp')) {
-          currentUrl = currentUrl.replace(/https?:\/\/[^/]+(?=https?:\/\/)/i, '');
-        }
-        parentDirectLink = `${currentUrl}?ph=HP-${s.id}`;
+      if (!window.secureAuth?.user || !window.secureAuth.cloudReady) {
+        alert('Cô cần đăng nhập tài khoản giáo viên để tạo liên kết phụ huynh.');
+        return;
       }
 
-      const shareContent = `🌸 SỔ LIÊN LẠC ĐIỆN TỬ - ${currentClassName}\nKính gửi phụ huynh bé: ${s.name}\nCô giáo xin gửi link tra cứu tình hình học tập, điểm hoa và lời nhắn của con:\n👉 ${parentDirectLink}\n(Mã bảo mật của con: HP-${s.id})\nBố mẹ bấm vào link để xem và để lại lời nhắn trao đổi cùng cô giáo nhé! ❤️`;
+      try {
+        if (!s.parentViewToken) s.parentViewToken = createParentAccessToken();
+        await publishStudentParentView(s, s.parentViewToken);
+        saveStudentsToStorage();
 
-      const tempInput = document.createElement("textarea");
-      tempInput.value = shareContent;
-      document.body.appendChild(tempInput);
-      tempInput.select();
-      document.execCommand("copy");
-      document.body.removeChild(tempInput);
+        let base = customBaseUrl || window.location.href.split('?')[0].split('#')[0];
+        if (base.startsWith('blob:')) {
+          if (confirm('Trang đang mở ở địa chỉ xem trước blob, phụ huynh không thể truy cập. Cô hãy đưa ứng dụng lên website chính thức rồi tạo lại liên kết.')) {
+            openSetBaseUrlModal();
+          }
+          return;
+        }
+        if (base.includes('googhttp')) base = base.replace(/https?:\/\/[^/]+(?=https?:\/\/)/i, '');
+        const parentDirectLink = base.replace(/\/+$/, '') + '/?ph=' + encodeURIComponent(s.parentViewToken);
+        const shareContent = `🌸 SỔ LIÊN LẠC ĐIỆN TỬ - ${currentClassName}
+Kính gửi phụ huynh bé: ${s.name}
+Cô giáo gửi đường link riêng để xem thông tin học tập và gửi lời nhắn:
+👉 ${parentDirectLink}
+Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công khai. ❤️`;
 
-      showToast(`Đã sao chép tin nhắn kèm link riêng của bé ${s.name}! Cô dán vào Zalo gửi cho bố mẹ nhé.`);
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(shareContent);
+        } else {
+          const tempInput = document.createElement('textarea');
+          tempInput.value = shareContent;
+          document.body.appendChild(tempInput);
+          tempInput.select();
+          document.execCommand('copy');
+          document.body.removeChild(tempInput);
+        }
+        showToast('Đã tạo và sao chép liên kết riêng cho phụ huynh bé ' + s.name + '.');
+      } catch (error) {
+        console.error('Không tạo được liên kết phụ huynh:', error);
+        alert('Chưa tạo được liên kết. Kiểm tra quyền Firestore parentViews và thử lại. ' + (error.message || ''));
+      }
     }
 
     // RENDER CỔNG PHỤ HUYNH
