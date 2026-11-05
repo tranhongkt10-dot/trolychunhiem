@@ -113,6 +113,8 @@
           if (quickSearch) quickSearch.classList.add('hidden');
           const exitButton = document.querySelector('#parentDedicatedView button[onclick="exitParentDedicatedView()"]');
           if (exitButton) exitButton.classList.add('hidden');
+          const zaloButton = document.querySelector('#parentDedicatedView button[onclick="forwardReplyViaZalo()"]');
+          if (zaloButton) zaloButton.classList.add('hidden');
           const title = document.getElementById('parentDedicatedStudentName');
           if (title) title.textContent = 'Đang tải sổ liên lạc...';
           try {
@@ -2304,6 +2306,17 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     function saveStudentsToStorage() {
       try { appStorage.setItem('lophanhphuc_students_v4', JSON.stringify(students)); } catch (e) {}
       saveActiveClassSnapshot();
+
+      // Đồng bộ phần thông tin được phép công khai tới từng sổ phụ huynh.
+      // Hàm publish dùng merge:true nên không ghi đè phản hồi của gia đình.
+      if (window.secureAuth?.user && window.secureAuth.cloudReady && typeof publishStudentParentView === 'function') {
+        students.forEach(student => {
+          if (student.parentViewToken) {
+            publishStudentParentView(student, student.parentViewToken)
+              .catch(error => console.error('Không đồng bộ được sổ phụ huynh của', student.id, error));
+          }
+        });
+      }
     }
 
     function openClassManager() {
