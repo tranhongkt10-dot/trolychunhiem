@@ -1994,80 +1994,123 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     // ÂM THANH LỚP HỌC: vỗ tay, tiếng quay vòng và pháo hoa nhẹ bằng Web Audio.
     // Không phụ thuộc MP3 ngoài; âm thanh được mở khóa từ thao tác chạm/bấm của giáo viên.
     function playApplauseSound() {
-      playCelebrationSound();
+      return playCelebrationSound();
     }
 
-    function playCelebrationSound() {
-      if (typeof confetti === 'function') {
-        confetti({ particleCount: 70, spread: 68, startVelocity: 34, origin: { y: 0.68, x: 0.18 }, scalar: 0.9 });
-        confetti({ particleCount: 70, spread: 68, startVelocity: 34, origin: { y: 0.68, x: 0.82 }, scalar: 0.9 });
-        setTimeout(() => confetti({ particleCount: 45, spread: 100, startVelocity: 24, origin: { y: 0.25, x: 0.5 }, ticks: 150, scalar: 0.75 }), 260);
+    // Âm thanh chúc mừng: giai điệu ngắn + vỗ tay + pháo hoa nhẹ.
+    // AudioContext.resume() được gọi ngay khi giáo viên bấm nút trò chơi.
+    async function playCelebrationSound() {
+      const ready = await unlockClassroomAudio();
+      const ctx = classroomAudioContext;
+      if (!ready || !ctx || ctx.state !== 'running') {
+        console.warn('Trình duyệt chưa mở khóa âm thanh lớp học.');
+        showToast('Thiết bị đang chặn âm thanh. Cô hãy chạm màn hình rồi thử lại.');
+        return false;
       }
 
-      // Trình duyệt cần được mở khóa bằng thao tác trực tiếp của người dùng.
-      unlockClassroomAudio().then(ready => {
-        const ctx = classroomAudioContext;
-        if (!ready || !ctx || ctx.state !== 'running') {
-          console.warn('Âm thanh chưa được trình duyệt cho phép.');
-          showToast('🎉 Chúc mừng! (Thiết bị đang chặn âm thanh)');
-          return;
-        }
-        const now = ctx.currentTime + 0.035;
+      try {
+        const now = ctx.currentTime + 0.04;
 
-        // Chuỗi tiếng vỗ tay ngắn, ấm và không quá lớn.
-        const duration = 1.75;
-        const length = Math.floor(ctx.sampleRate * duration);
-        const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
-        const samples = buffer.getChannelData(0);
-        for (let i = 0; i < length; i++) samples[i] = (Math.random() * 2 - 1) * (Math.random() > 0.985 ? 1 : 0.35);
-        for (let i = 0; i < 24; i++) {
-          const at = now + i * (0.055 + Math.random() * 0.035);
-          const source = ctx.createBufferSource();
-          source.buffer = buffer;
-          const filter = ctx.createBiquadFilter();
-          filter.type = 'bandpass';
-          filter.frequency.value = 900 + Math.random() * 1500;
-          filter.Q.value = 0.65;
-          const gain = ctx.createGain();
-          const level = 0.045 + Math.random() * 0.055;
-          gain.gain.setValueAtTime(0.0001, at);
-          gain.gain.linearRampToValueAtTime(level, at + 0.004);
-          gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.045 + Math.random() * 0.035);
-          source.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
-          source.start(at); source.stop(at + 0.09);
-        }
-
-        // Ba tiếng pháo hoa rất nhẹ: tiếng vút lên + tiếng nổ lách tách dịu.
-        [0.12, 0.62, 1.08].forEach((delay, index) => {
-          const launchAt = now + delay;
+        // Giai điệu vui ngắn, âm lượng vừa phải.
+        const melody = [
+          { f: 659.25, t: 0.00, d: 0.20 },
+          { f: 783.99, t: 0.22, d: 0.20 },
+          { f: 987.77, t: 0.44, d: 0.24 },
+          { f: 783.99, t: 0.72, d: 0.18 },
+          { f: 1046.50, t: 0.94, d: 0.42 }
+        ];
+        melody.forEach(note => {
           const osc = ctx.createOscillator();
-          const whistleGain = ctx.createGain();
+          const gain = ctx.createGain();
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(420 + index * 90, launchAt);
-          osc.frequency.exponentialRampToValueAtTime(1150 + index * 100, launchAt + 0.32);
-          whistleGain.gain.setValueAtTime(0.0001, launchAt);
-          whistleGain.gain.linearRampToValueAtTime(0.035, launchAt + 0.16);
-          whistleGain.gain.exponentialRampToValueAtTime(0.0001, launchAt + 0.34);
-          osc.connect(whistleGain); whistleGain.connect(ctx.destination);
-          osc.start(launchAt); osc.stop(launchAt + 0.36);
-
-          const popAt = launchAt + 0.34;
-          const pop = ctx.createBufferSource();
-          const popBuffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.42), ctx.sampleRate);
-          const popData = popBuffer.getChannelData(0);
-          for (let j = 0; j < popData.length; j++) popData[j] = (Math.random() * 2 - 1) * (1 - j / popData.length);
-          pop.buffer = popBuffer;
-          const popFilter = ctx.createBiquadFilter();
-          popFilter.type = 'highpass'; popFilter.frequency.value = 1700;
-          const popGain = ctx.createGain();
-          popGain.gain.setValueAtTime(0.0001, popAt);
-          popGain.gain.linearRampToValueAtTime(0.055, popAt + 0.012);
-          popGain.gain.exponentialRampToValueAtTime(0.0001, popAt + 0.34);
-          pop.connect(popFilter); popFilter.connect(popGain); popGain.connect(ctx.destination);
-          pop.start(popAt); pop.stop(popAt + 0.38);
+          osc.frequency.setValueAtTime(note.f, now + note.t);
+          gain.gain.setValueAtTime(0.0001, now + note.t);
+          gain.gain.linearRampToValueAtTime(0.12, now + note.t + 0.025);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + note.t + note.d);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + note.t);
+          osc.stop(now + note.t + note.d + 0.02);
         });
-        showToast('👏 Vỗ tay và pháo hoa chúc mừng!');
-      }).catch(error => console.warn('Không phát được âm thanh chúc mừng:', error));
+
+        // Tiếng vỗ tay ngắn, không quá lớn.
+        const clapDuration = 0.055;
+        const clapLength = Math.floor(ctx.sampleRate * clapDuration);
+        const clapBuffer = ctx.createBuffer(1, clapLength, ctx.sampleRate);
+        const clapData = clapBuffer.getChannelData(0);
+        for (let i = 0; i < clapLength; i++) {
+          const fade = 1 - i / clapLength;
+          clapData[i] = (Math.random() * 2 - 1) * fade;
+        }
+        for (let i = 0; i < 18; i++) {
+          const at = now + 0.18 + i * (0.065 + Math.random() * 0.025);
+          const source = ctx.createBufferSource();
+          const filter = ctx.createBiquadFilter();
+          const gain = ctx.createGain();
+          source.buffer = clapBuffer;
+          filter.type = 'bandpass';
+          filter.frequency.value = 1100 + Math.random() * 1000;
+          filter.Q.value = 0.7;
+          gain.gain.setValueAtTime(0.0001, at);
+          gain.gain.linearRampToValueAtTime(0.045, at + 0.004);
+          gain.gain.exponentialRampToValueAtTime(0.0001, at + clapDuration);
+          source.connect(filter);
+          filter.connect(gain);
+          gain.connect(ctx.destination);
+          source.start(at);
+          source.stop(at + clapDuration + 0.01);
+        }
+
+        // Hai tiếng pháo hoa dịu: tiếng vút lên và tiếng lách tách nhỏ.
+        [0.15, 0.82].forEach((delay, index) => {
+          const at = now + delay;
+          const osc = ctx.createOscillator();
+          const whistle = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(480 + index * 100, at);
+          osc.frequency.exponentialRampToValueAtTime(1250 + index * 80, at + 0.28);
+          whistle.gain.setValueAtTime(0.0001, at);
+          whistle.gain.linearRampToValueAtTime(0.025, at + 0.13);
+          whistle.gain.exponentialRampToValueAtTime(0.0001, at + 0.30);
+          osc.connect(whistle);
+          whistle.connect(ctx.destination);
+          osc.start(at);
+          osc.stop(at + 0.32);
+
+          const popAt = at + 0.30;
+          const pop = ctx.createBufferSource();
+          const popBuffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.16), ctx.sampleRate);
+          const popData = popBuffer.getChannelData(0);
+          for (let i = 0; i < popData.length; i++) popData[i] = (Math.random() * 2 - 1) * (1 - i / popData.length);
+          const popFilter = ctx.createBiquadFilter();
+          const popGain = ctx.createGain();
+          pop.buffer = popBuffer;
+          popFilter.type = 'highpass';
+          popFilter.frequency.value = 1800;
+          popGain.gain.setValueAtTime(0.0001, popAt);
+          popGain.gain.linearRampToValueAtTime(0.035, popAt + 0.01);
+          popGain.gain.exponentialRampToValueAtTime(0.0001, popAt + 0.15);
+          pop.connect(popFilter);
+          popFilter.connect(popGain);
+          popGain.connect(ctx.destination);
+          pop.start(popAt);
+          pop.stop(popAt + 0.17);
+        });
+
+        if (typeof confetti === 'function') {
+          confetti({ particleCount: 55, spread: 65, startVelocity: 30, origin: { y: 0.68, x: 0.18 }, scalar: 0.85 });
+          confetti({ particleCount: 55, spread: 65, startVelocity: 30, origin: { y: 0.68, x: 0.82 }, scalar: 0.85 });
+          setTimeout(() => {
+            if (typeof confetti === 'function') confetti({ particleCount: 35, spread: 90, startVelocity: 22, origin: { y: 0.25, x: 0.5 }, ticks: 120, scalar: 0.7 });
+          }, 250);
+        }
+        showToast('🎵 Chúc mừng! Có nhạc, vỗ tay và pháo hoa nhẹ.');
+        return true;
+      } catch (error) {
+        console.error('Lỗi phát âm thanh chúc mừng:', error);
+        showToast('Chưa phát được âm thanh. Cô kiểm tra âm lượng thiết bị nhé.');
+        return false;
+      }
     }
 
     function playWheelTick(progress) {
@@ -3241,9 +3284,9 @@ function switchCallingMode(mode) {
       ctx.fillText('🌸', cx, cy);
     }
 
-    function spinLuckyWheel() {
+    async function spinLuckyWheel() {
       if (luckyWheelSpinning || !students.length) return;
-      unlockClassroomAudio();
+      await unlockClassroomAudio();
       luckyWheelSpinning = true;
 
       const spins = 6 + Math.random() * 4;
@@ -3304,8 +3347,8 @@ function switchCallingMode(mode) {
       const pond = document.getElementById('duckPondContainer');
       if (!pond) return;
       pond.innerHTML = students.map((s, idx) => `
-        <div onclick="shootDuck(${idx})" class="p-3 bg-white/90 hover:bg-amber-100 rounded-2xl text-center border-2 border-amber-300 cursor-pointer hover:scale-110 active:scale-95 transition-all shadow-md">
-          <div class="text-3xl animate-bounce" style="animation-delay: ${idx * 0.1}s">🦆</div>
+        <div onclick="shootDuck(${idx})" class="p-3 bg-white/90 hover:bg-amber-100 rounded-2xl text-center border-2 border-amber-300 cursor-pointer shadow-md">
+          <div class="text-3xl select-none" aria-hidden="true">🦆</div>
           <div class="text-[10px] font-black text-amber-900 mt-1">Số ${idx + 1}</div>
         </div>
       `).join('');
