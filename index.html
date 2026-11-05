@@ -1876,17 +1876,57 @@
       fallbackPlayMp3Direct();
     }
 
-    function fallbackPlayMp3Direct() {
-      // Tệp âm thanh được đóng gói cùng dự án, hoạt động ổn định trên GitHub Pages.
-      const audioObj = new Audio('./assets/audio/applause.mp3');
-      audioObj.preload = 'auto';
-      audioObj.volume = 1.0;
-      audioObj.play().then(() => {
-        showToast('👏 Tràng pháo tay chào mừng & chúc mừng vang dội!');
-      }).catch((error) => {
-        console.warn('Không thể phát tệp âm thanh vỗ tay:', error);
-        showToast('👏 Cả lớp cùng vỗ tay tuyên dương ròn rã!');
-      });
+    async function fallbackPlayMp3Direct() {
+      // Dự án hiện chưa có assets/audio/applause.mp3, vì vậy tạo hiệu ứng vỗ tay
+      // bằng Web Audio để không phụ thuộc tệp âm thanh bên ngoài.
+      const ready = await unlockClassroomAudio();
+      const ctx = classroomAudioContext;
+      if (!ready || !ctx || ctx.state !== 'running') {
+        console.warn('Không thể mở khóa âm thanh vỗ tay trên thiết bị này.');
+        showToast('👏 Cả lớp cùng vỗ tay tuyên dương!');
+        return;
+      }
+
+      try {
+        const duration = 2.4;
+        const sampleRate = ctx.sampleRate;
+        const noiseBuffer = ctx.createBuffer(1, sampleRate, sampleRate);
+        const channel = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < channel.length; i++) channel[i] = Math.random() * 2 - 1;
+
+        const source = ctx.createBufferSource();
+        source.buffer = noiseBuffer;
+        source.loop = true;
+
+        const bandPass = ctx.createBiquadFilter();
+        bandPass.type = 'bandpass';
+        bandPass.frequency.value = 1900;
+        bandPass.Q.value = 0.75;
+
+        const highPass = ctx.createBiquadFilter();
+        highPass.type = 'highpass';
+        highPass.frequency.value = 650;
+
+        const gain = ctx.createGain();
+        const start = ctx.currentTime + 0.04;
+        gain.gain.setValueAtTime(0.0001, start);
+        for (let t = 0; t < duration; t += 0.075) {
+          const level = 0.035 + Math.random() * 0.075;
+          gain.gain.setValueAtTime(level, start + t);
+        }
+        gain.gain.setValueAtTime(0.0001, start + duration);
+
+        source.connect(bandPass);
+        bandPass.connect(highPass);
+        highPass.connect(gain);
+        gain.connect(ctx.destination);
+        source.start(start);
+        source.stop(start + duration + 0.03);
+        showToast('👏 Tràng pháo tay chúc mừng!');
+      } catch (error) {
+        console.error('Không tạo được hiệu ứng vỗ tay:', error);
+        showToast('👏 Cả lớp cùng vỗ tay tuyên dương!');
+      }
     }
 
     // Dùng một AudioContext dùng chung; mở khóa âm thanh ngay trong thao tác bấm của giáo viên.
