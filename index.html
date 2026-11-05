@@ -1759,6 +1759,34 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       const container = document.getElementById('parentPortalCards');
       if (!container) return;
 
+      // Lấy phản hồi mới nhất từ các sổ phụ huynh đã phát hành.
+      // Đọc từng token cụ thể, không truy vấn/liệt kê toàn bộ parentViews.
+      if (window.secureAuth?.user && window.secureAuth.cloudReady && !window.parentReplySyncBusy) {
+        const linkedStudents = students.filter(s => s.parentViewToken);
+        if (linkedStudents.length) {
+          window.parentReplySyncBusy = true;
+          Promise.all(linkedStudents.map(async student => {
+            try {
+              const snap = await firebase.firestore().collection('parentViews').doc(student.parentViewToken).get();
+              if (!snap.exists) return false;
+              const data = snap.data() || {};
+              let changed = false;
+              if ((student.parentReply || '') !== (data.parentReply || '')) { student.parentReply = data.parentReply || ''; changed = true; }
+              if ((student.parentReplyTime || '') !== (data.parentReplyTime || '')) { student.parentReplyTime = data.parentReplyTime || ''; changed = true; }
+              return changed;
+            } catch (error) {
+              console.warn('Không tải được phản hồi phụ huynh của', student.id, error);
+              return false;
+            }
+          })).then(results => {
+            if (results.some(Boolean)) {
+              try { appStorage.setItem('lophanhphuc_students_v4', JSON.stringify(students)); } catch (_) {}
+              renderParentPortal();
+            }
+          }).finally(() => { window.parentReplySyncBusy = false; });
+        }
+      }
+
       const filtered = students.filter(s => {
         const matchTeam = (currentParentFilteredTeam === 'ALL') || (s.team === currentParentFilteredTeam);
         const parentCode = `HP-${s.id}`.toLowerCase();
