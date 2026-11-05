@@ -184,7 +184,7 @@
       async function syncProfile(user) {
         const ref = profileRef(user.uid);
         const snap = await ref.get();
-        const isVerifiedAdmin = user.uid === ADMIN_UID && (user.email || '').toLowerCase() === ADMIN_EMAIL && user.emailVerified === true;
+        const isVerifiedAdmin = user.uid === ADMIN_UID && user.emailVerified === true;
         if (!snap.exists) {
           const profile = { uid: user.uid, email: user.email || '', displayName: user.displayName || (isVerifiedAdmin ? 'Cô Lê Thị Việt Anh' : 'Giáo viên'), role: isVerifiedAdmin ? 'admin' : 'teacher', createdAt: firebase.firestore.FieldValue.serverTimestamp() };
           await ref.set(profile);
@@ -371,7 +371,7 @@
           const profile = await syncProfile(user);
           window.secureAuth.profile = profile;
           if (typeof currentTeacherName !== 'undefined' && profile.displayName) currentTeacherName = profile.displayName;
-          window.secureAuth.isAdmin = user.uid === ADMIN_UID && (user.email || '').toLowerCase() === ADMIN_EMAIL && user.emailVerified === true;
+          window.secureAuth.isAdmin = user.uid === ADMIN_UID && user.emailVerified === true;
           await readAndPrepareUserData(user, profile);
           window.secureAuth.cloudReady = true;
           sessionStorage.setItem('lhp_cloud_ready_uid', user.uid);
@@ -1991,82 +1991,100 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       if (label) label.innerText = `${val} dB`;
     }
 
-    // PHÁT TỆP MP3 TIẾNG VỖ TAY
+    // ÂM THANH LỚP HỌC: vỗ tay, tiếng quay vòng và pháo hoa nhẹ bằng Web Audio.
+    // Không phụ thuộc MP3 ngoài; âm thanh được mở khóa từ thao tác chạm/bấm của giáo viên.
     function playApplauseSound() {
-      if (typeof confetti === 'function') {
-        confetti({ particleCount: 90, spread: 75, origin: { y: 0.7, x: 0.2 } });
-        confetti({ particleCount: 90, spread: 75, origin: { y: 0.7, x: 0.8 } });
-      }
-
-      const audioElement = document.getElementById('applauseAudioElement');
-      if (audioElement) {
-        audioElement.currentTime = 0;
-        audioElement.volume = 1.0;
-        const playPromise = audioElement.play();
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            showToast('👏 Tràng pháo tay chào mừng & chúc mừng vang dội!');
-            return;
-          }).catch(() => {
-            fallbackPlayMp3Direct();
-          });
-          return;
-        }
-      }
-      fallbackPlayMp3Direct();
+      playCelebrationSound();
     }
 
-    async function fallbackPlayMp3Direct() {
-      // Dự án hiện chưa có assets/audio/applause.mp3, vì vậy tạo hiệu ứng vỗ tay
-      // bằng Web Audio để không phụ thuộc tệp âm thanh bên ngoài.
-      const ready = await unlockClassroomAudio();
-      const ctx = classroomAudioContext;
-      if (!ready || !ctx || ctx.state !== 'running') {
-        console.warn('Không thể mở khóa âm thanh vỗ tay trên thiết bị này.');
-        showToast('👏 Cả lớp cùng vỗ tay tuyên dương!');
-        return;
+    function playCelebrationSound() {
+      if (typeof confetti === 'function') {
+        confetti({ particleCount: 70, spread: 68, startVelocity: 34, origin: { y: 0.68, x: 0.18 }, scalar: 0.9 });
+        confetti({ particleCount: 70, spread: 68, startVelocity: 34, origin: { y: 0.68, x: 0.82 }, scalar: 0.9 });
+        setTimeout(() => confetti({ particleCount: 45, spread: 100, startVelocity: 24, origin: { y: 0.25, x: 0.5 }, ticks: 150, scalar: 0.75 }), 260);
       }
 
-      try {
-        const duration = 2.4;
-        const sampleRate = ctx.sampleRate;
-        const noiseBuffer = ctx.createBuffer(1, sampleRate, sampleRate);
-        const channel = noiseBuffer.getChannelData(0);
-        for (let i = 0; i < channel.length; i++) channel[i] = Math.random() * 2 - 1;
-
-        const source = ctx.createBufferSource();
-        source.buffer = noiseBuffer;
-        source.loop = true;
-
-        const bandPass = ctx.createBiquadFilter();
-        bandPass.type = 'bandpass';
-        bandPass.frequency.value = 1900;
-        bandPass.Q.value = 0.75;
-
-        const highPass = ctx.createBiquadFilter();
-        highPass.type = 'highpass';
-        highPass.frequency.value = 650;
-
-        const gain = ctx.createGain();
-        const start = ctx.currentTime + 0.04;
-        gain.gain.setValueAtTime(0.0001, start);
-        for (let t = 0; t < duration; t += 0.075) {
-          const level = 0.035 + Math.random() * 0.075;
-          gain.gain.setValueAtTime(level, start + t);
+      // Trình duyệt cần được mở khóa bằng thao tác trực tiếp của người dùng.
+      unlockClassroomAudio().then(ready => {
+        const ctx = classroomAudioContext;
+        if (!ready || !ctx || ctx.state !== 'running') {
+          console.warn('Âm thanh chưa được trình duyệt cho phép.');
+          showToast('🎉 Chúc mừng! (Thiết bị đang chặn âm thanh)');
+          return;
         }
-        gain.gain.setValueAtTime(0.0001, start + duration);
+        const now = ctx.currentTime + 0.035;
 
-        source.connect(bandPass);
-        bandPass.connect(highPass);
-        highPass.connect(gain);
-        gain.connect(ctx.destination);
-        source.start(start);
-        source.stop(start + duration + 0.03);
-        showToast('👏 Tràng pháo tay chúc mừng!');
-      } catch (error) {
-        console.error('Không tạo được hiệu ứng vỗ tay:', error);
-        showToast('👏 Cả lớp cùng vỗ tay tuyên dương!');
-      }
+        // Chuỗi tiếng vỗ tay ngắn, ấm và không quá lớn.
+        const duration = 1.75;
+        const length = Math.floor(ctx.sampleRate * duration);
+        const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+        const samples = buffer.getChannelData(0);
+        for (let i = 0; i < length; i++) samples[i] = (Math.random() * 2 - 1) * (Math.random() > 0.985 ? 1 : 0.35);
+        for (let i = 0; i < 24; i++) {
+          const at = now + i * (0.055 + Math.random() * 0.035);
+          const source = ctx.createBufferSource();
+          source.buffer = buffer;
+          const filter = ctx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.value = 900 + Math.random() * 1500;
+          filter.Q.value = 0.65;
+          const gain = ctx.createGain();
+          const level = 0.045 + Math.random() * 0.055;
+          gain.gain.setValueAtTime(0.0001, at);
+          gain.gain.linearRampToValueAtTime(level, at + 0.004);
+          gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.045 + Math.random() * 0.035);
+          source.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+          source.start(at); source.stop(at + 0.09);
+        }
+
+        // Ba tiếng pháo hoa rất nhẹ: tiếng vút lên + tiếng nổ lách tách dịu.
+        [0.12, 0.62, 1.08].forEach((delay, index) => {
+          const launchAt = now + delay;
+          const osc = ctx.createOscillator();
+          const whistleGain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(420 + index * 90, launchAt);
+          osc.frequency.exponentialRampToValueAtTime(1150 + index * 100, launchAt + 0.32);
+          whistleGain.gain.setValueAtTime(0.0001, launchAt);
+          whistleGain.gain.linearRampToValueAtTime(0.035, launchAt + 0.16);
+          whistleGain.gain.exponentialRampToValueAtTime(0.0001, launchAt + 0.34);
+          osc.connect(whistleGain); whistleGain.connect(ctx.destination);
+          osc.start(launchAt); osc.stop(launchAt + 0.36);
+
+          const popAt = launchAt + 0.34;
+          const pop = ctx.createBufferSource();
+          const popBuffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.42), ctx.sampleRate);
+          const popData = popBuffer.getChannelData(0);
+          for (let j = 0; j < popData.length; j++) popData[j] = (Math.random() * 2 - 1) * (1 - j / popData.length);
+          pop.buffer = popBuffer;
+          const popFilter = ctx.createBiquadFilter();
+          popFilter.type = 'highpass'; popFilter.frequency.value = 1700;
+          const popGain = ctx.createGain();
+          popGain.gain.setValueAtTime(0.0001, popAt);
+          popGain.gain.linearRampToValueAtTime(0.055, popAt + 0.012);
+          popGain.gain.exponentialRampToValueAtTime(0.0001, popAt + 0.34);
+          pop.connect(popFilter); popFilter.connect(popGain); popGain.connect(ctx.destination);
+          pop.start(popAt); pop.stop(popAt + 0.38);
+        });
+        showToast('👏 Vỗ tay và pháo hoa chúc mừng!');
+      }).catch(error => console.warn('Không phát được âm thanh chúc mừng:', error));
+    }
+
+    function playWheelTick(progress) {
+      const ctx = classroomAudioContext;
+      if (!ctx || ctx.state !== 'running') return;
+      try {
+        const at = ctx.currentTime + 0.005;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(620 + Math.max(0, 1 - progress) * 360, at);
+        gain.gain.setValueAtTime(0.0001, at);
+        gain.gain.linearRampToValueAtTime(0.045, at + 0.004);
+        gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.045);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(at); osc.stop(at + 0.05);
+      } catch (error) { console.warn('Không phát được tiếng nấc vòng quay:', error); }
     }
 
     // Dùng một AudioContext dùng chung; mở khóa âm thanh ngay trong thao tác bấm của giáo viên.
@@ -2083,6 +2101,13 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
         return false;
       }
     }
+
+    // Mở khóa sớm ở lần chạm đầu tiên để Chrome/Safari trên điện thoại cho phép phát tiếng.
+    (function bindClassroomAudioUnlock() {
+      const unlock = () => { unlockClassroomAudio().catch(() => {}); };
+      document.addEventListener('pointerdown', unlock, { once: true, capture: true });
+      document.addEventListener('keydown', unlock, { once: true, capture: true });
+    })();
 
     function playChimeSound(type) {
       try {
@@ -3217,7 +3242,8 @@ function switchCallingMode(mode) {
     }
 
     function spinLuckyWheel() {
-      if (luckyWheelSpinning) return;
+      if (luckyWheelSpinning || !students.length) return;
+      unlockClassroomAudio();
       luckyWheelSpinning = true;
 
       const spins = 6 + Math.random() * 4;
@@ -3225,6 +3251,7 @@ function switchCallingMode(mode) {
       const startAngle = luckyWheelAngle;
       const duration = 5000;
       const startTime = performance.now();
+      let lastTick = -1;
 
       function animateWheel(now) {
         const elapsed = now - startTime;
@@ -3232,6 +3259,12 @@ function switchCallingMode(mode) {
         const ease = 1 - Math.pow(1 - progress, 3);
         luckyWheelAngle = startAngle + totalRot * ease;
         drawLuckyWheel();
+
+        const tickStep = Math.floor(elapsed / (95 + progress * 180));
+        if (tickStep !== lastTick) {
+          lastTick = tickStep;
+          playWheelTick(progress);
+        }
 
         if (progress < 1) {
           requestAnimationFrame(animateWheel);
@@ -3247,7 +3280,7 @@ function switchCallingMode(mode) {
           document.getElementById('wheelWinnerName').innerText = wheelWinnerStudent.name;
           document.getElementById('wheelWinnerTeam').innerText = `${wheelWinnerStudent.team} • Mã: ${wheelWinnerStudent.id}`;
           document.getElementById('wheelWinnerModal').classList.remove('hidden');
-          playApplauseSound();
+          playCelebrationSound();
         }
       }
       requestAnimationFrame(animateWheel);
