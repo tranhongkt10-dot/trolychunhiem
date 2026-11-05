@@ -796,16 +796,60 @@
         </button>
       </div>
 
-      <!-- CHẾ ĐỘ 3: BẮN VỊT CARNIVAL -->
-      <div id="callingView-duck" class="hidden bg-white rounded-3xl p-6 shadow-sm border border-pink-100 space-y-4">
-        <div class="text-center">
-          <h3 class="text-lg font-black text-gray-800 font-comfortaa">Hội Chợ Bắn Vịt Gọi Tên 🦆</h3>
-          <p class="text-xs text-gray-500 font-bold">Ngắm bắn một chú vịt vàng đang bơi để chọn học sinh xuất sắc!</p>
-        </div>
-        <div class="bg-gradient-to-b from-sky-300 via-sky-400 to-teal-500 p-4 rounded-3xl shadow-inner border-4 border-amber-300">
-          <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3" id="duckPondContainer"></div>
-        </div>
+      
+<!-- CHẾ ĐỘ 3: BẮN VỊT CARNIVAL -->
+<div id="callingView-duck" class="hidden bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-pink-100 space-y-4">
+
+  <div class="text-center">
+    <h3 class="text-lg sm:text-xl font-black text-gray-800 font-comfortaa">
+      Hội Chợ Bắn Vịt Gọi Tên 🦆
+    </h3>
+    <p class="text-xs text-gray-500 font-bold mt-1">
+      Nhấn MỞ TRÒ CHƠI để bắt đầu. Chọn một chú vịt để gọi tên học sinh.
+    </p>
+  </div>
+
+  <!-- HAI NÚT ĐIỀU KHIỂN -->
+  <div class="flex flex-wrap justify-center items-center gap-3">
+
+    <button
+      id="duckOpenBtn"
+      type="button"
+      onclick="openDuckGame()"
+      class="min-w-[180px] px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white rounded-2xl font-black text-sm shadow-lg active:scale-95 transition-all">
+      ▶️ MỞ TRÒ CHƠI
+    </button>
+
+    <button
+      id="duckCloseBtn"
+      type="button"
+      onclick="closeDuckGame()"
+      class="hidden min-w-[180px] px-6 py-3.5 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white rounded-2xl font-black text-sm shadow-lg active:scale-95 transition-all">
+      ✖ ĐÓNG TRÒ CHƠI
+    </button>
+
+  </div>
+
+  <!-- TRẠNG THÁI TRÒ CHƠI -->
+  <p
+    id="duckGameStatus"
+    role="status"
+    aria-live="polite"
+    class="text-center text-xs font-bold text-slate-500">
+    🔒 Trò chơi đang đóng. Nhấn MỞ TRÒ CHƠI khi cô sẵn sàng.
+  </p>
+
+  <!-- HỒ VỊT: CHỈ HIỆN KHI TRÒ CHƠI ĐƯỢC MỞ -->
+  <div id="duckGameBoard" class="hidden space-y-3">
+    <div class="bg-gradient-to-b from-sky-300 via-sky-400 to-teal-500 p-3 sm:p-4 rounded-3xl shadow-inner border-4 border-amber-300">
+      <div
+        class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 sm:gap-3"
+        id="duckPondContainer">
       </div>
+    </div>
+  </div>
+
+</div>
     </section>
 
     <!-- 8. CÔNG CỤ LỚP HỌC -->
@@ -2810,21 +2854,35 @@
       reader.readAsText(file);
       e.target.value = '';
     }
+// GỌI TÊN: SÂN KHẤU, VÒNG QUAY & BẮN VỊT
+function switchCallingMode(mode) {
+  currentCallingMode = mode;
 
-    // GỌI TÊN: SÂN KHẤU, VÒNG QUAY & BẮN VỊT
-    function switchCallingMode(mode) {
-      currentCallingMode = mode;
-      document.getElementById('callingView-stage').classList.toggle('hidden', mode !== 'stage');
-      document.getElementById('callingView-wheel').classList.toggle('hidden', mode !== 'wheel');
-      document.getElementById('callingView-duck').classList.toggle('hidden', mode !== 'duck');
+  const stage = document.getElementById('callingView-stage');
+  const wheel = document.getElementById('callingView-wheel');
+  const duck = document.getElementById('callingView-duck');
 
-      ['stage', 'wheel', 'duck'].forEach(m => {
-        const btn = document.getElementById(`callMode-${m}`);
-        if (btn) btn.className = m === mode ? 'px-4 py-2 rounded-xl bg-pink-500 text-white' : 'px-4 py-2 rounded-xl bg-gray-100 text-gray-600 hover:bg-pink-50';
-      });
+  // Chuyển đổi giữa 3 chế độ
+  if (stage) stage.classList.toggle('hidden', mode !== 'stage');
+  if (wheel) wheel.classList.toggle('hidden', mode !== 'wheel');
+  if (duck) duck.classList.toggle('hidden', mode !== 'duck');
 
-      if (mode === 'duck') renderDuckPond();
+  // Đổi màu nút đang được chọn
+  ['stage', 'wheel', 'duck'].forEach(m => {
+    const btn = document.getElementById(`callMode-${m}`);
+
+    if (btn) {
+      btn.className = m === mode
+        ? 'px-4 py-2 rounded-xl bg-pink-500 text-white'
+        : 'px-4 py-2 rounded-xl bg-gray-100 text-gray-600 hover:bg-pink-50';
     }
+  });
+
+  // Rời khỏi chế độ bắn vịt thì tự đóng trò chơi
+  if (mode !== 'duck') {
+    closeDuckGame();
+  }
+}
 
     function startStageCountdown() {
       const btn = document.getElementById('stageStartBtn');
@@ -3010,15 +3068,78 @@
       `).join('');
     }
 
-    function shootDuck(idx) {
-      const s = students[idx];
-      wheelWinnerStudent = s;
-      document.getElementById('wheelWinnerImg').src = getStudentAvatarUrl(s);
-      document.getElementById('wheelWinnerName').innerText = s.name;
-      document.getElementById('wheelWinnerTeam').innerText = `${s.team} • Vịt số ${idx + 1}`;
-      document.getElementById('wheelWinnerModal').classList.remove('hidden');
-      playApplauseSound();
-    }
+  // MỞ TRÒ CHƠI BẮN VỊT
+function openDuckGame() {
+  const board = document.getElementById('duckGameBoard');
+  const openBtn = document.getElementById('duckOpenBtn');
+  const closeBtn = document.getElementById('duckCloseBtn');
+  const status = document.getElementById('duckGameStatus');
+
+  if (!board || !openBtn || !closeBtn) return;
+
+  renderDuckPond();
+
+  board.classList.remove('hidden');
+  openBtn.classList.add('hidden');
+  closeBtn.classList.remove('hidden');
+
+  if (status) {
+    status.textContent = '🟢 Trò chơi đang mở. Hãy chọn một chú vịt!';
+  }
+}
+
+// ĐÓNG TRÒ CHƠI BẮN VỊT
+function closeDuckGame() {
+  const board = document.getElementById('duckGameBoard');
+  const openBtn = document.getElementById('duckOpenBtn');
+  const closeBtn = document.getElementById('duckCloseBtn');
+  const status = document.getElementById('duckGameStatus');
+
+  if (board) board.classList.add('hidden');
+  if (openBtn) openBtn.classList.remove('hidden');
+  if (closeBtn) closeBtn.classList.add('hidden');
+
+  // Dừng âm thanh trò chơi nếu có
+  if (window.duckGameAudio) {
+    try {
+      window.duckGameAudio.pause();
+      window.duckGameAudio.currentTime = 0;
+    } catch (e) {}
+  }
+
+  if (status) {
+    status.textContent = '🔒 Trò chơi đã đóng. Nhấn MỞ TRÒ CHƠI để chơi lại.';
+  }
+}
+
+// BẮN VỊT - CHỌN HỌC SINH
+function shootDuck(idx) {
+  const board = document.getElementById('duckGameBoard');
+
+  // Không cho chọn vịt khi trò chơi đang đóng
+  if (!board || board.classList.contains('hidden')) return;
+
+  const s = students[idx];
+  if (!s) return;
+
+  wheelWinnerStudent = s;
+
+  const img = document.getElementById('wheelWinnerImg');
+  const name = document.getElementById('wheelWinnerName');
+  const team = document.getElementById('wheelWinnerTeam');
+  const modal = document.getElementById('wheelWinnerModal');
+
+  if (img) img.src = getStudentAvatarUrl(s);
+  if (name) name.innerText = s.name || '';
+  if (team) team.innerText = `${s.team || ''} • Vịt số ${idx + 1}`;
+
+  if (modal) modal.classList.remove('hidden');
+
+  // Phát tiếng vỗ tay, không phát nhạc nền
+  if (typeof playApplauseSound === 'function') {
+    playApplauseSound();
+  }
+}
 
     // SƠ ĐỒ LỚP (19 BÀN ĐÔI)
     function renderSeatingDesks() {
