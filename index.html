@@ -432,6 +432,45 @@
     })();
   </script>
 
+
+<style id="classroom-carnival-theme">
+/* Sân khấu hội chợ bắn vịt */
+.duck-carnival-scene{position:relative;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse at 50% 18%,#9b145f 0%,#6b0d62 42%,#260b50 100%);border:5px solid #f7bd35}
+.duck-carnival-scene:before,.duck-carnival-scene:after{content:"";position:absolute;z-index:0;top:0;bottom:0;width:clamp(22px,8%,76px);background:repeating-linear-gradient(90deg,#a90821 0 12px,#ed2636 12px 27px,#8d061e 27px 34px);box-shadow:inset 0 0 18px #4b001b,0 0 18px #ffb52e}
+.duck-carnival-scene:before{left:0;border-right:5px solid #ffc84a;border-radius:0 0 28px 0}
+.duck-carnival-scene:after{right:0;border-left:5px solid #ffc84a;border-radius:0 0 0 28px}
+.duck-marquee{position:relative;z-index:1;margin:0 auto;padding:12px 8px 18px;max-width:760px;text-align:center;background:linear-gradient(180deg,#e71936,#9e092b);border:4px solid #ffcf52;border-radius:22px 22px 48% 48%;box-shadow:0 8px 0 #680b34,inset 0 0 22px #ff9d36}
+.duck-bulbs{color:#ffe66d;font-size:clamp(13px,2vw,22px);letter-spacing:2px;text-shadow:0 0 9px #fff3a6}
+.duck-curtain-title{font-family:Impact,'Arial Narrow',sans-serif;font-size:clamp(28px,5vw,48px);font-weight:1000;letter-spacing:2px;color:#ffd64e;text-shadow:2px 3px 0 #a74408,0 0 15px #ffb52e}
+.duck-water-stage{position:relative;overflow:hidden;padding:24px 14px 10px;border:5px solid #f9c94b;border-radius:28px;background:linear-gradient(180deg,#28105c 0%,#5a1b9b 38%,#167bd7 39%,#21b9dc 100%);box-shadow:inset 0 0 25px #10052f,0 8px 0 #7d142d}
+.duck-stage-label{position:relative;z-index:1;text-align:center;color:#fff7bc;font-weight:1000;font-size:clamp(14px,2vw,20px);letter-spacing:1px;text-shadow:0 2px 4px #32105c;margin-bottom:15px}
+.duck-target-grid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;max-width:850px;margin:auto}
+.duck-target{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:118px;padding:8px 4px 10px;border:3px solid #ffcf43;border-radius:48% 48% 18px 18px;background:linear-gradient(180deg,#fff7c7,#ffdb62 65%,#e99a24);box-shadow:0 6px 0 #9b501d,0 0 14px #ffdd67;cursor:pointer;transition:transform .18s,filter .18s}
+.duck-target:before{content:"";position:absolute;bottom:-17px;width:9px;height:25px;border-radius:8px;background:#b66b2b;z-index:-1}
+.duck-target:hover{transform:translateY(-5px) scale(1.04);filter:brightness(1.08)}
+.duck-target:active{transform:translateY(2px) scale(.97)}
+.duck-target-duck{font-size:clamp(35px,6vw,58px);line-height:1.15;filter:drop-shadow(0 4px 2px #9a5b1d)}
+.duck-target-number{font-size:11px;font-weight:1000;color:#79320c;letter-spacing:.5px}
+.duck-target-hit{font-size:9px;font-weight:1000;color:#a20e37;margin-top:3px}
+.duck-waterline{text-align:center;color:#a7f4ff;font-size:22px;letter-spacing:1px;margin-top:18px;text-shadow:0 0 8px #fff}
+.duck-bottom-stars{text-align:center;color:#ffe68a;font-size:20px;padding-top:3px}
+@media(min-width:540px){.duck-target-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}.duck-target{min-height:135px}}
+@media(min-width:850px){.duck-target-grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
+/* Vòng quay lễ hội: bóng bay, vòng viền kim tuyến, kim chỉ */
+.carnival-wheel-scene{position:relative;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse at center,#ffb8d5 0%,#f47db9 46%,#8d36a2 100%);border:5px solid #ffdb62}
+.carnival-wheel-scene:before{content:"🎈　🎈　🎈　🎈　🎈";position:absolute;inset:8px 0 auto;text-align:center;font-size:clamp(20px,4vw,36px);opacity:.9;pointer-events:none}
+.carnival-wheel-scene:after{content:"🎈　🎊　🎈　🎊　🎈";position:absolute;bottom:6px;left:0;right:0;text-align:center;font-size:clamp(18px,3vw,28px);pointer-events:none}
+.wheel-fairground{width:min(78vw,440px);aspect-ratio:1;padding:10px;border-radius:50%;background:repeating-conic-gradient(#ffe67a 0deg 8deg,#d88724 8deg 12deg);box-shadow:0 0 0 5px #fff2a5,0 0 0 11px #a84a9e,0 12px 28px #42104e}
+.wheel-rim{position:relative;width:100%;height:100%;padding:5px;border-radius:50%;background:linear-gradient(135deg,#fff4b0,#e6a12b,#fff6bd);box-shadow:inset 0 0 0 3px #fff}
+.wheel-canvas{display:block;width:100%;height:100%;border-radius:50%;filter:drop-shadow(0 4px 5px #3b164b)}
+.wheel-pointer{position:absolute;z-index:4;top:-12px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:20px solid transparent;border-right:20px solid transparent;border-top:0;border-bottom:38px solid #fff0a0;filter:drop-shadow(0 3px 3px #551344)}
+.wheel-pointer:after{content:"";position:absolute;left:-10px;top:7px;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:21px solid #e72e64}
+.wheel-center-cap{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:19%;height:19%;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 35% 25%,#fff0c7,#a8336e 65%,#55154d);border:4px solid #fff;box-shadow:0 3px 12px #391039;color:white;text-shadow:0 2px 3px #391039;pointer-events:none}
+.wheel-center-cap span{font-size:clamp(18px,3vw,27px);line-height:1}
+.wheel-center-cap b{font-size:clamp(8px,1.5vw,12px);letter-spacing:1px}
+@media(max-width:420px){.wheel-fairground{width:min(82vw,340px)}}
+</style>
+
 </head>
 <body class="flex flex-col min-h-screen relative">
 
@@ -887,69 +926,46 @@
       </div>
 
       <!-- CHẾ ĐỘ 2: VÒNG QUAY MAY MẮN -->
-      <div id="callingView-wheel" class="hidden bg-white rounded-3xl p-6 shadow-sm border border-pink-100 text-center max-w-lg mx-auto space-y-4">
-        <div class="relative w-[340px] h-[340px] mx-auto">
-          <div class="absolute -top-3 left-1/2 -translate-x-1/2 z-20 w-0 h-0 border-l-[14px] border-l-transparent border-r-[14px] border-r-transparent border-t-[28px] border-t-rose-600 drop-shadow-md"></div>
-          <canvas id="luckyWheelCanvas" width="680" height="680" class="w-full h-full rounded-full shadow-2xl cursor-pointer"></canvas>
+      <div id="callingView-wheel" class="hidden carnival-wheel-scene rounded-3xl p-4 sm:p-6 shadow-xl text-center max-w-3xl mx-auto space-y-4">
+        <div class="relative z-10">
+          <div class="text-3xl sm:text-4xl mb-1">🎈 🎊 🎈</div>
+          <h3 class="text-xl sm:text-2xl font-black text-white drop-shadow-lg">VÒNG QUAY MAY MẮN</h3>
+          <p class="text-xs sm:text-sm text-white/90 font-bold mt-1">Vòng quay chọn ngẫu nhiên một bạn học sinh thật công bằng!</p>
         </div>
-        <button onclick="spinLuckyWheel()" id="wheelSpinBtn" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-rose-500 text-white rounded-2xl font-black text-base shadow-lg hover:scale-105 active:scale-95 transition-all">
+        <div class="wheel-fairground relative mx-auto">
+          <div class="wheel-pointer" aria-hidden="true"></div>
+          <div class="wheel-rim">
+            <canvas id="luckyWheelCanvas" width="680" height="680" class="wheel-canvas cursor-pointer" aria-label="Vòng quay chọn học sinh"></canvas>
+            <div class="wheel-center-cap" aria-hidden="true"><span>🎡</span><b>QUAY</b></div>
+          </div>
+        </div>
+        <div class="relative z-10 flex justify-center gap-2 text-2xl">🎁 ⭐ 🎉 ⭐ 🎁</div>
+        <button onclick="spinLuckyWheel()" id="wheelSpinBtn" class="relative z-10 w-full sm:w-3/4 py-4 bg-gradient-to-r from-amber-300 via-yellow-400 to-orange-400 text-red-900 rounded-2xl font-black text-base sm:text-lg shadow-xl border-4 border-white hover:brightness-105 active:scale-95 transition-all">
           🎡 QUAY VÒNG MAY MẮN
         </button>
       </div>
 
       
 <!-- CHẾ ĐỘ 3: BẮN VỊT CARNIVAL -->
-<div id="callingView-duck" class="hidden bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-pink-100 space-y-4">
-
-  <div class="text-center">
-    <h3 class="text-lg sm:text-xl font-black text-gray-800 font-comfortaa">
-      Hội Chợ Bắn Vịt Gọi Tên 🦆
-    </h3>
-    <p class="text-xs text-gray-500 font-bold mt-1">
-      Nhấn MỞ TRÒ CHƠI để bắt đầu. Chọn một chú vịt để gọi tên học sinh.
-    </p>
+<div id="callingView-duck" class="hidden duck-carnival-scene rounded-3xl p-3 sm:p-5 shadow-xl space-y-4">
+  <div class="duck-marquee">
+    <div class="duck-bulbs" aria-hidden="true">✦　●　✦　●　✦　●　✦　●　✦</div>
+    <div class="duck-curtain-title">HỘI CHỢ BẮN VỊT</div>
+    <p class="text-xs sm:text-sm text-white/95 font-bold mt-1">🎯 Chọn chú vịt may mắn để gọi tên một bạn học sinh!</p>
   </div>
-
-  <!-- HAI NÚT ĐIỀU KHIỂN -->
-  <div class="flex flex-wrap justify-center items-center gap-3">
-
-    <button
-      id="duckOpenBtn"
-      type="button"
-      onclick="openDuckGame()"
-      class="min-w-[180px] px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white rounded-2xl font-black text-sm shadow-lg active:scale-95 transition-all">
-      ▶️ MỞ TRÒ CHƠI
-    </button>
-
-    <button
-      id="duckCloseBtn"
-      type="button"
-      onclick="closeDuckGame()"
-      class="hidden min-w-[180px] px-6 py-3.5 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white rounded-2xl font-black text-sm shadow-lg active:scale-95 transition-all">
-      ✖ ĐÓNG TRÒ CHƠI
-    </button>
-
+  <div class="flex flex-wrap justify-center items-center gap-3 relative z-10">
+    <button id="duckOpenBtn" type="button" onclick="openDuckGame()" class="min-w-[180px] px-6 py-3.5 bg-gradient-to-r from-emerald-400 to-green-600 hover:brightness-110 text-white rounded-2xl font-black text-sm shadow-lg border-2 border-white active:scale-95 transition-all">▶️ MỞ TRÒ CHƠI</button>
+    <button id="duckCloseBtn" type="button" onclick="closeDuckGame()" class="hidden min-w-[180px] px-6 py-3.5 bg-gradient-to-r from-rose-500 to-red-700 text-white rounded-2xl font-black text-sm shadow-lg border-2 border-white active:scale-95 transition-all">✖ ĐÓNG TRÒ CHƠI</button>
   </div>
-
-  <!-- TRẠNG THÁI TRÒ CHƠI -->
-  <p
-    id="duckGameStatus"
-    role="status"
-    aria-live="polite"
-    class="text-center text-xs font-bold text-slate-500">
-    🔒 Trò chơi đang đóng. Nhấn MỞ TRÒ CHƠI khi cô sẵn sàng.
-  </p>
-
-  <!-- HỒ VỊT: CHỈ HIỆN KHI TRÒ CHƠI ĐƯỢC MỞ -->
-  <div id="duckGameBoard" class="hidden space-y-3">
-    <div class="bg-gradient-to-b from-sky-300 via-sky-400 to-teal-500 p-3 sm:p-4 rounded-3xl shadow-inner border-4 border-amber-300">
-      <div
-        class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 sm:gap-3"
-        id="duckPondContainer">
-      </div>
+  <p id="duckGameStatus" role="status" aria-live="polite" class="relative z-10 text-center text-xs font-bold text-white">🔒 Trò chơi đang đóng. Nhấn MỞ TRÒ CHƠI khi cô sẵn sàng.</p>
+  <div id="duckGameBoard" class="hidden relative z-10 space-y-3">
+    <div class="duck-water-stage">
+      <div class="duck-stage-label">🦆 CHỌN MỘT CHÚ VỊT 🦆</div>
+      <div id="duckPondContainer" class="duck-target-grid"></div>
+      <div class="duck-waterline" aria-hidden="true">〰️　〰️　〰️　〰️　〰️　〰️　〰️</div>
     </div>
   </div>
-
+  <div class="duck-bottom-stars relative z-10">🎪　⭐　🎈　⭐　🎪</div>
 </div>
     </section>
 
@@ -3696,11 +3712,12 @@ function switchCallingMode(mode) {
       const pond = document.getElementById('duckPondContainer');
       if (!pond) return;
       pond.innerHTML = students.map((s, idx) => `
-        <div onclick="shootDuck(${idx})" class="p-3 bg-white/90 hover:bg-amber-100 rounded-2xl text-center border-2 border-amber-300 cursor-pointer shadow-md">
-          <div class="text-3xl select-none" aria-hidden="true">🦆</div>
-          <div class="text-[10px] font-black text-amber-900 mt-1">Số ${idx + 1}</div>
-        </div>
-      `).join('');
+        <button type="button" onclick="shootDuck(${idx})" class="duck-target" aria-label="Chọn vịt số ${idx + 1}">
+          <span class="duck-target-duck" aria-hidden="true">🦆</span>
+          <span class="duck-target-number">VỊT ${idx + 1}</span>
+          <span class="duck-target-hit">🎯 CHỌN</span>
+        </button>
+      `).join('') || '<p class="col-span-full text-center text-white font-black py-8">Chưa có học sinh trong lớp để tham gia trò chơi.</p>';
     }
 
   // MỞ TRÒ CHƠI BẮN VỊT
