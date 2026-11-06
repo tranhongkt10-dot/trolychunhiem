@@ -19,18 +19,6 @@
     .font-comfortaa {
       font-family: 'Comfortaa', cursive, sans-serif;
     }
-    /* Hiệu ứng công bố người thắng: ba nhịp sáng rõ, không nhấp nháy liên tục. */
-    @keyframes winnerCelebrationFlash {
-      0%, 100% { opacity: 0; }
-      12%, 32%, 52% { opacity: .72; }
-      22%, 42%, 68% { opacity: 0; }
-    }
-    .winner-celebration-flash {
-      animation: winnerCelebrationFlash 1.05s ease-out both;
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .winner-celebration-flash { animation: none; opacity: 0; }
-    }
     .custom-scroll::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -407,8 +395,6 @@
 
   <!-- MÀN FLASH MÁY ẢNH -->
   <div id="cameraFlashScreen" class="fixed inset-0 bg-white z-[100] opacity-0 pointer-events-none transition-opacity duration-300"></div>
-  <!-- FLASH VINH DANH KHI TRÒ CHƠI KẾT THÚC -->
-  <div id="winnerCelebrationFlash" aria-hidden="true" class="fixed inset-0 z-[110] pointer-events-none opacity-0 bg-gradient-to-br from-amber-200 via-white to-pink-200"></div>
 
   <!-- ============================================================== -->
   <!-- MÀN HÌNH CHUYÊN BIỆT DÀNH RIÊNG CHO PHỤ HUYNH KHI ẤN VÀO LINK -->
@@ -1515,8 +1501,10 @@
       { id: "rew_6", name: "Huy hiệu Ong Vàng Danh Dự", flowers: 50, icon: "🎖️" }
     ];
 
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
       loadInitialData();
+      try { await hydrateAssignedClassesFromCloud(); }
+      catch(error) { console.error('Không tải được lớp được phân công:',error); showToast('Không tải được dữ liệu lớp được phân công. Cô báo quản trị viên kiểm tra quyền truy cập.'); }
       updateClassTeacherDisplay();
       initLuckyWheel();
       initEqualizerLeds();
@@ -2002,124 +1990,74 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       if (label) label.innerText = `${val} dB`;
     }
 
-    // ÂM THANH LỚP HỌC: vỗ tay, tiếng quay vòng và pháo hoa nhẹ bằng Web Audio.
-    // Không phụ thuộc MP3 ngoài; âm thanh được mở khóa từ thao tác chạm/bấm của giáo viên.
+    // Âm thanh chúc mừng dùng chung cho vòng quay, bắn vịt và sân khấu:
+    // giai điệu êm, âm lượng nhỏ; không vỗ tay, không pháo hoa âm thanh.
     function playApplauseSound() {
       return playCelebrationSound();
     }
 
-    // Âm thanh chúc mừng: giai điệu ngắn + vỗ tay + pháo hoa nhẹ.
-    // AudioContext.resume() được gọi ngay khi giáo viên bấm nút trò chơi.
     async function playCelebrationSound() {
-      const ready = await unlockClassroomAudio();
-      const ctx = classroomAudioContext;
-      if (!ready || !ctx || ctx.state !== 'running') {
-        console.warn('Trình duyệt chưa mở khóa âm thanh lớp học. Trạng thái:', ctx?.state || 'không có AudioContext');
-        showToast('Âm thanh chưa được mở khóa. Cô hãy bấm nút Bật âm thanh rồi quay lại trò chơi.');
-        return false;
-      }
-
       try {
-        const now = ctx.currentTime + 0.06;
+        const ctx = ensureClassroomAudioContext();
+        if (!ctx) {
+          showToast('Thiết bị chưa hỗ trợ phát âm thanh.');
+          return false;
+        }
+        if (ctx.state !== 'running') await ctx.resume();
+        if (ctx.state !== 'running') {
+          showToast('Trình duyệt đang chặn âm thanh. Cô chạm màn hình rồi thử lại nhé.');
+          return false;
+        }
 
-        // Giai điệu vui ngắn, âm lượng vừa phải.
-        const melody = [
-          { f: 659.25, t: 0.00, d: 0.20 },
-          { f: 783.99, t: 0.22, d: 0.20 },
-          { f: 987.77, t: 0.44, d: 0.24 },
-          { f: 783.99, t: 0.72, d: 0.18 },
-          { f: 1046.50, t: 0.94, d: 0.42 }
+        const start = ctx.currentTime + 0.08;
+        // Giai điệu C trưởng ngắn, âm sắc mềm như chuông/piano điện tử.
+        const notes = [
+          { f: 523.25, t: 0.00, d: 0.58 },
+          { f: 659.25, t: 0.46, d: 0.58 },
+          { f: 783.99, t: 0.92, d: 0.72 },
+          { f: 659.25, t: 1.48, d: 0.56 },
+          { f: 587.33, t: 1.92, d: 0.60 },
+          { f: 659.25, t: 2.38, d: 0.92 }
         ];
-        melody.forEach(note => {
+        notes.forEach(note => {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(note.f, now + note.t);
-          gain.gain.setValueAtTime(0.0001, now + note.t);
-          gain.gain.linearRampToValueAtTime(0.12, now + note.t + 0.025);
-          gain.gain.exponentialRampToValueAtTime(0.0001, now + note.t + note.d);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(now + note.t);
-          osc.stop(now + note.t + note.d + 0.02);
-        });
-
-        // Tiếng vỗ tay ngắn, không quá lớn.
-        const clapDuration = 0.055;
-        const clapLength = Math.floor(ctx.sampleRate * clapDuration);
-        const clapBuffer = ctx.createBuffer(1, clapLength, ctx.sampleRate);
-        const clapData = clapBuffer.getChannelData(0);
-        for (let i = 0; i < clapLength; i++) {
-          const fade = 1 - i / clapLength;
-          clapData[i] = (Math.random() * 2 - 1) * fade;
-        }
-        for (let i = 0; i < 18; i++) {
-          const at = now + 0.18 + i * (0.065 + Math.random() * 0.025);
-          const source = ctx.createBufferSource();
           const filter = ctx.createBiquadFilter();
-          const gain = ctx.createGain();
-          source.buffer = clapBuffer;
-          filter.type = 'bandpass';
-          filter.frequency.value = 1100 + Math.random() * 1000;
-          filter.Q.value = 0.7;
-          gain.gain.setValueAtTime(0.0001, at);
-          gain.gain.linearRampToValueAtTime(0.045, at + 0.004);
-          gain.gain.exponentialRampToValueAtTime(0.0001, at + clapDuration);
-          source.connect(filter);
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(note.f, start + note.t);
+          filter.type = 'lowpass';
+          filter.frequency.value = 1500;
+          gain.gain.setValueAtTime(0.0001, start + note.t);
+          gain.gain.linearRampToValueAtTime(0.045, start + note.t + 0.06);
+          gain.gain.setValueAtTime(0.034, start + note.t + 0.16);
+          gain.gain.exponentialRampToValueAtTime(0.0001, start + note.t + note.d);
+          osc.connect(filter);
           filter.connect(gain);
           gain.connect(ctx.destination);
-          source.start(at);
-          source.stop(at + clapDuration + 0.01);
-        }
-
-        // Hai tiếng pháo hoa dịu: tiếng vút lên và tiếng lách tách nhỏ.
-        [0.15, 0.82].forEach((delay, index) => {
-          const at = now + delay;
-          const osc = ctx.createOscillator();
-          const whistle = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(480 + index * 100, at);
-          osc.frequency.exponentialRampToValueAtTime(1250 + index * 80, at + 0.28);
-          whistle.gain.setValueAtTime(0.0001, at);
-          whistle.gain.linearRampToValueAtTime(0.025, at + 0.13);
-          whistle.gain.exponentialRampToValueAtTime(0.0001, at + 0.30);
-          osc.connect(whistle);
-          whistle.connect(ctx.destination);
-          osc.start(at);
-          osc.stop(at + 0.32);
-
-          const popAt = at + 0.30;
-          const pop = ctx.createBufferSource();
-          const popBuffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.16), ctx.sampleRate);
-          const popData = popBuffer.getChannelData(0);
-          for (let i = 0; i < popData.length; i++) popData[i] = (Math.random() * 2 - 1) * (1 - i / popData.length);
-          const popFilter = ctx.createBiquadFilter();
-          const popGain = ctx.createGain();
-          pop.buffer = popBuffer;
-          popFilter.type = 'highpass';
-          popFilter.frequency.value = 1800;
-          popGain.gain.setValueAtTime(0.0001, popAt);
-          popGain.gain.linearRampToValueAtTime(0.035, popAt + 0.01);
-          popGain.gain.exponentialRampToValueAtTime(0.0001, popAt + 0.15);
-          pop.connect(popFilter);
-          popFilter.connect(popGain);
-          popGain.connect(ctx.destination);
-          pop.start(popAt);
-          pop.stop(popAt + 0.17);
+          osc.start(start + note.t);
+          osc.stop(start + note.t + note.d + 0.03);
         });
 
-        if (typeof confetti === 'function') {
-          confetti({ particleCount: 55, spread: 65, startVelocity: 30, origin: { y: 0.68, x: 0.18 }, scalar: 0.85 });
-          confetti({ particleCount: 55, spread: 65, startVelocity: 30, origin: { y: 0.68, x: 0.82 }, scalar: 0.85 });
-          setTimeout(() => {
-            if (typeof confetti === 'function') confetti({ particleCount: 35, spread: 90, startVelocity: 22, origin: { y: 0.25, x: 0.5 }, ticks: 120, scalar: 0.7 });
-          }, 250);
-        }
-        showToast('🎵 Chúc mừng! Có nhạc, vỗ tay và pháo hoa nhẹ.');
+        // Nền hòa âm rất nhỏ để giai điệu dịu và đầy hơn.
+        [261.63, 392.00].forEach((frequency, index) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const at = start + index * 0.06;
+          osc.type = 'triangle';
+          osc.frequency.value = frequency;
+          gain.gain.setValueAtTime(0.0001, at);
+          gain.gain.linearRampToValueAtTime(0.009, at + 0.22);
+          gain.gain.setValueAtTime(0.007, at + 1.8);
+          gain.gain.exponentialRampToValueAtTime(0.0001, at + 3.25);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(at);
+          osc.stop(at + 3.3);
+        });
         return true;
       } catch (error) {
-        console.error('Lỗi phát âm thanh chúc mừng:', error);
-        showToast('Chưa phát được âm thanh. Cô kiểm tra âm lượng thiết bị nhé.');
+        console.error('Lỗi phát nhạc chúc mừng:', error);
+        showToast('Chưa phát được nhạc. Cô kiểm tra âm lượng và chế độ im lặng của thiết bị nhé.');
         return false;
       }
     }
@@ -2390,6 +2328,73 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       { id: 'rew_6', name: 'Huy hiệu Ong Vàng Danh Dự', flowers: 50, icon: '🎖️' }
     ];
 
+    // Nạp các lớp được quản trị viên giao từ kho dữ liệu tập trung.
+    // Mỗi giáo viên chỉ truy vấn được các lớp có teacherUid trùng UID đăng nhập (Firestore Rules).
+    async function hydrateAssignedClassesFromCloud() {
+      const user=window.secureAuth?.user;
+      if(!user || window.secureAuth.isAdmin || !window.secureAuth.cloudReady) return;
+      const db=firebase.firestore();
+      const assigned=await db.collection('classes').where('teacherUid','==',user.uid).get();
+      if(assigned.empty) return; // Chưa được phân công: không đụng vào dữ liệu riêng hiện có.
+      const oldState=JSON.stringify({schools,classRecords,activeClassId});
+      try { if(!appStorage.getItem('lophanhphuc_pre_cloud_classes_backup_v1')) appStorage.setItem('lophanhphuc_pre_cloud_classes_backup_v1',oldState); } catch(e) { console.warn('Không tạo được bản sao lưu cục bộ trước khi nạp lớp tập trung:',e); }
+      const cloudSchools=[],cloudClasses=[];
+      for(const classDoc of assigned.docs){
+        const meta=classDoc.data()||{};
+        const items=await classDoc.ref.collection('items').get();
+        const roster=[];
+        let settings={};
+        items.forEach(doc=>{
+          const item=doc.data()||{};
+          if(doc.id==='_settings') settings=item;
+          else if(item.kind==='student' && item.student && typeof item.student==='object') roster.push(item.student);
+        });
+        roster.sort((a,b)=>String(a.id||'').localeCompare(String(b.id||''),'vi',{numeric:true}));
+        const schoolName=meta.schoolName||'Trường của tôi';
+        const schoolId='cloud_school_'+encodeURIComponent(schoolName).replace(/%/g,'_');
+        if(!cloudSchools.some(x=>x.id===schoolId)) cloudSchools.push({id:schoolId,name:schoolName,location:''});
+        const data={
+          className:settings.className||meta.className||'Lớp được phân công',
+          teacherName:settings.teacherName||meta.teacherName||user.displayName||'Giáo viên',
+          students:roster,
+          criteriaPos:Array.isArray(settings.criteriaPos)?settings.criteriaPos:cloneData(DEFAULT_CRITERIA_POS),
+          criteriaNeg:Array.isArray(settings.criteriaNeg)?settings.criteriaNeg:cloneData(DEFAULT_CRITERIA_NEG),
+          rewards:Array.isArray(settings.rewards)?settings.rewards:cloneData(DEFAULT_REWARDS),
+          customBaseUrl:settings.customBaseUrl||''
+        };
+        cloudClasses.push({
+          id:'cloud_'+classDoc.id,cloudClassId:classDoc.id,schoolId,
+          className:meta.className||data.className,teacherName:meta.teacherName||data.teacherName,
+          year:meta.year||'2026-2027',createdAt:meta.createdAt||new Date().toISOString(),data
+        });
+      }
+      schools=cloudSchools;
+      classRecords=cloudClasses;
+      activeClassId=cloudClasses[0]?.id||'';
+      if(activeClassId) loadClassSnapshot(getActiveClassRecord());
+      persistClassRegistry();
+      updateClassTeacherDisplay();
+      showToast('Đã tải '+cloudClasses.length+' lớp được phân công từ dữ liệu tập trung.');
+    }
+
+    let centralClassSyncTimer=null;
+    function scheduleCentralClassSync() {
+      const active=getActiveClassRecord();
+      if(!active?.cloudClassId || !window.secureAuth?.cloudReady || !window.secureAuth.user) return;
+      clearTimeout(centralClassSyncTimer);
+      centralClassSyncTimer=setTimeout(async()=>{
+        try {
+          const ref=firebase.firestore().collection('classes').doc(active.cloudClassId);
+          const meta=await ref.get();
+          if(!meta.exists) throw new Error('Không tìm thấy hồ sơ lớp tập trung.');
+          const info=meta.data()||{};
+          if(!window.secureAuth.isAdmin && info.teacherUid!==window.secureAuth.user.uid) throw new Error('Tài khoản không còn được phân công lớp này.');
+          await writeClassSnapshotToCloud(active.cloudClassId,currentClassSnapshot());
+          await ref.update({studentCount:students.length,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+        } catch(error){console.error('Không đồng bộ được dữ liệu lớp tập trung:',error);showToast('Chưa đồng bộ được lớp lên máy chủ. Kiểm tra kết nối/quyền lớp.');}
+      },900);
+    }
+
     function loadInitialData() {
       try {
         const savedSchools = appStorage.getItem(MULTI_SCHOOLS_KEY);
@@ -2450,6 +2455,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     function saveStudentsToStorage() {
       try { appStorage.setItem('lophanhphuc_students_v4', JSON.stringify(students)); } catch (e) {}
       saveActiveClassSnapshot();
+      scheduleCentralClassSync();
 
       // Đồng bộ phần thông tin được phép công khai tới từng sổ phụ huynh.
       // Hàm publish dùng merge:true nên không ghi đè phản hồi của gia đình.
@@ -2497,13 +2503,76 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
             sel.innerHTML='<option value="">Chưa phân công</option>'+adminTeacherCache.map(t=>'<option value="'+escapeHtml(t.uid)+'">'+escapeHtml(t.name+(t.email?' · '+t.email:''))+'</option>').join('');
             sel.value=c.teacherUid||'';
             const btn=document.createElement('button');btn.className='px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-bold';btn.textContent='Lưu phân công';btn.addEventListener('click',()=>adminAssignClassTeacher(d.id,sel.value));
-            controls.append(sel,btn);row.append(info,controls);classes.append(row);});
+            controls.append(sel,btn);
+            const sourceWrap=document.createElement('div');sourceWrap.className='flex flex-col sm:flex-row gap-2 border-t border-slate-100 pt-2';
+            const source=document.createElement('select');source.className='flex-1 min-w-0 rounded-lg border border-slate-200 px-2 py-2 text-xs';
+            source.innerHTML='<option value="">Chọn lớp dữ liệu trên tài khoản quản trị</option>'+classRecords.map(rec=>'<option value="'+escapeHtml(rec.id)+'">'+escapeHtml((rec.className||'Lớp')+' · '+(rec.teacherName||'')+' · '+(Array.isArray(rec.data?.students)?rec.data.students.length:0)+' HS')+'</option>').join('');
+            const importBtn=document.createElement('button');importBtn.className='px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold';importBtn.textContent='Đồng bộ dữ liệu lớp';importBtn.addEventListener('click',()=>adminSyncLocalClassToCloud(d.id,source.value));
+            sourceWrap.append(source,importBtn);
+            row.append(info,controls,sourceWrap);classes.append(row);});
         }
       } catch(err) {
         console.error('Lỗi quản trị:',err);
         const msg='Không tải được dữ liệu quản trị: '+(err.message||'Kiểm tra Firestore Rules.');
         if(accounts) accounts.textContent=msg;if(classes) classes.textContent=msg;
       }
+    }
+
+    async function adminSyncLocalClassToCloud(cloudClassId,localClassId) {
+      if(!window.secureAuth?.isAdmin || window.secureAuth.user?.uid!==ADMIN_UID){alert('Chỉ quản trị viên mới được đồng bộ dữ liệu lớp.');return;}
+      const source=classRecords.find(c=>c.id===localClassId);
+      if(!source){alert('Không tìm thấy lớp dữ liệu trên tài khoản quản trị.');return;}
+      const snap=source.data||{};
+      const roster=Array.isArray(snap.students)?snap.students:[];
+      const targetRef=firebase.firestore().collection('classes').doc(cloudClassId);
+      const targetSnap=await targetRef.get();
+      if(!targetSnap.exists){alert('Hồ sơ lớp tập trung không còn tồn tại.');return;}
+      const target=targetSnap.data()||{};
+      const sourceName=snap.className||source.className||'';
+      if(sourceName && target.className && sourceName!==target.className &&
+        !confirm('Lớp nguồn là '+sourceName+', lớp đích là '+target.className+'. Cô xác nhận chép dữ liệu nguồn vào lớp đích?')) return;
+      const message='Sẽ đồng bộ '+roster.length+' học sinh cùng tiêu chí, phần thưởng và dữ liệu lớp vào '+(target.className||'lớp đích')+'. Dữ liệu hiện có trên lớp đích có thể được cập nhật. Cô xác nhận?';
+      if(!confirm(message)) return;
+      try {
+        await writeClassSnapshotToCloud(cloudClassId,{
+          className:sourceName||target.className,
+          teacherName:snap.teacherName||source.teacherName||target.teacherName||'',
+          students:roster,
+          criteriaPos:Array.isArray(snap.criteriaPos)?snap.criteriaPos:cloneData(DEFAULT_CRITERIA_POS),
+          criteriaNeg:Array.isArray(snap.criteriaNeg)?snap.criteriaNeg:cloneData(DEFAULT_CRITERIA_NEG),
+          rewards:Array.isArray(snap.rewards)?snap.rewards:cloneData(DEFAULT_REWARDS),
+          customBaseUrl:snap.customBaseUrl||''
+        });
+        await targetRef.update({studentCount:roster.length,dataVersion:2,importedFromUid:window.secureAuth.user.uid,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+        await renderAdminManagement();
+        showToast('Đã đồng bộ '+roster.length+' học sinh lên dữ liệu lớp tập trung.');
+      } catch(error){console.error(error);alert('Đồng bộ chưa thành công: '+(error.message||'Lỗi Firestore'));}
+    }
+
+    async function writeClassSnapshotToCloud(classId,snapshot) {
+      const db=firebase.firestore();
+      const itemsRef=db.collection('classes').doc(classId).collection('items');
+      const existing=await itemsRef.get();
+      const batch=db.batch();
+      const keep=new Set();
+      const roster=Array.isArray(snapshot.students)?snapshot.students:[];
+      roster.forEach(student=>{
+        const safeId=encodeURIComponent(String(student.id||makeId('student'))).replace(/%/g,'_');
+        const docId='student_'+safeId;keep.add(docId);
+        batch.set(itemsRef.doc(docId),{kind:'student',student:cloneData(student),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+      });
+      batch.set(itemsRef.doc('_settings'),{
+        kind:'settings',
+        className:String(snapshot.className||''),
+        teacherName:String(snapshot.teacherName||''),
+        criteriaPos:cloneData(snapshot.criteriaPos||DEFAULT_CRITERIA_POS),
+        criteriaNeg:cloneData(snapshot.criteriaNeg||DEFAULT_CRITERIA_NEG),
+        rewards:cloneData(snapshot.rewards||DEFAULT_REWARDS),
+        customBaseUrl:String(snapshot.customBaseUrl||''),
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
+      existing.forEach(doc=>{if(doc.id.startsWith('student_')&&!keep.has(doc.id))batch.delete(doc.ref);});
+      await batch.commit();
     }
 
     async function adminCreateClass() {
@@ -2516,8 +2585,8 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       const teacher=adminTeacherCache.find(t=>t.uid===teacherUid);if(!teacher){alert('Không tìm thấy giáo viên. Hãy tải lại danh sách.');return;}
       try {
         const db=firebase.firestore();
-        const dup=await db.collection('classes').where('className','==',className).where('schoolName','==',schoolName).where('year','==',year).get();
-        if(!dup.empty){alert('Lớp cùng tên, cùng trường và năm học đã tồn tại.');return;}
+        const dup=await db.collection('classes').where('className','==',className).get();
+        if(dup.docs.some(doc=>{const x=doc.data()||{};return x.schoolName===schoolName&&x.year===year;})){alert('Lớp cùng tên, cùng trường và năm học đã tồn tại.');return;}
         await db.collection('classes').add({className,schoolName,year,teacherUid,teacherName:teacher.name,studentCount:0,dataVersion:1,createdBy:window.secureAuth.user.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
         document.getElementById('adminNewClassName').value='';document.getElementById('adminNewClassSchool').value='';document.getElementById('adminNewClassYear').value='2026-2027';document.getElementById('adminNewClassTeacher').value='';
         await renderAdminManagement();showToast('Đã tạo hồ sơ lớp và phân công giáo viên.');
@@ -3404,19 +3473,9 @@ function switchCallingMode(mode) {
       ctx.fillText('🌸', cx, cy);
     }
 
-    // Gọi đồng thời nhạc chúc mừng, pháo giấy và flash khi vòng quay dừng.
+    // Chỉ phát nhạc nhẹ khi có học sinh được chọn; không tạo flash/nhấp nháy.
     function triggerWinnerCelebration() {
-      const flash = document.getElementById('winnerCelebrationFlash');
-      if (flash) {
-        flash.classList.remove('winner-celebration-flash');
-        // Buộc trình duyệt khởi động lại animation khi có nhiều lượt chơi liên tiếp.
-        void flash.offsetWidth;
-        flash.classList.add('winner-celebration-flash');
-        window.setTimeout(() => flash.classList.remove('winner-celebration-flash'), 1200);
-      }
-      playCelebrationSound().then(ok => {
-        if (!ok) console.warn('Hiệu ứng hình ảnh đã chạy nhưng âm thanh không phát được.');
-      }).catch(err => console.error('Lỗi âm thanh lúc công bố người thắng:', err));
+      playCelebrationSound().catch(err => console.error('Lỗi âm thanh lúc công bố người trúng:', err));
     }
 
     function spinLuckyWheel() {
@@ -3521,14 +3580,6 @@ function closeDuckGame() {
   if (openBtn) openBtn.classList.remove('hidden');
   if (closeBtn) closeBtn.classList.add('hidden');
 
-  // Dừng âm thanh trò chơi nếu có
-  if (window.duckGameAudio) {
-    try {
-      window.duckGameAudio.pause();
-      window.duckGameAudio.currentTime = 0;
-    } catch (e) {}
-  }
-
   if (status) {
     status.textContent = '🔒 Trò chơi đã đóng. Nhấn MỞ TRÒ CHƠI để chơi lại.';
   }
@@ -3557,10 +3608,11 @@ function shootDuck(idx) {
 
   if (modal) modal.classList.remove('hidden');
 
-  // Phát tiếng vỗ tay, không phát nhạc nền
-  if (typeof playApplauseSound === 'function') {
-    playApplauseSound();
-  }
+  // Mở khóa âm thanh ngay trong thao tác chạm và phát nhạc chúc mừng nhẹ.
+  primeClassroomAudioFromGesture();
+  playCelebrationSound().catch(err => console.error('Lỗi nhạc bắn vịt:', err));
+  const status = document.getElementById('duckGameStatus');
+  if (status) status.textContent = '🎉 Đã chọn ' + (s.name || 'học sinh') + '. Chúc mừng!';
 }
 
     // SƠ ĐỒ LỚP (19 BÀN ĐÔI)
