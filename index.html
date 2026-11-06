@@ -166,6 +166,8 @@
       };
       const configReady = FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.startsWith('YOUR_') && FIREBASE_CONFIG.projectId && !FIREBASE_CONFIG.projectId.startsWith('YOUR_');
       const pendingWrites = new Set();
+      // Xếp hàng ghi theo từng khóa để lần lưu mới không bị lần lưu cũ ghi đè.
+      const writeChains = new Map();
       const profileRef = uid => firebase.firestore().collection('users').doc(uid);
       const dataCollection = uid => firebase.firestore().collection('userData').doc(uid).collection('items');
       const prefixFor = uid => 'lhp_user_' + uid + '::';
@@ -301,10 +303,26 @@
           // được tài liệu chính yêu cầu ở bước trên. Điều này tránh chặn đăng nhập
           // khi một phiên bản cũ đã xóa tài liệu chính nhưng còn sót chunk cũ.
 
-          // Bước 2: khôi phục dữ liệu cloud sau khi đã xác thực đầy đủ.
-          // Không xóa local-only keys; cloud chỉ thay thế cùng khóa để tránh mất dữ liệu.
+          // Bước 2: trước khi cloud thay thế một khóa trên máy, giữ bản máy
+          // thành bản dự phòng riêng nếu hai bản khác nhau.
+          let conflictCount = 0;
+          for (const [key, cloudValue] of restoredValues.entries()) {
+            if (localValues.has(key) && localValues.get(key) !== cloudValue) {
+              const backupKey = '__recovery_conflict__' + Date.now() + '__' + key;
+              const localValue = localValues.get(key);
+              await writeUserDataValue(col, backupKey, localValue);
+              localStorage.setItem(prefix + backupKey, localValue);
+              conflictCount++;
+            }
+          }
+
+          // Bước 3: chỉ khôi phục sau khi dữ liệu cloud đã được xác thực đầy đủ.
+          // Bản máy khác biệt đã được giữ ở khóa dự phòng phía trên.
           for (const [key, value] of restoredValues.entries()) {
             localStorage.setItem(prefix + key, value);
+          }
+          if (conflictCount) {
+            status('Đã phát hiện ' + conflictCount + ' mục dữ liệu khác nhau giữa thiết bị và Firebase. Bản trên thiết bị đã được giữ trong bản dự phòng khôi phục.', true);
           }
 
           // Bước 3: đưa các khóa chỉ có ở máy này lên cloud bằng cơ chế chia phần an toàn.
@@ -399,8 +417,19 @@
         },
         async queueWrite(key, value) {
           if (!this.user || !this.cloudReady) return;
-          const task = writeUserDataValue(dataCollection(this.user.uid), key, value).catch(err => { console.error(err); status('Không đồng bộ được dữ liệu lên máy chủ. Hãy kiểm tra kết nối và sao lưu lớp.', true); throw err; });
-          pendingWrites.add(task); task.finally(() => pendingWrites.delete(task));
+          const uid = this.user.uid;
+          const previous = writeChains.get(key) || Promise.resolve();
+          const task = previous.catch(() => {}).then(() => {
+            if (!this.user || this.user.uid !== uid || !this.cloudReady) throw new Error('Phiên đăng nhập đã thay đổi; dữ liệu vẫn được giữ trên thiết bị.');
+            return writeUserDataValue(dataCollection(uid), key, value);
+          }).catch(err => {
+            console.error(err);
+            status('Chưa đồng bộ được một mục dữ liệu lên Firebase. Bản lưu trên thiết bị vẫn được giữ; hãy thử Đồng Bộ Firebase.', true);
+            throw err;
+          });
+          writeChains.set(key, task);
+          pendingWrites.add(task);
+          task.then(() => { pendingWrites.delete(task); if (writeChains.get(key) === task) writeChains.delete(key); }, () => { pendingWrites.delete(task); if (writeChains.get(key) === task) writeChains.delete(key); });
           return task;
         },
         async queueDelete(key) {
@@ -431,8 +460,10 @@
             const value = localStorage.getItem(fullKey);
             if (value !== null) records.push({ key, value });
           }
-          // Ghi từng mục; mục lớn tự chia thành nhiều document nhỏ.
-          for (const item of records) await writeUserDataValue(col, item.key, item.value);
+          // Đồng bộ qua cùng hàng đợi với thao tác lưu tự động để không ghi đè sai thứ tự.
+          await Promise.all(records.map(item => this.queueWrite(item.key, item.value)));
+          // Chờ cả các thao tác lưu phát sinh trong lúc đồng bộ hoàn tất.
+          await Promise.all(Array.from(pendingWrites));
           // Nếu lớp đã được quản trị viên phân công, đồng bộ thêm danh sách học sinh
           // vào kho lớp tập trung. Không ghi đè kho lớp bằng danh sách rỗng ngoài ý muốn.
           const active = typeof getActiveClassRecord === 'function' ? getActiveClassRecord() : null;
