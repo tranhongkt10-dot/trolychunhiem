@@ -554,6 +554,14 @@
           window.secureAuth.isAdmin = user.uid === ADMIN_UID;
           await readAndPrepareUserData(user, profile);
           window.secureAuth.cloudReady = true;
+          // Nạp lớp sau khi giáo viên đăng nhập thành công.
+          // Không chỉ gọi lúc DOMContentLoaded vì thời điểm đó chưa có phiên đăng nhập.
+          try {
+            await hydrateAssignedClassesFromCloud();
+          } catch (classLoadError) {
+            console.error('Không tải được lớp được phân công sau đăng nhập:', classLoadError);
+            showToast('Đã đăng nhập nhưng chưa tải được lớp phân công. Kiểm tra phân công lớp và quyền Firestore.');
+          }
           sessionStorage.setItem('lhp_cloud_ready_uid', user.uid);
           setTimeout(() => { ensureCompetitionBaseline(); recordAppVisitOnce(); }, 0);
           status('Đã tải dữ liệu riêng và xác thực quyền truy cập.');
