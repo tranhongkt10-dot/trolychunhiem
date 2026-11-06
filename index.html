@@ -307,18 +307,62 @@
           pendingWrites.add(task); task.finally(() => pendingWrites.delete(task));
           return task;
         },
+        async syncAllData() {
+          if (!this.user || !this.cloudReady) throw new Error('Tài khoản chưa sẵn sàng đồng bộ.');
+          const uid = this.user.uid;
+          const prefix = prefixFor(uid);
+          const col = dataCollection(uid);
+          const records = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const fullKey = localStorage.key(i);
+            if (!fullKey || !fullKey.startsWith(prefix)) continue;
+            const key = fullKey.slice(prefix.length);
+            const value = localStorage.getItem(fullKey);
+            if (value !== null) records.push({ key, value });
+          }
+          // Ghi theo từng nhóm nhỏ để tránh vượt giới hạn batch của Firestore.
+          for (let i = 0; i < records.length; i += 300) {
+            const batch = firebase.firestore().batch();
+            records.slice(i, i + 300).forEach(item => {
+              batch.set(col.doc(encodeKey(item.key)), {
+                key: item.key, value: item.value,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
+            });
+            await batch.commit();
+          }
+          // Nếu lớp đã được quản trị viên phân công, đồng bộ thêm danh sách học sinh
+          // vào kho lớp tập trung. Không ghi đè kho lớp bằng danh sách rỗng ngoài ý muốn.
+          const active = typeof getActiveClassRecord === 'function' ? getActiveClassRecord() : null;
+          if (active?.cloudClassId && Array.isArray(students) && students.length > 0) {
+            const classRef = firebase.firestore().collection('classes').doc(active.cloudClassId);
+            const classSnap = await classRef.get();
+            if (!classSnap.exists) throw new Error('Không tìm thấy hồ sơ lớp tập trung.');
+            const classInfo = classSnap.data() || {};
+            if (!this.isAdmin && classInfo.teacherUid !== uid) throw new Error('Tài khoản không còn được phân công lớp này.');
+            await writeClassSnapshotToCloud(active.cloudClassId, currentClassSnapshot());
+            await classRef.update({
+              studentCount: students.length,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          }
+          return { count: records.length };
+        },
         async logout() {
           if (!this.user) { status('Vui lòng đăng nhập bằng tài khoản giáo viên.'); return; }
           try {
-            await Promise.allSettled(Array.from(pendingWrites));
-            const uid = this.user.uid;
+            // Đồng bộ toàn bộ bản lưu cục bộ lên Firestore trước khi kết thúc phiên.
+            const result = await this.syncAllData();
+            await Promise.all(Array.from(pendingWrites));
+            alert('Đã đồng bộ ' + result.count + ' mục dữ liệu lên Firebase. Bản lưu trên máy tính cũng được giữ nguyên.');
+            // Chỉ kết thúc phiên đăng nhập; tuyệt đối không xóa localStorage theo UID.
             await this.auth.signOut();
-            const prefix = prefixFor(uid), keys = [];
-            for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith(prefix)) keys.push(k); }
-            keys.forEach(k => localStorage.removeItem(k));
             sessionStorage.removeItem('lhp_active_uid'); sessionStorage.removeItem('lhp_teacher_name'); sessionStorage.removeItem('lhp_class_name'); sessionStorage.removeItem('lhp_cloud_ready_uid');
             location.reload();
-          } catch (err) { alert(this.friendlyError(err)); }
+          } catch (err) {
+            console.error('Lỗi đồng bộ trước khi đăng xuất:', err);
+            alert('Chưa đăng xuất để bảo vệ dữ liệu. Đồng bộ Firebase chưa hoàn tất: ' + (err.message || this.friendlyError(err)));
+          }
         },
         async openAdminPanel() {
           if (!this.isAdmin || !this.user || this.user.uid !== ADMIN_UID) { alert('Tài khoản không có quyền quản trị.'); return; }
@@ -578,6 +622,9 @@
         <button onclick="openClassManager()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm flex items-center gap-1.5 transition-all active:scale-95" title="Quản lý nhiều trường và lớp học">🏫 Quản lý lớp</button>
         <button onclick="exportClassDataToFile()" class="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-sm flex items-center gap-1.5 transition-all active:scale-95" title="Tải file dữ liệu lớp về máy tính an toàn">
           <span>📥 Sao Lưu Lớp</span>
+        </button>
+        <button onclick="secureAuth.syncAllData().then(r=>showToast('Đã đồng bộ '+r.count+' mục dữ liệu lên Firebase.')).catch(e=>{console.error(e);alert('Đồng bộ chưa hoàn tất: '+(e.message||e));})" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm flex items-center gap-1.5 transition-all active:scale-95" title="Đồng bộ dữ liệu ngay lên Firebase">
+          <span>☁️ Đồng Bộ Firebase</span>
         </button>
         <label class="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl shadow-sm flex items-center gap-1.5 cursor-pointer transition-all active:scale-95" title="Mở file dữ liệu đã lưu">
           <span>📤 Nạp Dữ Liệu</span>
