@@ -297,15 +297,9 @@
             }
           }
 
-          // Không chấp nhận các phần rời không có tài liệu chính tương ứng.
-          for (const [docId, item] of cloudItems.entries()) {
-            if (!item || !item.chunkParent) continue;
-            const parentId = encodeKey(item.chunkParent);
-            const parent = cloudItems.get(parentId);
-            if (!parent || parent.chunked !== true || !Number.isInteger(Number(item.chunkIndex))) {
-              throw new Error('Phát hiện phần dữ liệu rời trên Firebase: ' + docId + '. Dữ liệu cục bộ được giữ nguyên.');
-            }
-          }
+          // Bỏ qua các chunk rời/đã cũ không còn tài liệu chính; chỉ ghép những chunk
+          // được tài liệu chính yêu cầu ở bước trên. Điều này tránh chặn đăng nhập
+          // khi một phiên bản cũ đã xóa tài liệu chính nhưng còn sót chunk cũ.
 
           // Bước 2: khôi phục dữ liệu cloud sau khi đã xác thực đầy đủ.
           // Không xóa local-only keys; cloud chỉ thay thế cùng khóa để tránh mất dữ liệu.
@@ -411,7 +405,16 @@
         },
         async queueDelete(key) {
           if (!this.user || !this.cloudReady) return;
-          const task = dataCollection(this.user.uid).doc(encodeKey(key)).delete().catch(err => { console.error(err); status('Không đồng bộ được thao tác xóa lên máy chủ.', true); });
+          const task = (async () => {
+            const col = dataCollection(this.user.uid);
+            const oldParts = await col.where('chunkParent', '==', key).get();
+            for (let start = 0; start < oldParts.docs.length; start += 400) {
+              const batch = firebase.firestore().batch();
+              oldParts.docs.slice(start, start + 400).forEach(doc => batch.delete(doc.ref));
+              await batch.commit();
+            }
+            await col.doc(encodeKey(key)).delete();
+          })().catch(err => { console.error(err); status('Không đồng bộ được thao tác xóa lên máy chủ.', true); throw err; });
           pendingWrites.add(task); task.finally(() => pendingWrites.delete(task));
           return task;
         },
