@@ -788,6 +788,9 @@
       <button onclick="switchMainTab('calling')" id="nav-calling" class="px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 hover:bg-pink-50">
         <span>🎲 Gọi tên vui</span>
       </button>
+      <button onclick="switchMainTab('faceplay')" id="nav-faceplay" class="px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 hover:bg-pink-50">
+        <span>🎭 Gương mặt thần kỳ</span>
+      </button>
       <button onclick="switchMainTab('tools')" id="nav-tools" class="px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 hover:bg-pink-50">
         <span>🛠️ Công cụ lớp</span>
       </button>
@@ -1293,6 +1296,30 @@
           </ol>
         </div>
       </div>
+    </section>
+
+    <!-- TRÒ CHƠI AI QUÉT KHUÔN MẶT -->
+    <section id="tab-faceplay" class="hidden space-y-5">
+      <div class="rounded-3xl overflow-hidden bg-gradient-to-br from-indigo-950 via-purple-900 to-fuchsia-800 text-white p-5 sm:p-7 shadow-xl">
+        <div class="flex flex-wrap items-center justify-between gap-3"><div><div class="text-xs font-black tracking-widest text-fuchsia-200">AI FACE PLAY · TRÒ CHƠI TƯƠNG TÁC</div><h2 class="text-2xl sm:text-3xl font-black mt-1">🎭 Gương mặt thần kỳ</h2><p class="text-sm text-purple-100 mt-2">Cười, nháy mắt, há miệng và nghiêng đầu để khám phá những hiệu ứng vui nhộn!</p></div><span class="rounded-full bg-white/15 px-3 py-2 text-xs font-bold">📷 Camera trực tiếp</span></div>
+      </div>
+      <div class="grid lg:grid-cols-5 gap-5">
+        <div class="lg:col-span-3 bg-white rounded-3xl border border-purple-100 shadow-sm p-4 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2"><h3 class="font-black text-gray-800">📸 Khu vực camera</h3><span id="faceStatus" class="text-xs font-bold text-gray-500">Chưa bật camera</span></div>
+          <div class="relative bg-slate-950 rounded-2xl overflow-hidden aspect-video">
+            <video id="faceVideo" class="absolute inset-0 w-full h-full object-cover -scale-x-100" playsinline muted></video>
+            <canvas id="faceCanvas" class="absolute inset-0 w-full h-full"></canvas>
+            <div id="facePlaceholder" class="absolute inset-0 flex flex-col items-center justify-center text-center p-5 text-white"><div class="text-5xl mb-3">😊</div><b>Camera đang tắt</b><span class="text-xs text-slate-300 mt-1">Nhấn “Bật camera” và cho phép trình duyệt truy cập camera</span></div>
+          </div>
+          <div class="flex flex-wrap gap-2"><button id="faceStartBtn" onclick="startFaceGame()" class="px-5 py-3 rounded-xl bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white font-black text-sm shadow">📷 Bật camera</button><button id="faceStopBtn" onclick="stopFaceGame()" class="px-5 py-3 rounded-xl bg-slate-100 text-slate-700 font-bold text-sm" disabled>⏹ Tắt camera</button><button onclick="resetFaceGame()" class="px-4 py-3 rounded-xl bg-amber-50 text-amber-700 font-bold text-sm">↻ Chơi lại</button></div>
+          <p class="text-xs text-gray-500">Yêu cầu kết nối Internet lần đầu để tải mô hình AI. Trang GitHub Pages dùng HTTPS nên có thể xin quyền camera.</p>
+        </div>
+        <div class="lg:col-span-2 space-y-4">
+          <div class="bg-white rounded-3xl border border-pink-100 shadow-sm p-4"><h3 class="font-black text-gray-800 mb-3">✨ Thử thách biểu cảm</h3><div class="grid grid-cols-2 gap-2 text-sm"><div class="rounded-xl bg-pink-50 p-3"><span class="text-2xl">😄</span><div class="font-bold text-gray-700">Nụ cười</div><div id="faceSmile" class="text-xs text-gray-500">Chờ nhận diện</div></div><div class="rounded-xl bg-sky-50 p-3"><span class="text-2xl">😉</span><div class="font-bold text-gray-700">Nháy mắt</div><div id="faceBlink" class="text-xs text-gray-500">Chờ nhận diện</div></div><div class="rounded-xl bg-amber-50 p-3"><span class="text-2xl">😮</span><div class="font-bold text-gray-700">Há miệng</div><div id="faceMouth" class="text-xs text-gray-500">Chờ nhận diện</div></div><div class="rounded-xl bg-violet-50 p-3"><span class="text-2xl">↔️</span><div class="font-bold text-gray-700">Nghiêng đầu</div><div id="faceTilt" class="text-xs text-gray-500">Chờ nhận diện</div></div></div><div class="mt-4 rounded-2xl bg-gradient-to-r from-amber-100 to-pink-100 p-4 text-center"><div class="text-xs font-bold text-gray-600">ĐIỂM VUI HÔM NAY</div><div id="faceScore" class="text-4xl font-black text-purple-700">0</div><div id="faceEncourage" class="text-sm font-bold text-purple-700 mt-1">Cùng bắt đầu nhé!</div></div></div>
+          <div class="bg-white rounded-3xl border border-purple-100 shadow-sm p-4 space-y-2"><h3 class="font-black text-gray-800">🏅 Lưu thành tích</h3><label class="text-xs font-bold text-gray-600">Chọn học sinh (không dùng khuôn mặt để xác định danh tính)</label><select id="faceStudentSelect" class="w-full p-3 border border-gray-200 rounded-xl text-sm"><option value="">Thành tích chung của lớp</option></select><button onclick="saveFaceGameResult()" class="w-full p-3 rounded-xl bg-emerald-600 text-white font-black text-sm">💾 Lưu điểm vào ứng dụng</button><p id="faceSaveStatus" class="text-xs text-gray-500">Chỉ lưu điểm và thành tích trò chơi, không lưu ảnh hoặc video khuôn mặt.</p></div>
+        </div>
+      </div>
+      <div class="rounded-2xl bg-amber-50 border border-amber-200 p-4 text-xs text-amber-900"><b>🔐 Quyền riêng tư học sinh:</b> Camera chỉ dùng để phân tích trực tiếp trên thiết bị. Phiên bản này không chụp, tải lên hoặc lưu ảnh/video, không tạo hồ sơ nhận dạng khuôn mặt. Firebase chỉ lưu điểm trò chơi và tên/mã học sinh do giáo viên chọn. Giáo viên cần thông báo và có sự đồng ý phù hợp của phụ huynh trước khi cho trẻ tham gia.</div>
     </section>
 
   </main>
@@ -3087,7 +3114,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     }
 
     function switchMainTab(tabId) {
-      const tabs = ['overview', 'students', 'seating', 'garden', 'teams', 'rewards', 'calling', 'tools', 'attendance', 'honors', 'parent', 'gallery', 'help'];
+      const tabs = ['overview', 'students', 'seating', 'garden', 'teams', 'rewards', 'calling', 'faceplay', 'tools', 'attendance', 'honors', 'parent', 'gallery', 'help'];
       tabs.forEach(t => {
         const el = document.getElementById(`tab-${t}`);
         const nav = document.getElementById(`nav-${t}`);
@@ -3104,6 +3131,16 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
         setTimeout(drawLuckyWheel, 100);
       }
     }
+
+    // AI FACE PLAY: chỉ lưu điểm trò chơi, tuyệt đối không lưu ảnh/video khuôn mặt.
+    window.getFaceGameStudentList = () => students.map(s => ({id:s.id,name:s.name}));
+    window.recordFaceGameResult = (record) => {
+      const key = 'lophanhphuc_facegame_scores_v1';
+      let rows = []; try { rows = JSON.parse(appStorage.getItem(key) || '[]'); } catch (_) {}
+      rows.push(record); if (rows.length > 500) rows = rows.slice(-500);
+      appStorage.setItem(key, JSON.stringify(rows));
+      if (typeof showToast === 'function') showToast('Đã lưu thành tích trò chơi vào hồ sơ lớp 🌟');
+    };
 
     function renderAllViews() {
       renderOverviewStats();
@@ -4237,5 +4274,20 @@ function shootDuck(idx) {
       setTimeout(() => toast.classList.add('hidden'), 3500);
     }
   </script>
+
+<script type="module">
+import { FaceLandmarker, FilesetResolver, DrawingUtils } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+let faceLandmarker=null, faceStream=null, faceRunning=false, lastVideoTime=-1, rafId=0, score=0, blinkReady=true, lastSmile=false, lastMouth=false;
+const $=id=>document.getElementById(id);
+function status(t,ok=false){$('faceStatus').textContent=t;$('faceStatus').className='text-xs font-bold '+(ok?'text-emerald-600':'text-gray-500');}
+async function loadFaceModel(){if(faceLandmarker)return faceLandmarker;status('Đang tải mô hình AI…');const vision=await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');faceLandmarker=await FaceLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',delegate:'GPU'},runningMode:'VIDEO',numFaces:1,outputFaceBlendshapes:true});return faceLandmarker;}
+window.startFaceGame=async()=>{try{if(!navigator.mediaDevices?.getUserMedia)throw new Error('Trình duyệt không hỗ trợ camera. Hãy mở ứng dụng bằng HTTPS trên Chrome hoặc Safari.');$('faceStartBtn').disabled=true;await loadFaceModel();faceStream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:'user',width:{ideal:640},height:{ideal:480}}});const v=$('faceVideo');v.srcObject=faceStream;await v.play();$('facePlaceholder').classList.add('hidden');$('faceStopBtn').disabled=false;status('Đang quét khuôn mặt',true);faceRunning=true;lastVideoTime=-1;loop();}catch(e){status('Không bật được camera');$('faceStartBtn').disabled=false;alert('Không thể khởi động trò chơi: '+(e.message||e)+'\n\nCô hãy kiểm tra quyền Camera của trình duyệt và thử lại.');}};
+window.stopFaceGame=()=>{faceRunning=false;if(rafId)cancelAnimationFrame(rafId);if(faceStream)faceStream.getTracks().forEach(t=>t.stop());faceStream=null;$('faceVideo').srcObject=null;$('faceCanvas').getContext('2d').clearRect(0,0,$('faceCanvas').width,$('faceCanvas').height);$('facePlaceholder').classList.remove('hidden');$('faceStopBtn').disabled=true;$('faceStartBtn').disabled=false;status('Camera đã tắt');['faceSmile','faceBlink','faceMouth','faceTilt'].forEach(id=>$(id).textContent='Chờ nhận diện');};
+window.resetFaceGame=()=>{score=0;blinkReady=true;lastSmile=false;lastMouth=false;$('faceScore').textContent='0';$('faceEncourage').textContent='Cùng bắt đầu nhé!';};
+function award(msg){score+=5;$('faceScore').textContent=String(score);$('faceEncourage').textContent=msg;}
+function loop(){if(!faceRunning)return;const v=$('faceVideo'),c=$('faceCanvas'),ctx=c.getContext('2d');if(v.readyState>=2&&v.currentTime!==lastVideoTime){lastVideoTime=v.currentTime;c.width=v.videoWidth;c.height=v.videoHeight;const result=faceLandmarker.detectForVideo(v,performance.now());ctx.clearRect(0,0,c.width,c.height);if(result.faceLandmarks?.length){const lm=result.faceLandmarks[0];const draw=new DrawingUtils(ctx);draw.drawConnectors(lm,FaceLandmarker.FACE_LANDMARKS_TESSELATION,{color:'rgba(80,220,255,.32)',lineWidth:1});draw.drawConnectors(lm,FaceLandmarker.FACE_LANDMARKS_FACE_OVAL,{color:'#f9a8d4',lineWidth:2});draw.drawConnectors(lm,FaceLandmarker.FACE_LANDMARKS_LIPS,{color:'#fbbf24',lineWidth:2});const cats=result.faceBlendshapes?.[0]?.categories||[];const val=n=>cats.find(x=>x.categoryName===n)?.score||0;const smile=Math.max(val('mouthSmileLeft'),val('mouthSmileRight'));const blink=Math.max(val('eyeBlinkLeft'),val('eyeBlinkRight'));const mouth=val('jawOpen');const tilt=Math.abs(lm[1].x-lm[152].x);$('faceSmile').textContent=smile>.55?'Đã thấy nụ cười 😄':'Thử cười thật tươi';$('faceBlink').textContent=blink>.65?'Đang nháy mắt 😉':'Thử nháy mắt';$('faceMouth').textContent=mouth>.45?'Miệng đang mở 😮':'Thử há miệng';$('faceTilt').textContent=tilt>.12?'Đầu đang chuyển động ↔️':'Thử nghiêng đầu';if(smile>.65&&!lastSmile)award('Nụ cười tỏa sáng! +5');if(mouth>.65&&!lastMouth)award('Wow! Biểu cảm tuyệt vời! +5');if(blink<.18)blinkReady=true;if(blink>.72&&blinkReady){award('Nháy mắt siêu dễ thương! +5');blinkReady=false;}lastSmile=smile>.65;lastMouth=mouth>.65;}else{['faceSmile','faceBlink','faceMouth','faceTilt'].forEach(id=>$(id).textContent='Đưa khuôn mặt vào khung hình');}}rafId=requestAnimationFrame(loop);}
+window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[sel.selectedIndex];const record={studentId:sel.value||'',studentName:sel.value?opt.text:'Cả lớp',className:document.querySelector('[id*="className"]')?.textContent||'',score,createdAt:new Date().toISOString(),activity:'Gương mặt thần kỳ'};if(score<=0){alert('Bé hãy chơi và ghi điểm trước khi lưu nhé!');return;}if(typeof window.recordFaceGameResult!=='function'){alert('Chưa kết nối được chức năng lưu thành tích.');return;}window.recordFaceGameResult(record);$('faceSaveStatus').textContent='Đã lưu '+score+' điểm cho '+record.studentName+'. Không lưu ảnh/video khuôn mặt.';};
+const oldSwitch=window.switchMainTab;window.addEventListener('DOMContentLoaded',()=>{const sel=$('faceStudentSelect');if(sel&&window.getFaceGameStudentList){window.getFaceGameStudentList().forEach(s=>{const o=document.createElement('option');o.value=s.id;o.textContent=s.id+' – '+s.name;sel.appendChild(o);});}});
+</script>
 </body>
 </html>
