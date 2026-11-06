@@ -1984,10 +1984,67 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       if (label) label.innerText = `${val} dB`;
     }
 
-    // Âm thanh chúc mừng dùng chung cho vòng quay, bắn vịt và sân khấu:
-    // giai điệu êm, âm lượng nhỏ; không vỗ tay, không pháo hoa âm thanh.
+    // Âm thanh trò chơi: giai điệu chiến thắng vui tươi, tách riêng tiếng vỗ tay.
     function playApplauseSound() {
-      return playCelebrationSound();
+      try {
+        const ctx = ensureClassroomAudioContext();
+        if (!ctx) return false;
+        if (ctx.state !== 'running') {
+          ctx.resume().catch(error => console.warn('Không mở khóa được tiếng vỗ tay:', error));
+          return false;
+        }
+        const start = ctx.currentTime + 0.025;
+        // Tiếng vỗ tay mô phỏng bằng các cụm nhiễu ngắn, lọc dải trung-cao.
+        const duration = 1.9;
+        const frameCount = Math.floor(ctx.sampleRate * duration);
+        const buffer = ctx.createBuffer(1, frameCount, ctx.sampleRate);
+        const channel = buffer.getChannelData(0);
+        for (let i = 0; i < frameCount; i++) {
+          const t = i / ctx.sampleRate;
+          const envelope = Math.exp(-t * 1.35);
+          channel[i] = (Math.random() * 2 - 1) * envelope;
+        }
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        const band = ctx.createBiquadFilter();
+        band.type = 'bandpass';
+        band.frequency.value = 1650;
+        band.Q.value = 0.7;
+        const master = ctx.createGain();
+        master.gain.setValueAtTime(0.0001, start);
+        master.gain.linearRampToValueAtTime(0.32, start + 0.035);
+        master.gain.setValueAtTime(0.26, start + 0.45);
+        master.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+        source.connect(band);
+        band.connect(master);
+        master.connect(ctx.destination);
+        source.start(start);
+        source.stop(start + duration);
+
+        // Các tiếng vỗ tay rời tạo nhịp cổ vũ tự nhiên hơn.
+        for (let i = 0; i < 13; i++) {
+          const at = start + 0.06 + i * (0.105 + Math.random() * 0.045);
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const filter = ctx.createBiquadFilter();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(1250 + Math.random() * 900, at);
+          filter.type = 'highpass';
+          filter.frequency.value = 850;
+          gain.gain.setValueAtTime(0.0001, at);
+          gain.gain.linearRampToValueAtTime(0.035 + Math.random() * 0.025, at + 0.004);
+          gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.045);
+          osc.connect(filter);
+          filter.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(at);
+          osc.stop(at + 0.05);
+        }
+        return true;
+      } catch (error) {
+        console.error('Lỗi phát tiếng vỗ tay:', error);
+        return false;
+      }
     }
 
     async function playCelebrationSound() {
@@ -2003,50 +2060,49 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
           return false;
         }
 
-        const start = ctx.currentTime + 0.08;
-        // Giai điệu C trưởng ngắn, âm sắc mềm như chuông/piano điện tử.
+        const start = ctx.currentTime + 0.045;
+        // Jingle chiến thắng kiểu trò chơi thiếu nhi: nhanh, sáng, nhịp vui.
         const notes = [
-          { f: 523.25, t: 0.00, d: 0.58 },
-          { f: 659.25, t: 0.46, d: 0.58 },
-          { f: 783.99, t: 0.92, d: 0.72 },
-          { f: 659.25, t: 1.48, d: 0.56 },
-          { f: 587.33, t: 1.92, d: 0.60 },
-          { f: 659.25, t: 2.38, d: 0.92 }
+          { f: 659.25, t: 0.00, d: 0.16 },
+          { f: 783.99, t: 0.16, d: 0.16 },
+          { f: 987.77, t: 0.32, d: 0.20 },
+          { f: 1318.51, t: 0.56, d: 0.30 },
+          { f: 1174.66, t: 0.90, d: 0.16 },
+          { f: 1318.51, t: 1.08, d: 0.18 },
+          { f: 1567.98, t: 1.30, d: 0.42 }
         ];
-        notes.forEach(note => {
+        notes.forEach((note, index) => {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           const filter = ctx.createBiquadFilter();
-          osc.type = 'sine';
+          osc.type = index % 2 ? 'triangle' : 'sine';
           osc.frequency.setValueAtTime(note.f, start + note.t);
           filter.type = 'lowpass';
-          filter.frequency.value = 1500;
+          filter.frequency.value = 4200;
           gain.gain.setValueAtTime(0.0001, start + note.t);
-          gain.gain.linearRampToValueAtTime(0.045, start + note.t + 0.06);
-          gain.gain.setValueAtTime(0.034, start + note.t + 0.16);
+          gain.gain.linearRampToValueAtTime(0.075, start + note.t + 0.012);
           gain.gain.exponentialRampToValueAtTime(0.0001, start + note.t + note.d);
           osc.connect(filter);
           filter.connect(gain);
           gain.connect(ctx.destination);
           osc.start(start + note.t);
-          osc.stop(start + note.t + note.d + 0.03);
+          osc.stop(start + note.t + note.d + 0.02);
         });
 
-        // Nền hòa âm rất nhỏ để giai điệu dịu và đầy hơn.
-        [261.63, 392.00].forEach((frequency, index) => {
+        // Điểm nhấn leng keng ở cuối câu nhạc.
+        [1318.51, 1567.98, 1975.53].forEach((frequency, index) => {
+          const at = start + 1.34 + index * 0.035;
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
-          const at = start + index * 0.06;
-          osc.type = 'triangle';
+          osc.type = 'sine';
           osc.frequency.value = frequency;
           gain.gain.setValueAtTime(0.0001, at);
-          gain.gain.linearRampToValueAtTime(0.009, at + 0.22);
-          gain.gain.setValueAtTime(0.007, at + 1.8);
-          gain.gain.exponentialRampToValueAtTime(0.0001, at + 3.25);
+          gain.gain.linearRampToValueAtTime(0.035, at + 0.01);
+          gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.48);
           osc.connect(gain);
           gain.connect(ctx.destination);
           osc.start(at);
-          osc.stop(at + 3.3);
+          osc.stop(at + 0.5);
         });
         return true;
       } catch (error) {
