@@ -3733,6 +3733,20 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
         className: currentClassName,
         teacherName: currentTeacherName,
         exportDate: new Date().toISOString(),
+        // Sao lưu toàn bộ khóa dữ liệu của tài khoản giáo viên, không chỉ dữ liệu lớp đang mở.
+        accountData: (() => {
+          const data = {};
+          const prefix = appStorage._prefix();
+          for (let i = 0; i < localStorage.length; i++) {
+            const fullKey = localStorage.key(i);
+            if (fullKey && fullKey.startsWith(prefix)) {
+              const key = fullKey.slice(prefix.length);
+              const value = localStorage.getItem(fullKey);
+              if (value !== null) data[key] = value;
+            }
+          }
+          return data;
+        })(),
         students: students,
         criteriaPos: customCriteriaPos,
         criteriaNeg: customCriteriaNeg,
@@ -3754,9 +3768,22 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = function(evt) {
+      reader.onload = async function(evt) {
         try {
           const imported = JSON.parse(evt.target.result);
+          // Bản sao lưu đầy đủ sẽ nhập theo kiểu hợp nhất: ghi đè khóa trùng,
+          // giữ nguyên các khóa mới hơn không có trong file; lưu bản cũ trước khi thay.
+          if (imported.accountData && typeof imported.accountData === 'object' && !Array.isArray(imported.accountData)) {
+            const entries = Object.entries(imported.accountData).filter(([key, value]) => typeof key === 'string' && key && typeof value === 'string');
+            if (!confirm('File chứa ' + entries.length + ' mục dữ liệu của toàn tài khoản. Nạp sẽ cập nhật các mục trùng tên, giữ nguyên mục khác và lưu bản hiện tại để có thể khôi phục. Cô muốn tiếp tục?')) { e.target.value = ''; return; }
+            const prefix = appStorage._prefix();
+            const stamp = Date.now();
+            for (const [key, value] of entries) {
+              const oldValue = localStorage.getItem(prefix + key);
+              if (oldValue !== null && oldValue !== value) localStorage.setItem(prefix + '__restore_before_import__' + stamp + '__' + key, oldValue);
+              localStorage.setItem(prefix + key, value);
+            }
+          }
           if (imported.students && Array.isArray(imported.students)) {
             if (!confirm(`File có ${imported.students.length} học sinh. Nạp file này sẽ thay danh sách học sinh của lớp đang mở (${currentClassName}). Bạn đã sao lưu và muốn tiếp tục?`)) { e.target.value = ''; return; }
             students = imported.students;
@@ -3780,7 +3807,16 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
 
           updateClassTeacherDisplay();
           renderAllViews();
-          showToast('Đã nạp và phục hồi 100% dữ liệu lớp học thành công!');
+          if (window.secureAuth?.user && window.secureAuth.cloudReady) {
+            try {
+              const synced = await window.secureAuth.syncAllData();
+              showToast('Đã nạp dữ liệu và đồng bộ ' + synced.count + ' mục lên Firebase.');
+            } catch (syncError) {
+              alert('Dữ liệu đã được nạp và giữ trên thiết bị, nhưng chưa đồng bộ Firebase: ' + (syncError.message || syncError) + '. Cô hãy bấm Đồng Bộ Firebase khi mạng ổn định.');
+            }
+          } else {
+            showToast('Đã nạp dữ liệu vào thiết bị. Đăng nhập lại để đồng bộ Firebase.');
+          }
         } catch (err) {
           alert('Tệp dữ liệu không hợp lệ!');
         }
