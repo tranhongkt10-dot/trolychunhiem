@@ -130,7 +130,11 @@
             document.getElementById('parentDedicatedStudentName').textContent = 'Bé: ' + (data.studentName || 'Học sinh');
             document.getElementById('parentDedicatedClassInfo').textContent = (data.className || '') + ' • GVCN: ' + (data.teacherName || '');
             document.getElementById('parentDedicatedCodeDisplay').textContent = 'Liên kết riêng';
-            document.getElementById('parentDedicatedAvatarImg').src = '';
+            const parentAvatar = document.getElementById('parentDedicatedAvatarImg');
+            if (parentAvatar) {
+              parentAvatar.onerror = () => { parentAvatar.onerror = null; parentAvatar.src = generatePixar3DAvatarDataUrl({ name: data.studentName || 'Học sinh' }); };
+              parentAvatar.src = data.customAvatar || generatePixar3DAvatarDataUrl({ name: data.studentName || 'Học sinh' });
+            }
             const team = data.team || 'Chưa cập nhật tổ';
             const teamEmoji = team === 'Tổ 1' ? '🐰' : team === 'Tổ 2' ? '🐻' : team === 'Tổ 3' ? '🐼' : '🦊';
             document.getElementById('parentDedicatedTeamDisplay').textContent = teamEmoji + ' ' + team;
@@ -1690,6 +1694,7 @@
         studentName: String(student.name || 'Học sinh').slice(0, 120),
         className: String(currentClassName || '').slice(0, 80),
         teacherName: String(currentTeacherName || '').slice(0, 120),
+        customAvatar: typeof student.customAvatar === 'string' ? student.customAvatar.slice(0, 700000) : '',
         team: String(student.team || ''),
         desk: Math.max(0, Math.floor(Number(student.desk) || 0)),
         flowers: Math.max(0, Math.floor(Number(student.flowers) || 0)),
@@ -1993,52 +1998,36 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
           ctx.resume().catch(error => console.warn('Không mở khóa được tiếng vỗ tay:', error));
           return false;
         }
+        // Mô phỏng một tràng vỗ tay lớn: nhiều cụm tiếng "chát" ngắn, dày, không phải tiếng rì.
         const start = ctx.currentTime + 0.025;
-        // Tiếng vỗ tay mô phỏng bằng các cụm nhiễu ngắn, lọc dải trung-cao.
-        const duration = 1.9;
-        const frameCount = Math.floor(ctx.sampleRate * duration);
-        const buffer = ctx.createBuffer(1, frameCount, ctx.sampleRate);
-        const channel = buffer.getChannelData(0);
-        for (let i = 0; i < frameCount; i++) {
-          const t = i / ctx.sampleRate;
-          const envelope = Math.exp(-t * 1.35);
-          channel[i] = (Math.random() * 2 - 1) * envelope;
-        }
-        const source = ctx.createBufferSource();
-        source.buffer = buffer;
-        const band = ctx.createBiquadFilter();
-        band.type = 'bandpass';
-        band.frequency.value = 1650;
-        band.Q.value = 0.7;
         const master = ctx.createGain();
         master.gain.setValueAtTime(0.0001, start);
-        master.gain.linearRampToValueAtTime(0.32, start + 0.035);
-        master.gain.setValueAtTime(0.26, start + 0.45);
-        master.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-        source.connect(band);
-        band.connect(master);
+        master.gain.linearRampToValueAtTime(0.95, start + 0.04);
+        master.gain.setValueAtTime(0.82, start + 1.85);
+        master.gain.exponentialRampToValueAtTime(0.0001, start + 2.45);
         master.connect(ctx.destination);
-        source.start(start);
-        source.stop(start + duration);
-
-        // Các tiếng vỗ tay rời tạo nhịp cổ vũ tự nhiên hơn.
-        for (let i = 0; i < 13; i++) {
-          const at = start + 0.06 + i * (0.105 + Math.random() * 0.045);
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
+        for (let i = 0; i < 46; i++) {
+          const at = start + 0.025 + i * (0.043 + Math.random() * 0.022);
+          const duration = 0.035 + Math.random() * 0.045;
+          const count = Math.max(64, Math.floor(ctx.sampleRate * duration));
+          const buffer = ctx.createBuffer(1, count, ctx.sampleRate);
+          const samples = buffer.getChannelData(0);
+          for (let j = 0; j < count; j++) {
+            const envelope = Math.pow(1 - j / count, 2.2);
+            samples[j] = (Math.random() * 2 - 1) * envelope;
+          }
+          const source = ctx.createBufferSource();
           const filter = ctx.createBiquadFilter();
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(1250 + Math.random() * 900, at);
-          filter.type = 'highpass';
-          filter.frequency.value = 850;
-          gain.gain.setValueAtTime(0.0001, at);
-          gain.gain.linearRampToValueAtTime(0.035 + Math.random() * 0.025, at + 0.004);
-          gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.045);
-          osc.connect(filter);
-          filter.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(at);
-          osc.stop(at + 0.05);
+          const hitGain = ctx.createGain();
+          source.buffer = buffer;
+          filter.type = 'bandpass';
+          filter.frequency.value = 1250 + Math.random() * 1500;
+          filter.Q.value = 0.65;
+          hitGain.gain.setValueAtTime(0.42 + Math.random() * 0.38, at);
+          source.connect(filter);
+          filter.connect(hitGain);
+          hitGain.connect(master);
+          source.start(at);
         }
         return true;
       } catch (error) {
@@ -2220,6 +2209,35 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       }
     }
 
+    // Tiếng tích tắc đồng hồ: tiếng gõ ngắn, rõ, phát mỗi giây khi đồng hồ chạy.
+    function playClockTick() {
+      try {
+        const ctx = classroomAudioContext;
+        if (!ctx || ctx.state !== 'running') return false;
+        const at = ctx.currentTime + 0.006;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(1450, at);
+        osc.frequency.exponentialRampToValueAtTime(780, at + 0.028);
+        filter.type = 'lowpass';
+        filter.frequency.value = 2600;
+        gain.gain.setValueAtTime(0.0001, at);
+        gain.gain.linearRampToValueAtTime(0.11, at + 0.003);
+        gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.055);
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(at);
+        osc.stop(at + 0.06);
+        return true;
+      } catch (error) {
+        console.warn('Không phát được tiếng tích tắc:', error);
+        return false;
+      }
+    }
+
     // ĐỒNG HỒ BẤM GIỜ
     let timerDuration = 180;
     let timerRemaining = 180;
@@ -2257,6 +2275,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
           if (timerRemaining > 0) {
             timerRemaining--;
             updateTimerDisplay();
+            if (timerRemaining > 0) playClockTick();
             if (timerRemaining === 0) {
               clearInterval(timerInterval);
               timerInterval = null;
@@ -2562,7 +2581,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
         }
       } catch(err) {
         console.error('Lỗi quản trị:',err);
-        const msg='Không tải được dữ liệu quản trị: '+(err.message||'Kiểm tra Firestore Rules.');
+        const msg='Không tải được dữ liệu quản trị ('+(err.code||'lỗi')+'): '+(err.message||'Kiểm tra Firestore Rules đã Publish đúng dự án tro-ly-chu-nhiem-8f31b chưa.');
         if(accounts) accounts.textContent=msg;if(classes) classes.textContent=msg;
       }
     }
