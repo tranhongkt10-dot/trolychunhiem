@@ -480,41 +480,47 @@
 
 
 <style id="classroom-carnival-theme">
-/* Sân khấu hội chợ bắn vịt */
-.duck-carnival-scene{position:relative;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse at 50% 18%,#9b145f 0%,#6b0d62 42%,#260b50 100%);border:5px solid #f7bd35}
-.duck-carnival-scene:before,.duck-carnival-scene:after{content:"";position:absolute;z-index:0;top:0;bottom:0;width:clamp(22px,8%,76px);background:repeating-linear-gradient(90deg,#a90821 0 12px,#ed2636 12px 27px,#8d061e 27px 34px);box-shadow:inset 0 0 18px #4b001b,0 0 18px #ffb52e}
+/* Sân khấu bắn vịt: dựng theo bố cục sân khấu hội chợ trong ảnh mẫu */
+.duck-carnival-scene{position:relative;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse at 50% 38%,#a51a9a 0%,#68118f 58%,#310b62 100%);border:5px solid #f7c84b;box-shadow:inset 0 0 45px #210641}
+.duck-carnival-scene:before,.duck-carnival-scene:after{content:"";position:absolute;z-index:0;top:0;bottom:0;width:clamp(30px,9%,88px);background:repeating-linear-gradient(90deg,#8f001e 0 9px,#e51b32 9px 22px,#a90025 22px 31px,#ff3942 31px 39px);box-shadow:inset 0 0 20px #4a001c,0 0 18px #ffbd38}
 .duck-carnival-scene:before{left:0;border-right:5px solid #ffc84a;border-radius:0 0 28px 0}
 .duck-carnival-scene:after{right:0;border-left:5px solid #ffc84a;border-radius:0 0 0 28px}
-.duck-marquee{position:relative;z-index:1;margin:0 auto;padding:12px 8px 18px;max-width:760px;text-align:center;background:linear-gradient(180deg,#e71936,#9e092b);border:4px solid #ffcf52;border-radius:22px 22px 48% 48%;box-shadow:0 8px 0 #680b34,inset 0 0 22px #ff9d36}
+.duck-marquee{position:relative;z-index:1;margin:0 auto 12px;padding:8px 8px 17px;max-width:850px;text-align:center;background:linear-gradient(180deg,#f21b37 0%,#bd082c 78%,#8b0734 100%);border:4px solid #ffcf52;border-radius:22px 22px 48% 48%;box-shadow:0 8px 0 #620b36,inset 0 0 22px #ff9d36}
 .duck-bulbs{color:#ffe66d;font-size:clamp(13px,2vw,22px);letter-spacing:2px;text-shadow:0 0 9px #fff3a6}
-.duck-curtain-title{font-family:Impact,'Arial Narrow',sans-serif;font-size:clamp(28px,5vw,48px);font-weight:1000;letter-spacing:2px;color:#ffd64e;text-shadow:2px 3px 0 #a74408,0 0 15px #ffb52e}
-.duck-water-stage{position:relative;overflow:hidden;padding:24px 14px 10px;border:5px solid #f9c94b;border-radius:28px;background:linear-gradient(180deg,#28105c 0%,#5a1b9b 38%,#167bd7 39%,#21b9dc 100%);box-shadow:inset 0 0 25px #10052f,0 8px 0 #7d142d}
-.duck-stage-label{position:relative;z-index:1;text-align:center;color:#fff7bc;font-weight:1000;font-size:clamp(14px,2vw,20px);letter-spacing:1px;text-shadow:0 2px 4px #32105c;margin-bottom:15px}
-.duck-target-grid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;max-width:850px;margin:auto}
-.duck-target{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:118px;padding:8px 4px 10px;border:3px solid #ffcf43;border-radius:48% 48% 18px 18px;background:linear-gradient(180deg,#fff7c7,#ffdb62 65%,#e99a24);box-shadow:0 6px 0 #9b501d,0 0 14px #ffdd67;cursor:pointer;transition:transform .18s,filter .18s}
-.duck-target:before{content:"";position:absolute;bottom:-17px;width:9px;height:25px;border-radius:8px;background:#b66b2b;z-index:-1}
-.duck-target:hover{transform:translateY(-5px) scale(1.04);filter:brightness(1.08)}
+.duck-curtain-title{font-family:Impact,'Arial Narrow',sans-serif;font-size:clamp(34px,5.4vw,58px);font-weight:1000;letter-spacing:3px;color:#ffd64e;text-shadow:2px 3px 0 #a74408,0 0 15px #ffb52e}
+.duck-water-stage{position:relative;overflow:hidden;padding:34px 13px 15px;border:0;border-radius:18px;background:linear-gradient(180deg,#34116d 0%,#64159c 43%,#2d9ce5 44%,#1684d3 70%,#1cc5dc 100%);box-shadow:inset 0 0 25px #10052f}
+.duck-water-stage:before{content:"☁️";position:absolute;left:5%;top:2%;font-size:clamp(30px,5vw,55px);filter:drop-shadow(0 3px 0 #fff)}
+.duck-water-stage:after{content:"☁️";position:absolute;right:5%;top:2%;font-size:clamp(30px,5vw,55px);filter:drop-shadow(0 3px 0 #fff)}
+.duck-stage-label{position:relative;z-index:1;text-align:center;color:#fff7bc;font-weight:1000;font-size:clamp(14px,2vw,20px);letter-spacing:1px;text-shadow:0 2px 4px #32105c;margin-bottom:22px}
+.duck-target-grid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 9px;max-width:900px;margin:auto;padding:4px 3px 12px}
+.duck-target{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:126px;padding:7px 3px 10px;border:0;border-radius:0;background:transparent;box-shadow:none;cursor:pointer;transition:transform .18s,filter .18s}
+.duck-target:before{content:"";position:absolute;z-index:-1;bottom:0;width:7px;height:48%;border-radius:8px;background:linear-gradient(90deg,#7a421f,#d99a4b,#8b4b23);box-shadow:2px 1px 0 #4b2c24}
+.duck-target:after{content:"";position:absolute;z-index:-2;bottom:-5px;left:4%;right:4%;height:17px;border-radius:50%;background:#43c5e7;box-shadow:0 3px 0 #1275bd}
+.duck-target:hover{transform:translateY(-6px) scale(1.06);filter:brightness(1.08)}
 .duck-target:active{transform:translateY(2px) scale(.97)}
-.duck-target-duck{font-size:clamp(35px,6vw,58px);line-height:1.15;filter:drop-shadow(0 4px 2px #9a5b1d)}
-.duck-target-number{font-size:11px;font-weight:1000;color:#79320c;letter-spacing:.5px}
-.duck-target-hit{font-size:9px;font-weight:1000;color:#a20e37;margin-top:3px}
-.duck-waterline{text-align:center;color:#a7f4ff;font-size:22px;letter-spacing:1px;margin-top:18px;text-shadow:0 0 8px #fff}
+.duck-target-duck{font-size:clamp(42px,6vw,66px);line-height:1.15;filter:drop-shadow(0 4px 2px #9a5b1d);animation:duckBob 2.4s ease-in-out infinite}
+.duck-target:nth-child(2n) .duck-target-duck{animation-delay:-.7s}
+.duck-target:nth-child(3n) .duck-target-duck{animation-delay:-1.3s}
+@keyframes duckBob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-5px) rotate(3deg)}}
+.duck-target-number{font-size:10px;font-weight:1000;color:#fff5a8;letter-spacing:.5px;text-shadow:0 2px 4px #35105b}
+.duck-target-hit{font-size:9px;font-weight:1000;color:#fff;margin-top:2px;text-shadow:0 2px 4px #35105b}
+.duck-waterline{position:relative;z-index:1;text-align:center;color:#a7f4ff;font-size:22px;letter-spacing:1px;margin-top:12px;text-shadow:0 0 8px #fff}
 .duck-bottom-stars{text-align:center;color:#ffe68a;font-size:20px;padding-top:3px}
-@media(min-width:540px){.duck-target-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}.duck-target{min-height:135px}}
-@media(min-width:850px){.duck-target-grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
-/* Vòng quay lễ hội: bóng bay, vòng viền kim tuyến, kim chỉ */
-.carnival-wheel-scene{position:relative;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse at center,#ffb8d5 0%,#f47db9 46%,#8d36a2 100%);border:5px solid #ffdb62}
-.carnival-wheel-scene:before{content:"🎈　🎈　🎈　🎈　🎈";position:absolute;inset:8px 0 auto;text-align:center;font-size:clamp(20px,4vw,36px);opacity:.9;pointer-events:none}
-.carnival-wheel-scene:after{content:"🎈　🎊　🎈　🎊　🎈";position:absolute;bottom:6px;left:0;right:0;text-align:center;font-size:clamp(18px,3vw,28px);pointer-events:none}
-.wheel-fairground{width:min(78vw,440px);aspect-ratio:1;padding:10px;border-radius:50%;background:repeating-conic-gradient(#ffe67a 0deg 8deg,#d88724 8deg 12deg);box-shadow:0 0 0 5px #fff2a5,0 0 0 11px #a84a9e,0 12px 28px #42104e}
-.wheel-rim{position:relative;width:100%;height:100%;padding:5px;border-radius:50%;background:linear-gradient(135deg,#fff4b0,#e6a12b,#fff6bd);box-shadow:inset 0 0 0 3px #fff}
+@media(min-width:540px){.duck-target-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:16px}.duck-target{min-height:145px}}
+@media(min-width:850px){.duck-target-grid{grid-template-columns:repeat(7,minmax(0,1fr))}}
+/* Vòng quay may mắn: vòng nhiều múi màu rực, viền đèn hội chợ, bóng bay hai bên */
+.carnival-wheel-scene{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(90deg,#f5c9a7 0%,#f8e0bc 18%,#f4c8aa 50%,#f8e0bc 82%,#f5c9a7 100%);border:5px solid #ffdb62}
+.carnival-wheel-scene:before{content:"🎈　🎈　🎈";position:absolute;left:0;top:8px;width:100%;text-align:left;padding-left:12px;font-size:clamp(22px,4vw,38px);pointer-events:none;text-shadow:0 3px 5px #a45b9c}
+.carnival-wheel-scene:after{content:"🎈　🎈　🎈";position:absolute;right:0;top:8px;width:100%;text-align:right;padding-right:12px;font-size:clamp(22px,4vw,38px);pointer-events:none;text-shadow:0 3px 5px #a45b9c}
+.wheel-fairground{width:min(82vw,510px);aspect-ratio:1;padding:10px;border-radius:50%;background:repeating-conic-gradient(#ffe67a 0deg 5deg,#c87922 5deg 8deg,#fff1a4 8deg 11deg);box-shadow:0 0 0 5px #fff2a5,0 0 0 11px #9b55bd,0 12px 28px #42104e}
+.wheel-rim{position:relative;width:100%;height:100%;padding:5px;border-radius:50%;background:linear-gradient(135deg,#fff4b0,#e6a12b,#fff6bd);box-shadow:inset 0 0 0 4px #fff}
 .wheel-canvas{display:block;width:100%;height:100%;border-radius:50%;filter:drop-shadow(0 4px 5px #3b164b)}
-.wheel-pointer{position:absolute;z-index:4;top:-12px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:20px solid transparent;border-right:20px solid transparent;border-top:0;border-bottom:38px solid #fff0a0;filter:drop-shadow(0 3px 3px #551344)}
-.wheel-pointer:after{content:"";position:absolute;left:-10px;top:7px;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:21px solid #e72e64}
-.wheel-center-cap{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:19%;height:19%;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 35% 25%,#fff0c7,#a8336e 65%,#55154d);border:4px solid #fff;box-shadow:0 3px 12px #391039;color:white;text-shadow:0 2px 3px #391039;pointer-events:none}
-.wheel-center-cap span{font-size:clamp(18px,3vw,27px);line-height:1}
+.wheel-pointer{position:absolute;z-index:4;top:-13px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:23px solid transparent;border-right:23px solid transparent;border-top:0;border-bottom:43px solid #fff0a0;filter:drop-shadow(0 3px 3px #551344)}
+.wheel-pointer:after{content:"";position:absolute;left:-11px;top:9px;border-left:11px solid transparent;border-right:11px solid transparent;border-bottom:24px solid #e72e64}
+.wheel-center-cap{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:20%;height:20%;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 35% 25%,#fff0c7,#a8336e 65%,#55154d);border:5px solid #fff;box-shadow:0 3px 12px #391039;color:white;text-shadow:0 2px 3px #391039;pointer-events:none}
+.wheel-center-cap span{font-size:clamp(18px,3vw,29px);line-height:1}
 .wheel-center-cap b{font-size:clamp(8px,1.5vw,12px);letter-spacing:1px}
-@media(max-width:420px){.wheel-fairground{width:min(82vw,340px)}}
+@media(max-width:420px){.wheel-fairground{width:min(84vw,360px)}}
 </style>
 
 </head>
@@ -3613,7 +3619,7 @@ function switchCallingMode(mode) {
 
       const cx = canvas.width / 2;
       const cy = canvas.height / 2;
-      const radius = Math.max(10, cx - 15);
+      const radius = Math.max(10, cx - 12);
       const wheelStudents = getLuckyWheelStudents();
       const count = wheelStudents.length;
 
@@ -3642,7 +3648,7 @@ function switchCallingMode(mode) {
       ctx.translate(cx, cy);
       ctx.rotate(luckyWheelAngle);
 
-      const colors = ['#fce7f3', '#fef3c7', '#dcfce7', '#e0e7ff', '#f3e8ff', '#ffe4e6', '#ccfbf1', '#fed7aa'];
+      const colors = ['#ff477e', '#13c6d8', '#ffb52e', '#8b5cf6', '#f43f8e', '#18b978', '#ff7a35', '#3b82f6', '#f6d743', '#a855f7', '#06b6d4', '#fb7185'];
 
       for (let i = 0; i < count; i++) {
         const start = i * slice;
@@ -3654,17 +3660,17 @@ function switchCallingMode(mode) {
         ctx.arc(0, 0, radius, start, end);
         ctx.closePath();
         ctx.fill();
-        ctx.strokeStyle = '#f472b6';
-        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 5;
         ctx.stroke();
 
         ctx.save();
         ctx.rotate(start + slice / 2);
         ctx.textAlign = 'right';
-        ctx.fillStyle = '#831843';
-        ctx.font = 'bold 13px Nunito, sans-serif';
-        ctx.shadowColor = 'rgba(255,255,255,0.9)';
-        ctx.shadowBlur = 4;
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 15px Nunito, sans-serif';
+        ctx.shadowColor = 'rgba(35,12,70,0.95)';
+        ctx.shadowBlur = 5;
         ctx.fillText(String(wheelStudents[i].name || wheelStudents[i].fullName || 'Chưa có tên'), radius - 20, 4);
         ctx.restore();
       }
