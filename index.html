@@ -452,8 +452,8 @@
           task.then(() => { pendingWrites.delete(task); if (writeChains.get(key) === task) writeChains.delete(key); }, () => { pendingWrites.delete(task); if (writeChains.get(key) === task) writeChains.delete(key); });
           return task;
         },
-        async syncAllData() {
-          if (!this.user || !this.cloudReady) throw new Error('Tài khoản chưa sẵn sàng đồng bộ.');
+        async syncAllData(onProgress) {
+          if (!this.user || !this.cloudReady) throw new Error('Tài khoản chưa sẵn sàng đồng bộ. Vui lòng đăng nhập lại.');
           const uid = this.user.uid;
           const prefix = prefixFor(uid);
           const col = dataCollection(uid);
@@ -465,8 +465,17 @@
             const value = localStorage.getItem(fullKey);
             if (value !== null) records.push({ key, value });
           }
-          // Đồng bộ qua cùng hàng đợi với thao tác lưu tự động để không ghi đè sai thứ tự.
-          await Promise.all(records.map(item => this.queueWrite(item.key, item.value)));
+          // Báo tiến độ theo số khóa đã ghi thành công; chờ tất cả tác vụ kết thúc
+          // để không báo thành công sớm khi vẫn còn thao tác ghi nền.
+          let completed = 0;
+          if (typeof onProgress === 'function') onProgress(0, records.length);
+          const writeResults = await Promise.allSettled(records.map(async item => {
+            await this.queueWrite(item.key, item.value);
+            completed++;
+            if (typeof onProgress === 'function') onProgress(completed, records.length);
+          }));
+          const failedWrite = writeResults.find(result => result.status === 'rejected');
+          if (failedWrite) throw failedWrite.reason;
           // Chờ cả các thao tác lưu phát sinh trong lúc đồng bộ hoàn tất.
           await Promise.all(Array.from(pendingWrites));
           // Nếu lớp đã được quản trị viên phân công, đồng bộ thêm danh sách học sinh
@@ -564,9 +573,21 @@
       try {
         if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
         window.secureAuth.auth = firebase.auth(); window.secureAuth.db = firebase.firestore();
-        window.secureAuth.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.error);
-        firebaseReady = true;
-        window.secureAuth.auth.onAuthStateChanged(handleAuthenticatedUser);
+        // Yêu cầu đăng nhập thủ công mỗi lần mở/tải lại trang; không tự khôi phục phiên cũ.
+        // Chỉ thay đổi trạng thái xác thực, tuyệt đối không xóa dữ liệu localStorage hoặc Firestore.
+        (async () => {
+          try {
+            await window.secureAuth.auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
+            await window.secureAuth.auth.signOut();
+            sessionStorage.removeItem('lhp_active_uid');
+            sessionStorage.removeItem('lhp_cloud_ready_uid');
+            firebaseReady = true;
+            window.secureAuth.auth.onAuthStateChanged(handleAuthenticatedUser);
+          } catch (authInitError) {
+            console.error('Không thiết lập được đăng nhập thủ công:', authInitError);
+            status('Không thể khởi tạo đăng nhập. Hãy tải lại trang và kiểm tra kết nối.', true);
+          }
+        })();
       } catch (err) { console.error(err); status('Không khởi tạo được Firebase. Kiểm tra cấu hình trong index.html.', true); }
     })();
   </script>
@@ -839,7 +860,7 @@
         <button onclick="exportClassDataToFile()" class="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-sm flex items-center gap-1.5 transition-all active:scale-95" title="Tải file dữ liệu lớp về máy tính an toàn">
           <span>📥 Sao Lưu Lớp</span>
         </button>
-        <button onclick="secureAuth.syncAllData().then(r=>showToast('Đã đồng bộ '+r.count+' mục dữ liệu lên Firebase.')).catch(e=>{console.error(e);alert('Đồng bộ chưa hoàn tất: '+(e.message||e));})" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm flex items-center gap-1.5 transition-all active:scale-95" title="Đồng bộ dữ liệu ngay lên Firebase">
+        <button id="syncFirebaseButton" onclick="syncFirebaseWithFeedback(this)" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-wait" title="Đồng bộ dữ liệu ngay lên Firebase">
           <span>☁️ Đồng Bộ Firebase</span>
         </button>
         <label class="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl shadow-sm flex items-center gap-1.5 cursor-pointer transition-all active:scale-95" title="Mở file dữ liệu đã lưu">
@@ -4537,11 +4558,41 @@ function shootDuck(idx) {
       document.getElementById('statTotalFlowers').innerText = `${totalFlowers} bông`;
     }
 
+    let firebaseSyncInProgress = false;
+    async function syncFirebaseWithFeedback(button) {
+      if (firebaseSyncInProgress) return;
+      if (!window.secureAuth?.user || !window.secureAuth.cloudReady) {
+        alert('Tài khoản chưa đăng nhập hoặc Firebase chưa sẵn sàng. Cô hãy đăng nhập rồi thử lại.');
+        return;
+      }
+      firebaseSyncInProgress = true;
+      const originalHtml = button ? button.innerHTML : '☁️ Đồng Bộ Firebase';
+      if (button) { button.disabled = true; button.textContent = '⏳ Đang đồng bộ 0/…'; }
+      showToast('Đang kết nối và đồng bộ dữ liệu lên Firebase…');
+      try {
+        const result = await window.secureAuth.syncAllData((done, total) => {
+          if (button) button.textContent = '☁️ Đang đồng bộ ' + done + '/' + total;
+        });
+        showToast('Đồng bộ thành công: ' + result.count + ' mục dữ liệu đã ghi lên Firebase.');
+      } catch (error) {
+        console.error('Đồng bộ Firebase thất bại:', error);
+        const message = error?.message || window.secureAuth.friendlyError(error);
+        showToast('Đồng bộ thất bại. Dữ liệu trên máy vẫn được giữ.');
+        alert('ĐỒNG BỘ CHƯA THÀNH CÔNG\\n\\n' + message + '\\n\\nDữ liệu trên thiết bị vẫn được giữ nguyên. Cô chưa cần xóa hay cài lại ứng dụng.');
+      } finally {
+        firebaseSyncInProgress = false;
+        if (button) { button.disabled = false; button.innerHTML = originalHtml; }
+      }
+    }
+
     function showToast(msg) {
       const toast = document.getElementById('toastNotification');
-      document.getElementById('toastMessage').innerText = msg;
+      const message = document.getElementById('toastMessage');
+      if (!toast || !message) { console.log('[Thông báo ứng dụng]', msg); return; }
+      message.innerText = msg;
       toast.classList.remove('hidden');
-      setTimeout(() => toast.classList.add('hidden'), 3500);
+      clearTimeout(window.__lhpToastTimer);
+      window.__lhpToastTimer = setTimeout(() => toast.classList.add('hidden'), 4500);
     }
   </script>
 
