@@ -171,6 +171,48 @@
       const prefixFor = uid => 'lhp_user_' + uid + '::';
       const encodeKey = key => encodeURIComponent(key).replace(/\./g, '%2E');
 
+      // Chia giá trị lớn thành nhiều tài liệu nhỏ để không vượt giới hạn 1 MiB/document.
+      async function writeUserDataValue(col, key, rawValue) {
+        const value = String(rawValue);
+        const baseRef = col.doc(encodeKey(key));
+        const chunkSize = 200000; // ký tự UTF-16; an toàn dưới giới hạn Firestore kể cả tiếng Việt/emoji.
+        if (value.length <= chunkSize) {
+          await baseRef.set({ key, value, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+          const oldParts = await col.where('chunkParent', '==', key).get();
+          if (!oldParts.empty) {
+            const batch = firebase.firestore().batch();
+            oldParts.forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+          }
+          return;
+        }
+        const parts = [];
+        for (let i = 0; i < value.length; i += chunkSize) parts.push(value.slice(i, i + chunkSize));
+        const batchSize = 400;
+        for (let start = 0; start < parts.length; start += batchSize) {
+          const batch = firebase.firestore().batch();
+          parts.slice(start, start + batchSize).forEach((part, offset) => {
+            const index = start + offset;
+            batch.set(col.doc(encodeKey(key) + '__chunk_' + index), {
+              key: key + '__chunk_' + index, chunkParent: key, chunkIndex: index, value: part,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          });
+          await batch.commit();
+        }
+        await baseRef.set({
+          key, chunked: true, chunkCount: parts.length,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        const oldParts = await col.where('chunkParent', '==', key).get();
+        const stale = oldParts.docs.filter(doc => Number(doc.data().chunkIndex) >= parts.length);
+        for (let start = 0; start < stale.length; start += 400) {
+          const batch = firebase.firestore().batch();
+          stale.slice(start, start + 400).forEach(doc => batch.delete(doc.ref));
+          await batch.commit();
+        }
+      }
+
       function maybeReleaseApp() {
         if (parentAccessRequested) return;
         if (!domReady || appReleased || !window.secureAuth || !window.secureAuth.user || !window.secureAuth.cloudReady) return;
@@ -209,9 +251,22 @@
         for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith(prefix)) localKeys.push(k); }
         if (!snap.empty) {
           localKeys.forEach(k => localStorage.removeItem(k));
+          const cloudItems = new Map();
+          snap.forEach(doc => cloudItems.set(doc.id, doc.data() || {}));
           snap.forEach(doc => {
-            const item = doc.data();
-            if (item && typeof item.key === 'string' && typeof item.value === 'string') localStorage.setItem(prefix + item.key, item.value);
+            const item = doc.data() || {};
+            if (!item || typeof item.key !== 'string' || item.chunkParent) return;
+            if (item.chunked === true && Number.isInteger(item.chunkCount) && item.chunkCount > 0) {
+              const parts = [];
+              for (let n = 0; n < item.chunkCount; n++) {
+                const part = cloudItems.get(encodeKey(item.key) + '__chunk_' + n);
+                if (!part || typeof part.value !== 'string') throw new Error('Thiếu phần dữ liệu đồng bộ: ' + item.key + ' (' + (n + 1) + '/' + item.chunkCount + ').');
+                parts.push(part.value);
+              }
+              localStorage.setItem(prefix + item.key, parts.join(''));
+            } else if (typeof item.value === 'string') {
+              localStorage.setItem(prefix + item.key, item.value);
+            }
           });
           return;
         }
@@ -297,7 +352,7 @@
         },
         async queueWrite(key, value) {
           if (!this.user || !this.cloudReady) return;
-          const task = dataCollection(this.user.uid).doc(encodeKey(key)).set({ key, value: String(value), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(err => { console.error(err); status('Không đồng bộ được dữ liệu lên máy chủ. Hãy kiểm tra kết nối và sao lưu lớp.', true); });
+          const task = writeUserDataValue(dataCollection(this.user.uid), key, value).catch(err => { console.error(err); status('Không đồng bộ được dữ liệu lên máy chủ. Hãy kiểm tra kết nối và sao lưu lớp.', true); throw err; });
           pendingWrites.add(task); task.finally(() => pendingWrites.delete(task));
           return task;
         },
@@ -320,17 +375,8 @@
             const value = localStorage.getItem(fullKey);
             if (value !== null) records.push({ key, value });
           }
-          // Ghi theo từng nhóm nhỏ để tránh vượt giới hạn batch của Firestore.
-          for (let i = 0; i < records.length; i += 300) {
-            const batch = firebase.firestore().batch();
-            records.slice(i, i + 300).forEach(item => {
-              batch.set(col.doc(encodeKey(item.key)), {
-                key: item.key, value: item.value,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-              });
-            });
-            await batch.commit();
-          }
+          // Ghi từng mục; mục lớn tự chia thành nhiều document nhỏ.
+          for (const item of records) await writeUserDataValue(col, item.key, item.value);
           // Nếu lớp đã được quản trị viên phân công, đồng bộ thêm danh sách học sinh
           // vào kho lớp tập trung. Không ghi đè kho lớp bằng danh sách rỗng ngoài ý muốn.
           const active = typeof getActiveClassRecord === 'function' ? getActiveClassRecord() : null;
