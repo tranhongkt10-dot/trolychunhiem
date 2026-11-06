@@ -2523,7 +2523,12 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       const source=classRecords.find(c=>c.id===localClassId);
       if(!source){alert('Không tìm thấy lớp dữ liệu trên tài khoản quản trị.');return;}
       const snap=source.data||{};
-      const roster=Array.isArray(snap.students)?snap.students:[];
+      const roster=Array.isArray(snap.students)?snap.students.filter(student=>{
+        // HS39 đã được xác nhận là dữ liệu thử, không thuộc lớp 2A7.
+        const is2A7=String(snap.className||source.className||'').trim().toUpperCase()==='2A7';
+        return !(is2A7 && String(student.id||'').trim().toUpperCase()==='HS39');
+      }):[];
+      const excludedCount=(Array.isArray(snap.students)?snap.students.length:0)-roster.length;
       const targetRef=firebase.firestore().collection('classes').doc(cloudClassId);
       const targetSnap=await targetRef.get();
       if(!targetSnap.exists){alert('Hồ sơ lớp tập trung không còn tồn tại.');return;}
@@ -2531,7 +2536,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       const sourceName=snap.className||source.className||'';
       if(sourceName && target.className && sourceName!==target.className &&
         !confirm('Lớp nguồn là '+sourceName+', lớp đích là '+target.className+'. Cô xác nhận chép dữ liệu nguồn vào lớp đích?')) return;
-      const message='Sẽ đồng bộ '+roster.length+' học sinh cùng tiêu chí, phần thưởng và dữ liệu lớp vào '+(target.className||'lớp đích')+'. Dữ liệu hiện có trên lớp đích có thể được cập nhật. Cô xác nhận?';
+      const message='Sẽ đồng bộ '+roster.length+' học sinh'+(excludedCount?' (đã loại '+excludedCount+' học sinh thử HS39)':'')+' cùng tiêu chí, phần thưởng và dữ liệu lớp vào '+(target.className||'lớp đích')+'. Dữ liệu hiện có trên lớp đích có thể được cập nhật. Cô xác nhận?';
       if(!confirm(message)) return;
       try {
         await writeClassSnapshotToCloud(cloudClassId,{
