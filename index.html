@@ -2150,6 +2150,10 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     let noiseThreshold = 65;
     let noiseAudioCtx = null;
     let noiseStream = null;
+    let noiseAlertCandidate = 0;
+    let noiseAlertCandidateSince = 0;
+    let noiseAlertLevel = 0;
+    let noiseLastAlertAt = 0;
 
     function initEqualizerLeds() {
       const container = document.getElementById('equalizerBarsContainer');
@@ -2167,15 +2171,83 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       }
     }
 
+    // Cảnh báo bằng tiếng bíp ngắn: 1 tiếng (nhẹ), 2 tiếng (vừa), 3 tiếng (nghiêm trọng).
+    function playNoiseWarning(level) {
+      if (!noiseAudioCtx || noiseAudioCtx.state !== 'running') return;
+      const count = level === 1 ? 1 : level === 2 ? 2 : 3;
+      const frequency = level === 1 ? 660 : level === 2 ? 820 : 1040;
+      const volume = level === 1 ? 0.10 : level === 2 ? 0.14 : 0.18;
+      const startAt = noiseAudioCtx.currentTime + 0.03;
+
+      for (let i = 0; i < count; i++) {
+        const start = startAt + i * 0.24;
+        const oscillator = noiseAudioCtx.createOscillator();
+        const gain = noiseAudioCtx.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(frequency, start);
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(volume, start + 0.025);
+        gain.gain.setValueAtTime(volume, start + 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.17);
+        oscillator.connect(gain);
+        gain.connect(noiseAudioCtx.destination);
+        oscillator.start(start);
+        oscillator.stop(start + 0.18);
+      }
+    }
+
+    function getNoiseAlertLevel(db) {
+      if (db >= noiseThreshold + 20) return 3;
+      if (db >= noiseThreshold + 10) return 2;
+      if (db > noiseThreshold) return 1;
+      return 0;
+    }
+
+    function updateNoiseAlert(db) {
+      const now = Date.now();
+      const level = getNoiseAlertLevel(db);
+
+      if (level === 0) {
+        noiseAlertCandidate = 0;
+        noiseAlertCandidateSince = 0;
+        noiseAlertLevel = 0;
+        return;
+      }
+
+      if (level !== noiseAlertCandidate) {
+        noiseAlertCandidate = level;
+        noiseAlertCandidateSince = now;
+        return;
+      }
+
+      const holdMs = level === 3 ? 700 : level === 2 ? 1200 : 1800;
+      const cooldownMs = level === 3 ? 4500 : 6500;
+      const heldLongEnough = now - noiseAlertCandidateSince >= holdMs;
+      const escalation = level > noiseAlertLevel;
+      const cooldownPassed = now - noiseLastAlertAt >= cooldownMs;
+
+      if (heldLongEnough && (escalation || cooldownPassed)) {
+        playNoiseWarning(level);
+        noiseAlertLevel = level;
+        noiseLastAlertAt = now;
+      }
+    }
+
     async function startNoiseMeter() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         noiseStream = stream;
         noiseAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (noiseAudioCtx.state === 'suspended') await noiseAudioCtx.resume();
         const source = noiseAudioCtx.createMediaStreamSource(stream);
         const analyser = noiseAudioCtx.createAnalyser();
         analyser.fftSize = 64;
         source.connect(analyser);
+
+        noiseAlertCandidate = 0;
+        noiseAlertCandidateSince = 0;
+        noiseAlertLevel = 0;
+        noiseLastAlertAt = 0;
 
         const dataArray = new Uint8Array(analyser.frequencyBinCount);
         noiseRunning = true;
@@ -2202,14 +2274,24 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
             }
           }
           const avg = sum / 14;
+          // Đây là mức dB ước lượng tương đối của ứng dụng, không phải máy đo dB đã hiệu chuẩn.
           const dbApprox = Math.round(35 + (avg / 255) * 55);
+          updateNoiseAlert(dbApprox);
+
           const badge = document.getElementById('noiseStatusBadge');
           if (badge) {
-            if (dbApprox > noiseThreshold) {
-              badge.innerText = `Quá ồn (${dbApprox} dB) ⚠️`;
-              badge.className = "text-xs bg-rose-100 text-rose-700 px-2 py-0.5 rounded-lg font-bold animate-none";
+            const level = getNoiseAlertLevel(dbApprox);
+            if (level === 3) {
+              badge.innerText = `ỒN NGHIÊM TRỌNG (${dbApprox}) 🔴`;
+              badge.className = "text-xs bg-rose-100 text-rose-800 px-2 py-0.5 rounded-lg font-black";
+            } else if (level === 2) {
+              badge.innerText = `ỒN MỨC CAO (${dbApprox}) 🟠`;
+              badge.className = "text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-lg font-bold";
+            } else if (level === 1) {
+              badge.innerText = `ỒN NHẸ (${dbApprox}) ⚠️`;
+              badge.className = "text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-lg font-bold";
             } else {
-              badge.innerText = `Trật tự lý tưởng (${dbApprox} dB) ✨`;
+              badge.innerText = `Trật tự lý tưởng (${dbApprox}) ✨`;
               badge.className = "text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-lg font-bold";
             }
           }
@@ -2218,14 +2300,23 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
         }
         updateMeter();
       } catch (err) {
+        if (noiseStream) noiseStream.getTracks().forEach(t => t.stop());
+        if (noiseAudioCtx) noiseAudioCtx.close();
+        noiseStream = null;
+        noiseAudioCtx = null;
         showToast('Không thể kết nối Mic: Vui lòng cho phép quyền micro trên trình duyệt!');
       }
     }
 
     function stopNoiseMeter() {
       noiseRunning = false;
+      noiseAlertCandidate = 0;
+      noiseAlertCandidateSince = 0;
+      noiseAlertLevel = 0;
       if (noiseStream) noiseStream.getTracks().forEach(t => t.stop());
       if (noiseAudioCtx) noiseAudioCtx.close();
+      noiseStream = null;
+      noiseAudioCtx = null;
       const btn = document.getElementById('noiseMeterBtn');
       if (btn) {
         btn.innerHTML = `<span>🎤 BẬT ĐO TIẾNG ỒN</span>`;
@@ -2237,6 +2328,9 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
 
     function updateNoiseThreshold(val) {
       noiseThreshold = parseInt(val);
+      noiseAlertCandidate = 0;
+      noiseAlertCandidateSince = 0;
+      noiseAlertLevel = 0;
       const label = document.getElementById('noiseThresholdVal');
       if (label) label.innerText = `${val} dB`;
     }
