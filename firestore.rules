@@ -121,11 +121,10 @@ service cloud.firestore {
       );
     }
 
-    // Hồ sơ lớp tập trung: chỉ quản trị viên được tạo/sửa/xóa metadata.
-    // Giáo viên chỉ đọc hồ sơ lớp được phân công cho UID của mình.
+    // Hồ sơ lớp tập trung: người dùng đã đăng nhập được đọc metadata để chọn lớp trong Sổ đầu bài.
+    // Việc tạo/sửa/xóa hồ sơ lớp vẫn do quản trị viên kiểm soát.
     match /classes/{classId} {
-      allow get, list: if isAdmin()
-        || (signedIn() && resource.data.teacherUid == request.auth.uid);
+      allow get, list: if signedIn();
       allow create, delete: if isAdmin();
       allow update: if isAdmin()
         || (signedIn()
@@ -140,16 +139,13 @@ service cloud.firestore {
             && get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid);
       }
 
-      // Sổ đầu bài: chỉ quản trị viên hoặc giáo viên chủ nhiệm được phân công lớp.
+      // Sổ đầu bài: mọi tài khoản đã đăng nhập đều được đọc/ghi sổ của lớp đã chọn.
+      // Không phụ thuộc teacherUid; người chưa đăng nhập vẫn bị từ chối.
       match /lessonBook/{entryId} {
-        allow read, create, update, delete: if isAdmin()
-          || (signedIn()
-            && get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid);
+        allow read, create, update, delete: if signedIn();
       }
       match /lessonBookWeeks/{weekId} {
-        allow read, create, update, delete: if isAdmin()
-          || (signedIn()
-            && get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid);
+        allow read, create, update, delete: if signedIn();
       }
     }
 
