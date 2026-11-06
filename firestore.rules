@@ -119,9 +119,14 @@ service cloud.firestore {
     match /classes/{classId} {
       allow get, list: if isAdmin()
         || (signedIn() && resource.data.teacherUid == request.auth.uid);
-      allow create, update, delete: if isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+        || (signedIn()
+          && resource.data.teacherUid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['studentCount', 'updatedAt']));
 
-      // Dữ liệu lớp sẽ được chuyển theo từng mục trong bước di chuyển riêng.
+      // Mỗi học sinh/cấu hình là một tài liệu riêng để tránh vượt giới hạn 1 MiB/tài liệu.
       match /items/{itemId} {
         allow read, write: if isAdmin()
           || (signedIn()
