@@ -523,6 +523,38 @@
 @media(max-width:420px){.wheel-fairground{width:min(84vw,360px)}}
 </style>
 
+<style id="modern-classroom-tools">
+/* Giao diện hiện đại cho bộ công cụ lớp học */
+.calling-mode-switch{background:linear-gradient(110deg,#fff,#fff5fb);border:1px solid #f4d5e8;box-shadow:0 8px 26px rgba(139,42,105,.08)}
+.calling-mode-btn{font-weight:900;letter-spacing:.01em;transition:transform .2s,box-shadow .2s,background .2s}
+.calling-mode-btn:hover{transform:translateY(-2px);box-shadow:0 7px 16px #8e3d731c}
+.calling-stage-card{background:radial-gradient(circle at 50% 0,#fff1f8,#fff 58%);border:1px solid #f5d5e8;box-shadow:0 18px 45px rgba(150,48,111,.12)}
+.tool-modern-card{position:relative;isolation:isolate;overflow:hidden;border:1px solid rgba(255,255,255,.8);box-shadow:0 14px 36px rgba(47,36,80,.09);transition:transform .22s,box-shadow .22s}
+.tool-modern-card:hover{transform:translateY(-3px);box-shadow:0 20px 42px rgba(47,36,80,.14)}
+.tool-modern-card:before{content:"";position:absolute;z-index:-1;width:190px;height:190px;border-radius:50%;right:-80px;top:-100px;background:rgba(255,255,255,.45)}
+.timer-modern-card{background:linear-gradient(145deg,#fff 0%,#fff2f8 55%,#f4edff 100%);border-color:#f4d7e8}
+.timer-modern-card #timerDisplay{font-variant-numeric:tabular-nums;letter-spacing:-.06em;color:#642d75;text-shadow:0 3px 15px #d9a6dc66}
+.timer-modern-card #timerProgressCircle{stroke:#b34caa;filter:drop-shadow(0 0 5px #e9a7df)}
+.timer-modern-card button[onclick^="setTimerDuration"]{border:1px solid #f2d5e9;padding:8px 14px;border-radius:999px;background:#fff;color:#8b3c80;box-shadow:0 3px 8px #7b397410;transition:.2s}
+.timer-modern-card button[onclick^="setTimerDuration"]:hover{background:#f9e4f3;transform:translateY(-2px)}
+.timer-modern-card #timerToggleBtn{background:linear-gradient(110deg,#12a77b,#20c997);border-radius:999px;padding:12px 24px;box-shadow:0 8px 18px #12a77b38}
+.timer-modern-card button[onclick="resetTimer()"]{border-radius:999px;padding:12px 20px}
+.noise-modern-card{background:linear-gradient(145deg,#101b36,#202b52 65%,#31285e);border:1px solid #6c73a4;color:#fff}
+.noise-modern-card h3{color:#fff}
+.noise-modern-card .text-gray-500,.noise-modern-card .text-gray-400{color:#c5c9e6}
+.noise-visualizer{background:radial-gradient(ellipse at 50% 100%,#1b4160,#0b1228 72%);border:1px solid #53628f;box-shadow:inset 0 0 28px #050a1b,0 0 0 4px #ffffff0b}
+.noise-visualizer #equalizerBarsContainer{align-items:flex-end}
+.noise-visualizer [id^="eqBar-"]{width:clamp(7px,2.3vw,13px);border-radius:7px 7px 2px 2px;box-shadow:0 0 9px currentColor;min-height:7px}
+.noise-modern-card #noiseThresholdVal{color:#fde68a}
+.noise-modern-card input[type=range]{accent-color:#fb7185}
+.noise-modern-card #noiseMeterBtn{border-radius:999px;background:linear-gradient(110deg,#8b5cf6,#d946ef);box-shadow:0 8px 20px #a855f744;padding:12px 23px}
+.noise-modern-card #noiseStatusBadge{border:1px solid #ffffff26}
+.applause-modern-card{background:linear-gradient(145deg,#fff8df,#ffe5ef 70%,#f8e8ff);border-color:#f4d5a6}
+.bell-modern-card{background:linear-gradient(145deg,#e4fffb,#e8f7ff 70%,#f0eaff);border-color:#bcebe3}
+.applause-modern-card button,.bell-modern-card button{border-radius:999px;box-shadow:0 8px 18px #45224a1a;transition:transform .2s,filter .2s}
+.applause-modern-card button:hover,.bell-modern-card button:hover{transform:translateY(-2px);filter:brightness(1.06)}
+@media(max-width:520px){.calling-mode-btn{flex:1 1 100%;justify-content:center}.tool-modern-card{padding:18px}.noise-visualizer{height:128px}}
+</style>
 </head>
 <body class="flex flex-col min-h-screen relative">
 
@@ -931,14 +963,14 @@
 
     <!-- 7. GỌI TÊN VUI -->
     <section id="tab-calling" class="hidden space-y-6">
-      <div class="bg-white p-3 rounded-2xl shadow-sm border border-pink-100 flex justify-center gap-2 text-xs font-bold">
-        <button onclick="switchCallingMode('stage')" id="callMode-stage" class="px-4 py-2 rounded-xl bg-pink-500 text-white">📷 Sân Khấu Máy Ảnh (7s)</button>
-        <button onclick="switchCallingMode('wheel')" id="callMode-wheel" class="px-4 py-2 rounded-xl bg-gray-100 text-gray-600 hover:bg-pink-50">🎡 Vòng Quay May Mắn</button>
-        <button onclick="switchCallingMode('duck')" id="callMode-duck" class="px-4 py-2 rounded-xl bg-gray-100 text-gray-600 hover:bg-pink-50">🦆 Bắn Vịt Carnival</button>
+      <div class="calling-mode-switch p-2 rounded-2xl flex flex-wrap justify-center gap-2 text-xs font-bold">
+        <button onclick="switchCallingMode('stage')" id="callMode-stage" class="calling-mode-btn px-4 py-2.5 rounded-xl bg-pink-500 text-white">📷 Sân Khấu Máy Ảnh (7s)</button>
+        <button onclick="switchCallingMode('wheel')" id="callMode-wheel" class="calling-mode-btn px-4 py-2.5 rounded-xl bg-gray-100 text-gray-600 hover:bg-pink-50">🎡 Vòng Quay May Mắn</button>
+        <button onclick="switchCallingMode('duck')" id="callMode-duck" class="calling-mode-btn px-4 py-2.5 rounded-xl bg-gray-100 text-gray-600 hover:bg-pink-50">🦆 Bắn Vịt Carnival</button>
       </div>
 
       <!-- CHẾ ĐỘ 1: SÂN KHẤU MÁY ẢNH RETRO -->
-      <div id="callingView-stage" class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-pink-100 text-center max-w-lg mx-auto space-y-6">
+      <div id="callingView-stage" class="calling-stage-card rounded-3xl p-6 sm:p-8 text-center max-w-lg mx-auto space-y-6">
         <div class="relative bg-gradient-to-b from-pink-400 via-rose-400 to-pink-500 p-5 rounded-[40px] shadow-2xl border-4 border-white max-w-xs mx-auto">
           <div class="flex items-center justify-between px-2 mb-3">
             <div class="flex items-center gap-1.5 px-3 py-1 bg-white/90 rounded-full shadow-inner">
@@ -1026,7 +1058,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         <!-- ĐỒNG HỒ BẤM GIỜ -->
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-pink-100 text-center space-y-4">
+        <div class="tool-modern-card timer-modern-card p-6 rounded-3xl text-center space-y-4">
           <div class="flex items-center justify-between">
             <h3 class="text-base font-black text-gray-800 font-comfortaa flex items-center gap-2">
               <span>⏱️ Đồng Hồ Bấm Giờ</span>
@@ -1063,7 +1095,7 @@
         </div>
 
         <!-- ĐO TIẾNG ỒN EQUALIZER -->
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-pink-100 text-center space-y-4">
+        <div class="tool-modern-card noise-modern-card p-6 rounded-3xl text-center space-y-4">
           <div class="flex items-center justify-between">
             <h3 class="text-base font-black text-gray-800 font-comfortaa flex items-center gap-2">
               <span>🎙️ Thước Đo Tiếng Ồn Lớp Học</span>
@@ -1071,7 +1103,7 @@
             <span id="noiseStatusBadge" class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-lg font-bold">Trật tự lý tưởng</span>
           </div>
 
-          <div class="h-32 bg-gray-900 rounded-2xl p-4 flex items-end justify-center gap-2 border-2 border-pink-200 shadow-inner">
+          <div class="noise-visualizer h-36 rounded-2xl p-4 flex items-end justify-center gap-2 shadow-inner">
             <div id="equalizerBarsContainer" class="flex items-end justify-center gap-1.5 w-full h-full"></div>
           </div>
 
@@ -1088,7 +1120,7 @@
         </div>
 
         <!-- TRÀNG PHÁO TAY CẢ LỚP -->
-        <div class="bg-gradient-to-br from-amber-50 to-pink-50 p-6 rounded-3xl shadow-sm border border-pink-200 text-center space-y-3">
+        <div class="tool-modern-card applause-modern-card p-6 rounded-3xl text-center space-y-3">
           <div class="text-3xl animate-bounce">👏</div>
           <h3 class="text-lg font-black text-gray-800 font-comfortaa">Tràng Pháo Tay Cả Lớp</h3>
           <p class="text-xs text-gray-500 font-bold max-w-xs mx-auto">
@@ -1100,7 +1132,7 @@
         </div>
 
         <!-- CHUÔNG LỚP HỌC -->
-        <div class="bg-gradient-to-br from-teal-50 to-emerald-50 p-6 rounded-3xl shadow-sm border border-teal-200 text-center space-y-3">
+        <div class="tool-modern-card bell-modern-card p-6 rounded-3xl text-center space-y-3">
           <div class="text-3xl">🔔</div>
           <h3 class="text-lg font-black text-gray-800 font-comfortaa">Chuông Vào Tiết & Báo Hiệu</h3>
           <p class="text-xs text-gray-500 font-bold max-w-xs mx-auto">
