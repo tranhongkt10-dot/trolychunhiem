@@ -66,11 +66,11 @@
       setItem(key, value) {
         const stringValue = String(value);
         localStorage.setItem(this._prefix() + key, stringValue);
-        if (window.secureAuth && window.secureAuth.cloudReady && window.secureAuth.user) window.secureAuth.queueWrite(key, stringValue);
+        if (window.secureAuth && window.secureAuth.cloudReady && window.secureAuth.user) window.secureAuth.queueWrite(key, stringValue).catch(err => console.warn('Dữ liệu vẫn nằm trên thiết bị; đồng bộ Firebase cần thử lại.', err));
       },
       removeItem(key) {
         localStorage.removeItem(this._prefix() + key);
-        if (window.secureAuth && window.secureAuth.cloudReady && window.secureAuth.user) window.secureAuth.queueDelete(key);
+        if (window.secureAuth && window.secureAuth.cloudReady && window.secureAuth.user) window.secureAuth.queueDelete(key).catch(err => console.warn('Chưa đồng bộ được thao tác xóa lên Firebase.', err));
       },
       clear() {
         const prefix = this._prefix();
@@ -434,8 +434,11 @@
         },
         async queueDelete(key) {
           if (!this.user || !this.cloudReady) return;
-          const task = (async () => {
-            const col = dataCollection(this.user.uid);
+          const uid = this.user.uid;
+          const previous = writeChains.get(key) || Promise.resolve();
+          const task = previous.catch(() => {}).then(async () => {
+            if (!this.user || this.user.uid !== uid || !this.cloudReady) throw new Error('Phiên đăng nhập đã thay đổi; dữ liệu vẫn được giữ trên thiết bị.');
+            const col = dataCollection(uid);
             const oldParts = await col.where('chunkParent', '==', key).get();
             for (let start = 0; start < oldParts.docs.length; start += 400) {
               const batch = firebase.firestore().batch();
@@ -443,8 +446,10 @@
               await batch.commit();
             }
             await col.doc(encodeKey(key)).delete();
-          })().catch(err => { console.error(err); status('Không đồng bộ được thao tác xóa lên máy chủ.', true); throw err; });
-          pendingWrites.add(task); task.finally(() => pendingWrites.delete(task));
+          }).catch(err => { console.error(err); status('Không đồng bộ được thao tác xóa lên máy chủ. Bản trên thiết bị vẫn được giữ.', true); throw err; });
+          writeChains.set(key, task);
+          pendingWrites.add(task);
+          task.then(() => { pendingWrites.delete(task); if (writeChains.get(key) === task) writeChains.delete(key); }, () => { pendingWrites.delete(task); if (writeChains.get(key) === task) writeChains.delete(key); });
           return task;
         },
         async syncAllData() {
