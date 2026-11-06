@@ -1726,6 +1726,27 @@
   <!-- INPUT FILE ẨN -->
   <input type="file" id="globalAvatarInput" accept="image/*" class="hidden" onchange="handleGlobalAvatarUpload(event)" />
 
+  <!-- SỬA TƯƠNG PHẢN CHỮ TRONG BẢNG QUẢN TRỊ -->
+  <style id="admin-modal-readable-text">
+    #adminAccountsModal > div.bg-white { color: #1e293b !important; }
+    #adminAccountsModal > div.bg-white > .overflow-y-auto,
+    #adminAccountsModal > div.bg-white > .overflow-y-auto *:not(button):not(button *) {
+      color: #1e293b !important;
+    }
+    #adminAccountsModal input,
+    #adminAccountsModal select,
+    #adminAccountsModal textarea,
+    #adminAccountsModal option {
+      color: #1e293b !important;
+      background-color: #ffffff !important;
+    }
+    #adminAccountsModal input::placeholder { color: #64748b !important; opacity: 1; }
+    #adminAccountsModal button { color: #ffffff; }
+    #adminAccountsModal button * { color: inherit; }
+    #adminAccountsModal .bg-emerald-50,
+    #adminAccountsModal .bg-amber-50 { color: #1e293b !important; }
+  </style>
+
   <!-- HỘP THOẠI QUẢN TRỊ TÀI KHOẢN -->
   <div id="adminAccountsModal" class="fixed inset-0 z-[80] hidden items-center justify-center bg-slate-900/60 p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden">
