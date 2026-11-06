@@ -245,49 +245,102 @@
 
       async function readAndPrepareUserData(user, profile) {
         const col = dataCollection(user.uid);
-        const snap = await col.get();
+        // Yêu cầu dữ liệu mới nhất từ máy chủ, không chỉ dùng cache Firestore trên trình duyệt.
+        const snap = await col.get({ source: 'server' });
         const prefix = prefixFor(user.uid);
-        const localKeys = [];
-        for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith(prefix)) localKeys.push(k); }
+        const localValues = new Map();
+
+        // Chụp lại toàn bộ dữ liệu cục bộ trước khi khôi phục; tuyệt đối không xóa trước.
+        for (let i = 0; i < localStorage.length; i++) {
+          const fullKey = localStorage.key(i);
+          if (fullKey && fullKey.startsWith(prefix)) {
+            const key = fullKey.slice(prefix.length);
+            const value = localStorage.getItem(fullKey);
+            if (value !== null) localValues.set(key, value);
+          }
+        }
+
         if (!snap.empty) {
-          localKeys.forEach(k => localStorage.removeItem(k));
           const cloudItems = new Map();
           snap.forEach(doc => cloudItems.set(doc.id, doc.data() || {}));
-          snap.forEach(doc => {
-            const item = doc.data() || {};
-            if (!item || typeof item.key !== 'string' || item.chunkParent) return;
-            if (item.chunked === true && Number.isInteger(item.chunkCount) && item.chunkCount > 0) {
+          const restoredValues = new Map();
+          const cloudKeys = new Set();
+
+          // Bước 1: xác thực và ghép TẤT CẢ dữ liệu trong bộ nhớ.
+          // Chỉ khi mọi phần đều đầy đủ mới ghi vào localStorage.
+          for (const [docId, item] of cloudItems.entries()) {
+            if (!item || item.chunkParent) continue;
+            if (typeof item.key !== 'string' || !item.key) {
+              throw new Error('Tài liệu Firebase ' + docId + ' thiếu tên khóa dữ liệu. Dữ liệu cục bộ được giữ nguyên.');
+            }
+
+            cloudKeys.add(item.key);
+            if (item.chunked === true) {
+              const count = Number(item.chunkCount);
+              if (!Number.isInteger(count) || count < 1 || count > 10000) {
+                throw new Error('Số phần dữ liệu không hợp lệ: ' + item.key + '. Dữ liệu cục bộ được giữ nguyên.');
+              }
               const parts = [];
-              for (let n = 0; n < item.chunkCount; n++) {
-                const part = cloudItems.get(encodeKey(item.key) + '__chunk_' + n);
-                if (!part || typeof part.value !== 'string') throw new Error('Thiếu phần dữ liệu đồng bộ: ' + item.key + ' (' + (n + 1) + '/' + item.chunkCount + ').');
+              for (let n = 0; n < count; n++) {
+                const partId = encodeKey(item.key) + '__chunk_' + n;
+                const part = cloudItems.get(partId);
+                if (!part || part.chunkParent !== item.key || Number(part.chunkIndex) !== n || typeof part.value !== 'string') {
+                  throw new Error('Thiếu hoặc sai phần dữ liệu Firebase: ' + item.key + ' (' + (n + 1) + '/' + count + '). Dữ liệu cục bộ được giữ nguyên.');
+                }
                 parts.push(part.value);
               }
-              localStorage.setItem(prefix + item.key, parts.join(''));
+              restoredValues.set(item.key, parts.join(''));
             } else if (typeof item.value === 'string') {
-              localStorage.setItem(prefix + item.key, item.value);
+              restoredValues.set(item.key, item.value);
+            } else {
+              throw new Error('Dữ liệu Firebase không hợp lệ: ' + item.key + '. Dữ liệu cục bộ được giữ nguyên.');
             }
-          });
+          }
+
+          // Không chấp nhận các phần rời không có tài liệu chính tương ứng.
+          for (const [docId, item] of cloudItems.entries()) {
+            if (!item || !item.chunkParent) continue;
+            const parentId = encodeKey(item.chunkParent);
+            const parent = cloudItems.get(parentId);
+            if (!parent || parent.chunked !== true || !Number.isInteger(Number(item.chunkIndex))) {
+              throw new Error('Phát hiện phần dữ liệu rời trên Firebase: ' + docId + '. Dữ liệu cục bộ được giữ nguyên.');
+            }
+          }
+
+          // Bước 2: khôi phục dữ liệu cloud sau khi đã xác thực đầy đủ.
+          // Không xóa local-only keys; cloud chỉ thay thế cùng khóa để tránh mất dữ liệu.
+          for (const [key, value] of restoredValues.entries()) {
+            localStorage.setItem(prefix + key, value);
+          }
+
+          // Bước 3: đưa các khóa chỉ có ở máy này lên cloud bằng cơ chế chia phần an toàn.
+          for (const [key, value] of localValues.entries()) {
+            if (!cloudKeys.has(key)) {
+              await writeUserDataValue(col, key, value);
+            }
+          }
           return;
         }
-        // Chuyển dữ liệu v4.9 cũ sang tài khoản quản trị lần đầu, nếu đang có dữ liệu chưa phân vùng.
-        const legacyKeys = [];
-        for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('lophanhphuc_')) legacyKeys.push(k); }
-        const isAdminEmail = user.uid === ADMIN_UID;
-        if (isAdminEmail && legacyKeys.length) {
-          for (const key of legacyKeys) {
-            const value = localStorage.getItem(key);
-            if (value !== null) {
-              localStorage.setItem(prefix + key, value);
-              await col.doc(encodeKey(key)).set({ key, value, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+
+        // Firestore chưa có tài liệu: giữ và chuyển dữ liệu hiện có lên cloud bằng cơ chế chia phần.
+        const legacyValues = new Map();
+        const isAdminAccount = user.uid === ADMIN_UID;
+        if (isAdminAccount) {
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('lophanhphuc_')) {
+              const value = localStorage.getItem(key);
+              if (value !== null && !key.startsWith(prefix)) legacyValues.set(key, value);
             }
           }
-        } else if (localKeys.length) {
-          // Khôi phục cache cục bộ nếu Firestore chưa có bản ghi.
-          for (const fullKey of localKeys) {
-            const key = fullKey.slice(prefix.length), value = localStorage.getItem(fullKey);
-            if (value !== null) await col.doc(encodeKey(key)).set({ key, value, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-          }
+        }
+
+        for (const [key, value] of localValues.entries()) {
+          await writeUserDataValue(col, key, value);
+        }
+        for (const [key, value] of legacyValues.entries()) {
+          localStorage.setItem(prefix + key, value);
+          await writeUserDataValue(col, key, value);
         }
       }
 
