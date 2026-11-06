@@ -510,6 +510,7 @@
           await readAndPrepareUserData(user, profile);
           window.secureAuth.cloudReady = true;
           sessionStorage.setItem('lhp_cloud_ready_uid', user.uid);
+          setTimeout(() => { ensureCompetitionBaseline(); recordAppVisitOnce(); }, 0);
           status('Đã tải dữ liệu riêng và xác thực quyền truy cập.');
           maybeReleaseApp();
         } catch (err) {
@@ -865,6 +866,8 @@
       <button onclick="switchMainTab('help')" id="nav-help" class="px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 hover:bg-pink-50">
         <span>💡 Trợ giúp</span>
       </button>
+      <button onclick="switchMainTab('competition')" id="nav-competition" class="px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 hover:bg-pink-50 text-gray-600"><span>🏅 Tổng kết thi đua</span></button>
+      <button onclick="switchMainTab('traffic')" id="nav-traffic" class="px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 hover:bg-pink-50 text-gray-600"><span>📈 Lưu lượng truy cập</span></button>
     </div>
   </nav>
 
@@ -1353,6 +1356,16 @@
         </div>
       </div>
     </section>
+
+    <section id="tab-competition" class="hidden space-y-5">
+      <div class="bg-gradient-to-r from-amber-400 via-orange-400 to-pink-500 p-6 rounded-3xl text-white shadow-md"><h2 class="text-2xl font-black">🏅 Sổ tổng kết thi đua</h2><p class="text-sm mt-2">Giữ nguyên số hoa hiện tại làm số dư đầu kỳ. Từ ngày triển khai, mọi lần cộng/trừ điểm và đổi thưởng được ghi nhật ký.</p></div>
+      <div class="bg-white rounded-3xl border border-pink-100 shadow-sm p-5 space-y-4">
+        <div class="flex flex-wrap items-center gap-3"><label class="font-bold">Kỳ tổng kết:</label><select id="competitionPeriod" onchange="renderCompetition()" class="border rounded-xl px-3 py-2 font-bold"><option value="week">Tuần này</option><option value="month">Tháng này</option><option value="year">Năm học hiện tại</option></select><button onclick="saveCompetitionSummary()" class="px-4 py-2 rounded-xl bg-pink-600 text-white font-bold">💾 Lưu kỳ tổng kết</button><button onclick="exportCompetitionCsv()" class="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold">⬇️ Xuất CSV</button></div>
+        <div id="competitionPeriodLabel" class="text-sm text-gray-500 font-bold"></div><div id="competitionSummaryStats" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
+        <div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-pink-50"><tr><th class="p-3">Hạng</th><th class="p-3">Học sinh</th><th class="p-3">Điểm cộng</th><th class="p-3">Điểm trừ</th><th class="p-3">Điểm ròng</th><th class="p-3">Hoa hiện có</th></tr></thead><tbody id="competitionRankingBody"></tbody></table></div>
+      </div><div class="bg-white rounded-3xl border border-pink-100 shadow-sm p-5"><h3 class="font-black text-gray-800 text-lg mb-3">📚 Lịch sử các kỳ đã lưu</h3><div id="competitionHistoryList" class="space-y-2 text-sm"></div></div>
+    </section>
+    <section id="tab-traffic" class="hidden space-y-5"><div class="bg-gradient-to-r from-sky-500 to-indigo-600 p-6 rounded-3xl text-white shadow-md"><h2 class="text-2xl font-black">📈 Thống kê lưu lượng truy cập</h2><p class="text-sm mt-2">Ghi nhận lượt mở ứng dụng của tài khoản giáo viên đã đăng nhập; không thu thập ảnh, camera hay nội dung cá nhân.</p></div><div class="bg-white rounded-3xl border border-sky-100 shadow-sm p-5 space-y-4"><div class="flex items-center justify-between gap-3 flex-wrap"><h3 class="font-black text-gray-800">Tổng quan truy cập</h3><button onclick="loadTrafficStats()" class="px-4 py-2 rounded-xl bg-sky-600 text-white font-bold">🔄 Làm mới</button></div><div id="trafficStatsCards" class="grid grid-cols-1 sm:grid-cols-3 gap-3"><p class="text-gray-500">Đang tải...</p></div><div id="trafficRecentList" class="text-sm text-gray-600"></div></div></section>
 
     <!-- TRÒ CHƠI AI QUÉT KHUÔN MẶT -->
     <section id="tab-faceplay" class="hidden space-y-5">
@@ -3179,7 +3192,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     }
 
     function switchMainTab(tabId) {
-      const tabs = ['overview', 'students', 'seating', 'garden', 'teams', 'rewards', 'calling', 'faceplay', 'tools', 'attendance', 'honors', 'parent', 'gallery', 'help'];
+      const tabs = ['overview', 'students', 'seating', 'garden', 'teams', 'rewards', 'calling', 'faceplay', 'tools', 'attendance', 'honors', 'parent', 'gallery', 'help', 'competition', 'traffic'];
       tabs.forEach(t => {
         const el = document.getElementById(`tab-${t}`);
         const nav = document.getElementById(`nav-${t}`);
@@ -3192,9 +3205,9 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
           }
         }
       });
-      if (tabId === 'calling') {
-        setTimeout(drawLuckyWheel, 100);
-      }
+      if (tabId === 'calling') setTimeout(drawLuckyWheel, 100);
+      if (tabId === 'competition') renderCompetition();
+      if (tabId === 'traffic') loadTrafficStats();
     }
 
     // AI FACE PLAY: chỉ lưu điểm trò chơi, tuyệt đối không lưu ảnh/video khuôn mặt.
@@ -4083,7 +4096,9 @@ function shootDuck(idx) {
       if (!s) return alert('Không tìm thấy học sinh này!');
       if (s.flowers < r.flowers) return alert(`Bé ${s.name} chỉ có ${s.flowers} hoa, chưa đủ ${r.flowers} hoa để đổi.`);
 
+      const beforeFlowers = Number(s.flowers) || 0;
       s.flowers -= r.flowers;
+      recordCompetitionTransaction(s, s.flowers - beforeFlowers, 'Đổi thưởng: ' + r.name);
       saveStudentsToStorage();
       renderAllViews();
       playApplauseSound();
@@ -4295,7 +4310,10 @@ function shootDuck(idx) {
       selectedHonorStudentIds.forEach(id => {
         const s = students.find(x => x.id === id);
         if (s) {
-          s.flowers = Math.max(0, s.flowers + points);
+          const before = Number(s.flowers) || 0;
+          s.flowers = Math.max(0, before + points);
+          const delta = s.flowers - before;
+          if (delta) recordCompetitionTransaction(s, delta, criteriaName || 'Điều chỉnh thi đua');
         }
       });
       saveStudentsToStorage();
@@ -4326,6 +4344,20 @@ function shootDuck(idx) {
       showToast(`Đã lưu bài dự thi "${title}" của bạn ${author || 'học sinh'} vào phòng tranh! 🎨`);
     }
 
+    const COMPETITION_LEDGER_KEY='lophanhphuc_competition_ledger_v1', COMPETITION_SUMMARIES_KEY='lophanhphuc_competition_summaries_v1', COMPETITION_BASELINE_KEY='lophanhphuc_competition_baseline_v1';
+    function readJsonStore(key,fallback){try{const v=JSON.parse(appStorage.getItem(key)||'null');return v==null?fallback:v;}catch(_){return fallback;}}
+    function competitionClassId(){return String(activeClassId||currentClassName||'default');}
+    function ensureCompetitionBaseline(){const all=readJsonStore(COMPETITION_BASELINE_KEY,{}),id=competitionClassId();if(!all[id]){all[id]={startedAt:new Date().toISOString(),students:students.map(s=>({id:String(s.id),name:s.name,openingFlowers:Number(s.flowers)||0}))};appStorage.setItem(COMPETITION_BASELINE_KEY,JSON.stringify(all));}return all[id];}
+    function recordCompetitionTransaction(student,delta,reason){if(!student||!delta)return;const rows=readJsonStore(COMPETITION_LEDGER_KEY,[]);rows.push({id:'tx_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),classId:competitionClassId(),className:currentClassName,studentId:String(student.id),studentName:student.name,delta:Number(delta),reason:String(reason||'Điều chỉnh điểm'),at:new Date().toISOString(),teacher:currentTeacherName||''});if(rows.length>10000)rows.splice(0,rows.length-10000);appStorage.setItem(COMPETITION_LEDGER_KEY,JSON.stringify(rows));}
+    function getCompetitionRange(period){const now=new Date(),start=new Date(now),end=new Date(now);if(period==='week'){start.setDate(now.getDate()-((now.getDay()+6)%7));start.setHours(0,0,0,0);end.setTime(start.getTime());end.setDate(start.getDate()+7);end.setMilliseconds(-1);}else if(period==='month'){start.setDate(1);start.setHours(0,0,0,0);end.setMonth(end.getMonth()+1,0);end.setHours(23,59,59,999);}else{const y=now.getFullYear();start.setFullYear(now.getMonth()>=8?y:y-1,8,1);start.setHours(0,0,0,0);end.setTime(start.getTime());end.setFullYear(start.getFullYear()+1);end.setMilliseconds(-1);}return{start,end};}
+    function buildCompetitionSnapshot(period){const range=getCompetitionRange(period),rows=readJsonStore(COMPETITION_LEDGER_KEY,[]).filter(x=>x.classId===competitionClassId()&&new Date(x.at)>=range.start&&new Date(x.at)<=range.end),map=new Map();students.forEach(s=>map.set(String(s.id),{studentId:String(s.id),studentName:s.name,positive:0,negative:0,net:0,currentFlowers:Number(s.flowers)||0}));rows.forEach(x=>{const r=map.get(String(x.studentId))||{studentId:String(x.studentId),studentName:x.studentName,positive:0,negative:0,net:0,currentFlowers:0};if(x.delta>0)r.positive+=x.delta;else r.negative+=Math.abs(x.delta);r.net+=x.delta;map.set(String(x.studentId),r);});return{period,classId:competitionClassId(),className:currentClassName,teacher:currentTeacherName,start:range.start.toISOString(),end:range.end.toISOString(),createdAt:new Date().toISOString(),transactions:rows.length,ranking:Array.from(map.values()).sort((a,b)=>b.net-a.net||b.positive-a.positive||a.studentName.localeCompare(b.studentName,'vi'))};}
+    function renderCompetition(){const sel=document.getElementById('competitionPeriod');if(!sel)return;ensureCompetitionBaseline();const snap=buildCompetitionSnapshot(sel.value),label=document.getElementById('competitionPeriodLabel');if(label)label.textContent='Lớp '+currentClassName+' • '+snap.start.slice(0,10)+' đến '+snap.end.slice(0,10)+' • Chỉ tính điểm phát sinh từ ngày bắt đầu ghi sổ.';const stats=document.getElementById('competitionSummaryStats');if(stats)stats.innerHTML=[['Lượt ghi nhận',snap.transactions],['Điểm cộng',snap.ranking.reduce((a,x)=>a+x.positive,0)],['Điểm trừ',snap.ranking.reduce((a,x)=>a+x.negative,0)]].map(x=>'<div class="p-4 rounded-2xl bg-pink-50"><div class="text-xs text-gray-500">'+x[0]+'</div><div class="text-2xl font-black text-pink-700">'+x[1]+'</div></div>').join('');const body=document.getElementById('competitionRankingBody');if(body)body.innerHTML=snap.ranking.map((x,i)=>'<tr class="border-b"><td class="p-3 font-black">'+(i+1)+'</td><td class="p-3 font-bold">'+escapeHtml(x.studentName)+' ('+escapeHtml(x.studentId)+')</td><td class="p-3 text-emerald-700">+'+x.positive+'</td><td class="p-3 text-rose-600">-'+x.negative+'</td><td class="p-3 font-black">'+(x.net>0?'+':'')+x.net+'</td><td class="p-3">'+x.currentFlowers+'</td></tr>').join('')||'<tr><td colspan="6" class="p-4 text-center text-gray-400">Chưa có giao dịch trong kỳ.</td></tr>';renderCompetitionHistory();}
+    function saveCompetitionSummary(){if(!window.secureAuth?.cloudReady){alert('Cần đăng nhập và kết nối Firebase trước khi lưu.');return;}const period=document.getElementById('competitionPeriod').value,snap=buildCompetitionSnapshot(period),all=readJsonStore(COMPETITION_SUMMARIES_KEY,[]),key=snap.classId+'_'+period+'_'+snap.start.slice(0,10),idx=all.findIndex(x=>x.key===key);if(idx>=0){if(!confirm('Kỳ này đã có bản lưu. Cập nhật bản tổng kết của kỳ hiện tại?'))return;all[idx]={...snap,key};}else all.unshift({...snap,key});appStorage.setItem(COMPETITION_SUMMARIES_KEY,JSON.stringify(all));renderCompetition();showToast('Đã lưu kỳ tổng kết vào Firebase.');}
+    function renderCompetitionHistory(){const el=document.getElementById('competitionHistoryList');if(!el)return;const rows=readJsonStore(COMPETITION_SUMMARIES_KEY,[]).filter(x=>x.classId===competitionClassId()).slice(0,30);el.innerHTML=rows.map(x=>'<div class="flex flex-wrap justify-between gap-2 p-3 rounded-xl bg-gray-50"><span><b>'+({week:'Tuần',month:'Tháng',year:'Năm học'}[x.period]||x.period)+'</b> • '+x.start.slice(0,10)+' → '+x.end.slice(0,10)+' • '+escapeHtml(x.className)+'</span><button class="text-pink-700 font-bold" onclick="viewSavedCompetition(\''+x.key+'\')">Xem lại</button></div>').join('')||'<p class="text-gray-400">Chưa có kỳ tổng kết nào được lưu.</p>';}
+    function viewSavedCompetition(key){const x=readJsonStore(COMPETITION_SUMMARIES_KEY,[]).find(r=>r.key===key);if(!x)return;document.getElementById('competitionPeriodLabel').textContent='BẢN LƯU • '+x.className+' • '+x.start.slice(0,10)+' đến '+x.end.slice(0,10);document.getElementById('competitionSummaryStats').innerHTML=[['Lượt ghi nhận',x.transactions],['Điểm cộng',x.ranking.reduce((a,r)=>a+r.positive,0)],['Điểm trừ',x.ranking.reduce((a,r)=>a+r.negative,0)]].map(r=>'<div class="p-4 rounded-2xl bg-pink-50"><div class="text-xs text-gray-500">'+r[0]+'</div><div class="text-2xl font-black text-pink-700">'+r[1]+'</div></div>').join('');document.getElementById('competitionRankingBody').innerHTML=x.ranking.map((r,i)=>'<tr class="border-b"><td class="p-3">'+(i+1)+'</td><td class="p-3">'+escapeHtml(r.studentName)+'</td><td class="p-3">+'+r.positive+'</td><td class="p-3">-'+r.negative+'</td><td class="p-3">'+r.net+'</td><td class="p-3">'+r.currentFlowers+'</td></tr>').join('');}
+    function exportCompetitionCsv(){const x=buildCompetitionSnapshot(document.getElementById('competitionPeriod').value),rows=[['Hạng','Mã học sinh','Họ tên','Điểm cộng','Điểm trừ','Điểm ròng','Hoa hiện có'],...x.ranking.map((r,i)=>[i+1,r.studentId,r.studentName,r.positive,r.negative,r.net,r.currentFlowers])],csv='\\uFEFF'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\\r\\n'),blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Tong-ket-thi-dua-'+x.period+'-'+x.start.slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url);}
+    async function recordAppVisitOnce(){if(!window.secureAuth?.user||!window.secureAuth.cloudReady)return;const key='lhp_visit_recorded_'+window.secureAuth.user.uid;if(sessionStorage.getItem(key))return;try{await firebase.firestore().collection('appVisits').add({teacherUid:window.secureAuth.user.uid,teacherName:currentTeacherName||window.secureAuth.user.displayName||'Giáo viên',className:currentClassName||'',visitedAt:firebase.firestore.FieldValue.serverTimestamp()});sessionStorage.setItem(key,'1');}catch(e){console.warn('Không ghi nhận được lượt truy cập:',e);}}
+    async function loadTrafficStats(){const cards=document.getElementById('trafficStatsCards'),list=document.getElementById('trafficRecentList');if(!cards||!list)return;if(!window.secureAuth?.user||!window.secureAuth.cloudReady){cards.textContent='Vui lòng đăng nhập để xem thống kê.';return;}if(!window.secureAuth.isAdmin){cards.innerHTML='<p class="text-gray-500">Thống kê tổng chỉ dành cho quản trị viên.</p>';list.textContent='';return;}cards.textContent='Đang tải...';try{const snap=await firebase.firestore().collection('appVisits').orderBy('visitedAt','desc').limit(500).get(),rows=snap.docs.map(d=>d.data()),now=new Date(),day=new Date(now.getFullYear(),now.getMonth(),now.getDate()),week=new Date(day);week.setDate(day.getDate()-((day.getDay()+6)%7));const month=new Date(now.getFullYear(),now.getMonth(),1),valid=rows.filter(r=>r.visitedAt&&r.visitedAt.toDate),today=valid.filter(r=>r.visitedAt.toDate()>=day).length,thisWeek=valid.filter(r=>r.visitedAt.toDate()>=week).length,thisMonth=valid.filter(r=>r.visitedAt.toDate()>=month).length;cards.innerHTML=[['Tổng lượt (500 gần nhất)',rows.length],['Hôm nay',today],['Tuần này / tháng này',thisWeek+' / '+thisMonth]].map(x=>'<div class="p-4 rounded-2xl bg-sky-50"><div class="text-xs text-gray-500">'+x[0]+'</div><div class="text-2xl font-black text-sky-700">'+x[1]+'</div></div>').join('');list.innerHTML='<h4 class="font-black mt-5 mb-2">Truy cập gần đây</h4>'+valid.slice(0,30).map(r=>'<div class="border-b py-2">'+escapeHtml(r.teacherName||'Giáo viên')+' • '+escapeHtml(r.className||'')+' • '+r.visitedAt.toDate().toLocaleString('vi-VN')+'</div>').join('');}catch(e){cards.innerHTML='<p class="text-rose-600">Không tải được thống kê: '+escapeHtml(e.message||'')+'</p>';}}
     function renderOverviewStats() {
       document.getElementById('statTotalStudents').innerText = `${students.length} bạn`;
       const totalFlowers = students.reduce((sum, s) => sum + s.flowers, 0);
