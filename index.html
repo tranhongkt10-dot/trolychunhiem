@@ -3523,7 +3523,9 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
           s.gender = gender;
           s.team = team;
           s.desk = desk;
+          const beforeFlowers = Number(s.flowers) || 0;
           s.flowers = flowers;
+          if (Number(flowers) !== beforeFlowers) recordCompetitionTransaction(s, Number(flowers) - beforeFlowers, 'Điều chỉnh số hoa trong hồ sơ học sinh');
           showToast(`Đã cập nhật thông tin bạn ${name}! ✨`);
         }
       } else {
