@@ -860,9 +860,10 @@
         <button onclick="exportClassDataToFile()" class="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-sm flex items-center gap-1.5 transition-all active:scale-95" title="Tải file dữ liệu lớp về máy tính an toàn">
           <span>📥 Sao Lưu Lớp</span>
         </button>
-        <button id="syncFirebaseButton" onclick="syncFirebaseWithFeedback(this)" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-wait" title="Đồng bộ dữ liệu ngay lên Firebase">
+        <button id="syncFirebaseButton" onclick="window.syncFirebaseWithFeedback(this)" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-wait" title="Đồng bộ dữ liệu ngay lên Firebase">
           <span>☁️ Đồng Bộ Firebase</span>
         </button>
+        <span id="syncFirebaseStatus" role="status" aria-live="polite" class="px-2 py-1 rounded-lg bg-slate-100 text-slate-700 text-[11px] font-black">Chưa đồng bộ</span>
         <label class="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl shadow-sm flex items-center gap-1.5 cursor-pointer transition-all active:scale-95" title="Mở file dữ liệu đã lưu">
           <span>📤 Nạp Dữ Liệu</span>
           <input type="file" accept=".json,.csv" class="hidden" onchange="handleImportClassData(event)" />
@@ -4559,31 +4560,49 @@ function shootDuck(idx) {
     }
 
     let firebaseSyncInProgress = false;
-    async function syncFirebaseWithFeedback(button) {
-      if (firebaseSyncInProgress) return;
+    window.syncFirebaseWithFeedback = async function(button) {
+      const statusEl = document.getElementById('syncFirebaseStatus');
+      const setSyncStatus = (message, kind) => {
+        if (statusEl) {
+          statusEl.textContent = message;
+          statusEl.className = 'px-2 py-1 rounded-lg text-[11px] font-black ' +
+            (kind === 'ok' ? 'bg-emerald-100 text-emerald-800' :
+             kind === 'error' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800');
+        }
+      };
+      if (firebaseSyncInProgress) {
+        setSyncStatus('Đang xử lý, vui lòng chờ…', 'wait');
+        return;
+      }
       if (!window.secureAuth?.user || !window.secureAuth.cloudReady) {
-        alert('Tài khoản chưa đăng nhập hoặc Firebase chưa sẵn sàng. Cô hãy đăng nhập rồi thử lại.');
+        setSyncStatus('Chưa đăng nhập / Firebase chưa sẵn sàng', 'error');
+        alert('Chưa thể đồng bộ: tài khoản chưa đăng nhập hoặc Firebase chưa sẵn sàng. Dữ liệu trên thiết bị không bị xóa.');
         return;
       }
       firebaseSyncInProgress = true;
       const originalHtml = button ? button.innerHTML : '☁️ Đồng Bộ Firebase';
-      if (button) { button.disabled = true; button.textContent = '⏳ Đang đồng bộ 0/…'; }
-      showToast('Đang kết nối và đồng bộ dữ liệu lên Firebase…');
+      if (button) { button.disabled = true; button.textContent = '⏳ Đang đồng bộ…'; }
+      setSyncStatus('Đang kết nối Firebase…', 'wait');
       try {
         const result = await window.secureAuth.syncAllData((done, total) => {
-          if (button) button.textContent = '☁️ Đang đồng bộ ' + done + '/' + total;
+          if (button) button.textContent = '☁️ ' + done + '/' + total;
+          setSyncStatus('Đang đồng bộ ' + done + '/' + total, 'wait');
         });
+        const successMessage = 'ĐỒNG BỘ THÀNH CÔNG!\\n\\nĐã ghi ' + result.count + ' mục dữ liệu lên Firebase.';
+        setSyncStatus('Thành công: ' + result.count + ' mục', 'ok');
         showToast('Đồng bộ thành công: ' + result.count + ' mục dữ liệu đã ghi lên Firebase.');
+        alert(successMessage);
       } catch (error) {
         console.error('Đồng bộ Firebase thất bại:', error);
         const message = error?.message || window.secureAuth.friendlyError(error);
+        setSyncStatus('THẤT BẠI: ' + message, 'error');
         showToast('Đồng bộ thất bại. Dữ liệu trên máy vẫn được giữ.');
-        alert('ĐỒNG BỘ CHƯA THÀNH CÔNG\n\n' + message + '\n\nDữ liệu trên thiết bị vẫn được giữ nguyên. Cô chưa cần xóa hay cài lại ứng dụng.');
+        alert('ĐỒNG BỘ THẤT BẠI!\\n\\n' + message + '\\n\\nDữ liệu trên thiết bị vẫn được giữ nguyên. Không xóa dữ liệu hoặc cài lại ứng dụng.');
       } finally {
         firebaseSyncInProgress = false;
         if (button) { button.disabled = false; button.innerHTML = originalHtml; }
       }
-    }
+    };
 
     function showToast(msg) {
       const toast = document.getElementById('toastNotification');
