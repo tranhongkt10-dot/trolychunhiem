@@ -1736,8 +1736,8 @@
       <div class="p-4 overflow-y-auto max-h-[70vh] space-y-5">
         <section class="rounded-2xl border-2 border-emerald-200 bg-emerald-50 p-3 space-y-3">
           <div>
-            <h4 class="font-black text-sm text-emerald-900">🛡️ Sao lưu và khôi phục toàn hệ thống</h4>
-            <p class="text-xs text-emerald-800 mt-1">Bao gồm hồ sơ giáo viên, toàn bộ dữ liệu riêng theo UID, lớp tập trung, dữ liệu học sinh/cấu hình của lớp và sổ liên lạc phụ huynh.</p>
+            <h4 class="font-black text-sm text-emerald-900" style="color:#064e3b!important">🛡️ Sao lưu và khôi phục toàn hệ thống</h4>
+            <p class="text-xs text-emerald-800 mt-1" style="color:#065f46!important">Bao gồm hồ sơ giáo viên, toàn bộ dữ liệu riêng theo UID, lớp tập trung, dữ liệu học sinh/cấu hình của lớp và sổ liên lạc phụ huynh.</p>
           </div>
           <div class="flex flex-col sm:flex-row gap-2">
             <button type="button" onclick="window.adminBackupAllData()" class="flex-1 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-black">📦 Sao lưu toàn trường</button>
@@ -1745,7 +1745,7 @@
             <input id="adminFullRestoreFile" type="file" accept=".json,application/json" class="hidden" onchange="window.adminRestoreAllData(event)">
           </div>
           <p id="adminFullBackupStatus" role="status" aria-live="polite" class="text-xs font-bold text-slate-700">Chưa thực hiện sao lưu toàn hệ thống.</p>
-          <p class="text-[11px] text-emerald-900">Khôi phục sẽ cập nhật các tài liệu có trong tệp, không tự xóa tài liệu hiện có không xuất hiện trong bản sao lưu. Tài khoản/mật khẩu đăng nhập Firebase không nằm trong tệp này.</p>
+          <p class="text-[11px] text-emerald-900" style="color:#064e3b!important">Khôi phục sẽ cập nhật các tài liệu có trong tệp, không tự xóa tài liệu hiện có không xuất hiện trong bản sao lưu. Tài khoản/mật khẩu đăng nhập Firebase không nằm trong tệp này.</p>
         </section>
         <section class="rounded-2xl border border-amber-200 bg-amber-50 p-3">
           <h4 class="font-black text-sm text-amber-900 mb-2">➕ Tạo lớp và phân công giáo viên</h4>
@@ -4660,7 +4660,11 @@ const oldSwitch=window.switchMainTab;window.addEventListener('DOMContentLoaded',
     const el = document.getElementById('adminFullBackupStatus');
     if (!el) return;
     el.textContent = message;
-    el.className = 'text-xs font-bold ' + (isError ? 'text-red-700' : 'text-emerald-800');
+    el.className = 'text-xs font-bold';
+    el.style.cssText = 'display:block;width:100%;box-sizing:border-box;margin-top:8px;padding:10px 12px;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.5;font-weight:800;color:' +
+      (isError ? '#991b1b' : '#065f46') + ';background:' +
+      (isError ? '#fef2f2' : '#ecfdf5') + ';border:1px solid ' +
+      (isError ? '#fecaca' : '#a7f3d0') + ';';
   }
 
   function serializeValue(value) {
@@ -4705,9 +4709,10 @@ const oldSwitch=window.switchMainTab;window.addEventListener('DOMContentLoaded',
   }
 
   window.adminBackupAllData = async function () {
-    let buttonBusy = false;
+    let backupStage = 'Kiểm tra quyền quản trị và kết nối Firebase';
     try {
       const db = requireAdmin();
+      backupStage = 'Đọc danh sách hồ sơ giáo viên (users)';
       setBackupStatus('Đang đọc danh sách tài khoản giáo viên...', false);
       const usersSnap = await db.collection('users').get();
       const users = [];
@@ -4717,6 +4722,7 @@ const oldSwitch=window.switchMainTab;window.addEventListener('DOMContentLoaded',
       for (const userDoc of usersSnap.docs) {
         const profile = userDoc.data() || {};
         users.push({ id: userDoc.id, data: serializeValue(profile) });
+        backupStage = 'Đọc dữ liệu riêng của tài khoản UID ' + userDoc.id + ' (userData/' + userDoc.id + '/items)';
         setBackupStatus('Đang sao lưu dữ liệu tài khoản ' + (profile.displayName || userDoc.id) + '...', false);
         const itemsSnap = await db.collection('userData').doc(userDoc.id).collection('items').get();
         const items = itemsSnap.docs.map(doc => ({ id: doc.id, data: serializeValue(doc.data() || {}) }));
@@ -4724,10 +4730,12 @@ const oldSwitch=window.switchMainTab;window.addEventListener('DOMContentLoaded',
         teacherData.push({ uid: userDoc.id, items });
       }
 
+      backupStage = 'Đọc danh sách lớp tập trung (classes)';
       setBackupStatus('Đang sao lưu lớp tập trung và sổ liên lạc phụ huynh...', false);
       const classesSnap = await db.collection('classes').get();
       const classes = [];
       for (const classDoc of classesSnap.docs) {
+        backupStage = 'Đọc dữ liệu chi tiết lớp ' + classDoc.id + ' (classes/' + classDoc.id + '/items)';
         const itemsSnap = await db.collection('classes').doc(classDoc.id).collection('items').get();
         classes.push({
           id: classDoc.id,
@@ -4735,6 +4743,7 @@ const oldSwitch=window.switchMainTab;window.addEventListener('DOMContentLoaded',
           items: itemsSnap.docs.map(doc => ({ id: doc.id, data: serializeValue(doc.data() || {}) }))
         });
       }
+      backupStage = 'Đọc sổ liên lạc phụ huynh (parentViews)';
       const parentSnap = await db.collection('parentViews').get();
       const parentViews = parentSnap.docs.map(doc => ({ id: doc.id, data: serializeValue(doc.data() || {}) }));
 
@@ -4753,9 +4762,12 @@ const oldSwitch=window.switchMainTab;window.addEventListener('DOMContentLoaded',
       setBackupStatus('SAO LƯU THÀNH CÔNG: ' + users.length + ' tài khoản, ' + dataDocumentCount + ' tài liệu dữ liệu, ' + classes.length + ' lớp, ' + parentViews.length + ' sổ phụ huynh. Tệp JSON đã được tải về (' + Math.round(bytes / 1024) + ' KB).', false);
       alert('Đã tạo bản sao lưu toàn hệ thống.\nTài khoản: ' + users.length + '\nTài liệu dữ liệu giáo viên: ' + dataDocumentCount + '\nLớp tập trung: ' + classes.length + '\nSổ phụ huynh: ' + parentViews.length + '\n\nHãy giữ tệp JSON ở nơi an toàn.');
     } catch (error) {
-      console.error('Sao lưu toàn hệ thống thất bại:', error);
-      setBackupStatus('SAO LƯU THẤT BẠI: ' + (error.message || error), true);
-      alert('Không sao lưu được toàn hệ thống: ' + (error.message || error) + '\n\nKiểm tra Firestore Rules đã được Publish chưa.');
+      console.error('Sao lưu toàn hệ thống thất bại tại bước: ' + backupStage, error);
+      const errorCode = error && error.code ? ' [' + error.code + ']' : '';
+      const errorMessage = error && error.message ? error.message : String(error);
+      const detail = 'SAO LƯU THẤT BẠI\nBước gặp lỗi: ' + backupStage + '\nMã lỗi: ' + (errorCode || 'không có') + '\nChi tiết: ' + errorMessage + '\n\nChưa tạo được tệp sao lưu hoàn chỉnh. Dữ liệu trên Firebase không bị xóa.';
+      setBackupStatus(detail, true);
+      alert(detail + '\n\nNếu là permission-denied, cần kiểm tra Firestore Rules đã Publish đúng dự án tro-ly-chu-nhiem-8f31b chưa.');
     }
   };
 
