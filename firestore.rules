@@ -114,6 +114,21 @@ service cloud.firestore {
         && resource.data.teacherUid == request.auth.uid;
     }
 
+    // Hồ sơ lớp tập trung: chỉ quản trị viên được tạo/sửa/xóa metadata.
+    // Giáo viên chỉ đọc hồ sơ lớp được phân công cho UID của mình.
+    match /classes/{classId} {
+      allow get, list: if isAdmin()
+        || (signedIn() && resource.data.teacherUid == request.auth.uid);
+      allow create, update, delete: if isAdmin();
+
+      // Dữ liệu lớp sẽ được chuyển theo từng mục trong bước di chuyển riêng.
+      match /items/{itemId} {
+        allow read, write: if isAdmin()
+          || (signedIn()
+            && get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid);
+      }
+    }
+
     // Các đường dẫn chưa được thiết kế đều mặc định bị từ chối.
     match /{document=**} {
       allow read, write: if false;
