@@ -3785,7 +3785,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
             }
           }
           if (imported.students && Array.isArray(imported.students)) {
-            if (!confirm(`File có ${imported.students.length} học sinh. Nạp file này sẽ thay danh sách học sinh của lớp đang mở (${currentClassName}). Bạn đã sao lưu và muốn tiếp tục?`)) { e.target.value = ''; return; }
+            if (!imported.accountData && !confirm(`File có ${imported.students.length} học sinh. Nạp file này sẽ thay danh sách học sinh của lớp đang mở (${currentClassName}). Bạn đã sao lưu và muốn tiếp tục?`)) { e.target.value = ''; return; }
             students = imported.students;
             saveStudentsToStorage();
           }
