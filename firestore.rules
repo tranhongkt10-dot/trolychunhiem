@@ -1,0 +1,142 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Quyền quản trị gắn với UID đã xác minh, không dựa vào trường role do người dùng tự sửa.
+    function isAdmin() {
+      return signedIn()
+        && request.auth.uid == 'dqVutQQEqVWlAEqvA2C89cLhDw63';
+    }
+
+    function validParentView() {
+      return request.resource.data.keys().hasOnly([
+          'teacherUid',
+          'studentName',
+          'className',
+          'teacherName',
+          'team',
+          'desk',
+          'flowers',
+          'teacherNote',
+          'teacherNoteTime',
+          'parentReply',
+          'parentReplyTime',
+          'updatedAt'
+        ])
+        && request.resource.data.keys().hasAll([
+          'teacherUid',
+          'studentName',
+          'className',
+          'teacherName',
+          'flowers'
+        ])
+        && request.resource.data.teacherUid is string
+        && request.resource.data.studentName is string
+        && request.resource.data.studentName.size() <= 120
+        && request.resource.data.className is string
+        && request.resource.data.className.size() <= 80
+        && request.resource.data.teacherName is string
+        && request.resource.data.teacherName.size() <= 120
+        && request.resource.data.flowers is int
+        && request.resource.data.flowers >= 0
+        && (!('team' in request.resource.data) || request.resource.data.team is string)
+        && (!('desk' in request.resource.data) || request.resource.data.desk is int)
+        && (!('teacherNote' in request.resource.data) || (request.resource.data.teacherNote is string && request.resource.data.teacherNote.size() <= 1200))
+        && (!('teacherNoteTime' in request.resource.data) || (request.resource.data.teacherNoteTime is string && request.resource.data.teacherNoteTime.size() <= 80))
+        && (!('parentReply' in request.resource.data) || (request.resource.data.parentReply is string && request.resource.data.parentReply.size() <= 1200))
+        && (!('parentReplyTime' in request.resource.data) || (request.resource.data.parentReplyTime is string && request.resource.data.parentReplyTime.size() <= 80));
+    }
+
+    function validParentReplyOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['parentReply', 'parentReplyTime'])
+        && request.resource.data.keys().hasAll(['parentReply', 'parentReplyTime'])
+        && request.resource.data.parentReply is string
+        && request.resource.data.parentReply.size() <= 1200
+        && request.resource.data.parentReplyTime is string
+        && request.resource.data.parentReplyTime.size() <= 80;
+    }
+
+    // Hồ sơ tài khoản giáo viên.
+    match /users/{userId} {
+      allow get, list: if isAdmin() || (signedIn() && request.auth.uid == userId);
+
+      allow create: if
+        (isAdmin() && request.auth.uid == userId)
+        || (
+          signedIn()
+          && request.auth.uid == userId
+          && request.resource.data.uid == userId
+          && request.resource.data.role == 'teacher'
+        );
+
+      allow update: if isAdmin()
+        || (
+          signedIn()
+          && request.auth.uid == userId
+          && request.resource.data.uid == resource.data.uid
+          && request.resource.data.role == resource.data.role
+          && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['displayName', 'email', 'updatedAt'])
+        );
+
+      allow delete: if false;
+    }
+
+    // Kho dữ liệu riêng của từng giáo viên.
+    match /userData/{userId}/items/{itemId} {
+      allow read, write: if signedIn() && request.auth.uid == userId;
+    }
+
+    // Cổng phụ huynh: token ngẫu nhiên là khóa truy cập riêng cho đúng một học sinh.
+    // Chỉ cho phép đọc từng tài liệu; tuyệt đối không cho phép liệt kê toàn bộ cổng.
+    match /parentViews/{token} {
+      allow get: if true;
+      allow list: if false;
+
+      allow create: if signedIn()
+        && request.resource.data.teacherUid == request.auth.uid
+        && validParentView();
+
+      allow update: if (
+          signedIn()
+          && resource.data.teacherUid == request.auth.uid
+          && request.resource.data.teacherUid == resource.data.teacherUid
+          && validParentView()
+        ) || validParentReplyOnly();
+
+      allow delete: if signedIn()
+        && resource.data.teacherUid == request.auth.uid;
+    }
+
+    // Hồ sơ lớp tập trung: chỉ quản trị viên được tạo/sửa/xóa metadata.
+    // Giáo viên chỉ đọc hồ sơ lớp được phân công cho UID của mình.
+    match /classes/{classId} {
+      allow get, list: if isAdmin()
+        || (signedIn() && resource.data.teacherUid == request.auth.uid);
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+        || (signedIn()
+          && resource.data.teacherUid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['studentCount', 'updatedAt']));
+
+      // Mỗi học sinh/cấu hình là một tài liệu riêng để tránh vượt giới hạn 1 MiB/tài liệu.
+      match /items/{itemId} {
+        allow read, write: if isAdmin()
+          || (signedIn()
+            && get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid);
+      }
+    }
+
+    // Các đường dẫn chưa được thiết kế đều mặc định bị từ chối.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
