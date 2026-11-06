@@ -318,24 +318,10 @@
           } catch (err) { alert(this.friendlyError(err)); }
         },
         async openAdminPanel() {
-          if (!this.isAdmin) { alert('Tài khoản không có quyền quản trị.'); return; }
+          if (!this.isAdmin || !this.user || this.user.uid !== ADMIN_UID) { alert('Tài khoản không có quyền quản trị.'); return; }
           const modal = document.getElementById('adminAccountsModal');
-          const list = document.getElementById('adminAccountsList');
-          modal.classList.remove('hidden'); modal.classList.add('flex'); list.innerHTML = '<p class="text-sm text-slate-500">Đang tải danh sách tài khoản…</p>';
-          try {
-            const snap = await firebase.firestore().collection('users').get();
-            if (snap.empty) { list.innerHTML = '<p class="text-sm text-slate-500">Chưa có tài khoản nào.</p>'; return; }
-            list.innerHTML = '';
-            snap.forEach(doc => {
-              const p = doc.data(); const row = document.createElement('div');
-              row.className = 'p-3 border border-slate-200 rounded-xl flex items-start justify-between gap-3';
-              const info = document.createElement('div'); info.className = 'min-w-0';
-              const name = document.createElement('p'); name.className = 'font-black text-sm text-slate-800'; name.textContent = p.displayName || 'Giáo viên';
-              const email = document.createElement('p'); email.className = 'text-xs text-slate-600 break-all'; email.textContent = p.email || ''; 
-              const role = document.createElement('p'); role.className = 'text-[10px] font-bold text-purple-700 mt-1'; role.textContent = p.role === 'admin' ? 'QUẢN TRỊ VIÊN' : 'GIÁO VIÊN';
-              info.append(name, email, role); row.append(info); list.append(row);
-            });
-          } catch (err) { list.innerHTML = '<p class="text-sm text-red-600">Không tải được danh sách. Kiểm tra Firestore Security Rules.</p>'; console.error(err); }
+          modal.classList.remove('hidden'); modal.classList.add('flex');
+          await renderAdminManagement();
         },
         closeAdminPanel() { const modal = document.getElementById('adminAccountsModal'); modal.classList.add('hidden'); modal.classList.remove('flex'); },
         friendlyError(err) {
@@ -1439,9 +1425,20 @@
         <div><h3 class="font-black text-lg">👑 Quản trị tài khoản giáo viên</h3><p class="text-xs opacity-90">Quản trị viên: Cô Lê Thị Việt Anh</p></div>
         <button onclick="secureAuth.closeAdminPanel()" class="text-2xl px-2" aria-label="Đóng">×</button>
       </div>
-      <div class="p-4 overflow-y-auto max-h-[65vh]">
-        <p class="text-xs text-slate-600 mb-3">Danh sách tài khoản chỉ hiển thị thông tin tài khoản; quản trị viên không mặc nhiên được đọc dữ liệu học sinh riêng của giáo viên.</p>
-        <div id="adminAccountsList" class="space-y-2"><p class="text-sm text-slate-500">Đang tải...</p></div>
+      <div class="p-4 overflow-y-auto max-h-[70vh] space-y-5">
+        <section class="rounded-2xl border border-amber-200 bg-amber-50 p-3">
+          <h4 class="font-black text-sm text-amber-900 mb-2">➕ Tạo lớp và phân công giáo viên</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <input id="adminNewClassName" class="w-full rounded-xl border border-amber-200 bg-white px-3 py-2 text-sm" placeholder="Tên lớp, ví dụ 2A7">
+            <input id="adminNewClassSchool" class="w-full rounded-xl border border-amber-200 bg-white px-3 py-2 text-sm" placeholder="Tên trường">
+            <input id="adminNewClassYear" class="w-full rounded-xl border border-amber-200 bg-white px-3 py-2 text-sm" value="2026-2027" placeholder="Năm học">
+            <select id="adminNewClassTeacher" class="w-full rounded-xl border border-amber-200 bg-white px-3 py-2 text-sm"><option value="">Chọn giáo viên chủ nhiệm</option></select>
+          </div>
+          <button onclick="adminCreateClass()" class="mt-3 w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-black">Tạo lớp</button>
+          <p class="mt-2 text-[11px] text-amber-900">Tạo hồ sơ lớp và phân công. Bước này chưa chuyển hoặc xóa dữ liệu học sinh đang lưu ở tài khoản cũ.</p>
+        </section>
+        <section><h4 class="font-black text-sm text-slate-800 mb-2">🏫 Danh sách lớp và phân công</h4><div id="adminClassesList" class="space-y-2"><p class="text-sm text-slate-500">Đang tải danh sách lớp...</p></div></section>
+        <section><h4 class="font-black text-sm text-slate-800 mb-2">👩‍🏫 Tài khoản giáo viên</h4><p class="text-xs text-slate-600 mb-2">Mỗi lớp chỉ được gán một giáo viên chủ nhiệm tại một thời điểm.</p><div id="adminAccountsList" class="space-y-2"><p class="text-sm text-slate-500">Đang tải...</p></div></section>
       </div>
     </div>
   </div>
@@ -2413,6 +2410,78 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
           }
         });
       }
+    }
+
+    // QUẢN TRỊ TẬP TRUNG: metadata lớp và phân công giáo viên.
+    // Chưa chuyển dữ liệu học sinh cũ; việc di chuyển sẽ là bước riêng có đối soát.
+    let adminTeacherCache = [];
+    async function renderAdminManagement() {
+      const accounts=document.getElementById('adminAccountsList'), classes=document.getElementById('adminClassesList');
+      const teacherSelect=document.getElementById('adminNewClassTeacher');
+      if(!window.secureAuth?.isAdmin || window.secureAuth.user?.uid!==ADMIN_UID) return;
+      if(accounts) accounts.textContent='Đang tải tài khoản...';
+      if(classes) classes.textContent='Đang tải lớp...';
+      try {
+        const db=firebase.firestore();
+        const [us,cs]=await Promise.all([db.collection('users').get(),db.collection('classes').get()]);
+        adminTeacherCache=[];
+        us.forEach(d=>{const p=d.data()||{}; if(p.role!=='admin') adminTeacherCache.push({uid:d.id,name:p.displayName||'Giáo viên',email:p.email||''});});
+        adminTeacherCache.sort((a,b)=>a.name.localeCompare(b.name,'vi'));
+        if(teacherSelect) teacherSelect.innerHTML='<option value="">Chọn giáo viên chủ nhiệm</option>'+adminTeacherCache.map(t=>'<option value="'+escapeHtml(t.uid)+'">'+escapeHtml(t.name+(t.email?' · '+t.email:''))+'</option>').join('');
+        if(accounts) {
+          accounts.innerHTML='';
+          if(us.empty) accounts.textContent='Chưa có tài khoản nào.';
+          us.forEach(d=>{const p=d.data()||{},row=document.createElement('div');row.className='p-3 border border-slate-200 rounded-xl';
+            const n=document.createElement('p');n.className='font-black text-sm';n.textContent=p.displayName||'Giáo viên';
+            const e=document.createElement('p');e.className='text-xs text-slate-600 break-all';e.textContent=p.email||'';
+            const r=document.createElement('p');r.className='text-[10px] font-bold text-purple-700';r.textContent=p.role==='admin'?'QUẢN TRỊ VIÊN':'GIÁO VIÊN';row.append(n,e,r);accounts.append(row);});
+        }
+        if(classes) {
+          classes.innerHTML='';
+          if(cs.empty) classes.textContent='Chưa có lớp tập trung. Tạo lớp ở biểu mẫu phía trên.';
+          cs.forEach(d=>{const c=d.data()||{},row=document.createElement('div');row.className='p-3 border border-slate-200 rounded-xl space-y-2';
+            const info=document.createElement('div');info.innerHTML='<div class="font-black text-sm">'+escapeHtml(c.className||'Lớp chưa đặt tên')+'</div><div class="text-xs text-slate-500">'+escapeHtml(c.schoolName||'Chưa có trường')+' · '+escapeHtml(c.year||'')+' · '+Number(c.studentCount||0)+' học sinh</div>';
+            const controls=document.createElement('div');controls.className='flex flex-col sm:flex-row gap-2';
+            const sel=document.createElement('select');sel.className='flex-1 min-w-0 rounded-lg border border-slate-200 px-2 py-2 text-xs';
+            sel.innerHTML='<option value="">Chưa phân công</option>'+adminTeacherCache.map(t=>'<option value="'+escapeHtml(t.uid)+'">'+escapeHtml(t.name+(t.email?' · '+t.email:''))+'</option>').join('');
+            sel.value=c.teacherUid||'';
+            const btn=document.createElement('button');btn.className='px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-bold';btn.textContent='Lưu phân công';btn.addEventListener('click',()=>adminAssignClassTeacher(d.id,sel.value));
+            controls.append(sel,btn);row.append(info,controls);classes.append(row);});
+        }
+      } catch(err) {
+        console.error('Lỗi quản trị:',err);
+        const msg='Không tải được dữ liệu quản trị: '+(err.message||'Kiểm tra Firestore Rules.');
+        if(accounts) accounts.textContent=msg;if(classes) classes.textContent=msg;
+      }
+    }
+
+    async function adminCreateClass() {
+      if(!window.secureAuth?.isAdmin || window.secureAuth.user?.uid!==ADMIN_UID){alert('Chỉ quản trị viên mới được tạo lớp.');return;}
+      const className=document.getElementById('adminNewClassName')?.value.trim()||'';
+      const schoolName=document.getElementById('adminNewClassSchool')?.value.trim()||'';
+      const year=document.getElementById('adminNewClassYear')?.value.trim()||'2026-2027';
+      const teacherUid=document.getElementById('adminNewClassTeacher')?.value||'';
+      if(!className||!schoolName||!teacherUid){alert('Vui lòng nhập tên lớp, tên trường và chọn giáo viên chủ nhiệm.');return;}
+      const teacher=adminTeacherCache.find(t=>t.uid===teacherUid);if(!teacher){alert('Không tìm thấy giáo viên. Hãy tải lại danh sách.');return;}
+      try {
+        const db=firebase.firestore();
+        const dup=await db.collection('classes').where('className','==',className).where('schoolName','==',schoolName).where('year','==',year).get();
+        if(!dup.empty){alert('Lớp cùng tên, cùng trường và năm học đã tồn tại.');return;}
+        await db.collection('classes').add({className,schoolName,year,teacherUid,teacherName:teacher.name,studentCount:0,dataVersion:1,createdBy:window.secureAuth.user.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+        document.getElementById('adminNewClassName').value='';document.getElementById('adminNewClassSchool').value='';document.getElementById('adminNewClassYear').value='2026-2027';document.getElementById('adminNewClassTeacher').value='';
+        await renderAdminManagement();showToast('Đã tạo hồ sơ lớp và phân công giáo viên.');
+      } catch(err){console.error(err);alert('Không tạo được lớp. Kiểm tra Firestore Rules. '+(err.message||''));}
+    }
+
+    async function adminAssignClassTeacher(classId,teacherUid) {
+      if(!window.secureAuth?.isAdmin || window.secureAuth.user?.uid!==ADMIN_UID){alert('Chỉ quản trị viên mới được phân công.');return;}
+      const teacher=adminTeacherCache.find(t=>t.uid===teacherUid);if(!teacherUid||!teacher){alert('Hãy chọn giáo viên hợp lệ.');return;}
+      try {
+        const ref=firebase.firestore().collection('classes').doc(classId),snap=await ref.get();
+        if(!snap.exists) throw new Error('Lớp không còn tồn tại.');
+        await ref.update({teacherUid,teacherName:teacher.name,updatedBy:window.secureAuth.user.uid,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+        await renderAdminManagement();showToast('Đã đổi giáo viên phụ trách; hồ sơ lớp vẫn được giữ nguyên.');
+      } catch(err){console.error(err);alert('Không lưu được phân công. '+(err.message||''));}
     }
 
     function openClassManager() {
