@@ -3486,6 +3486,12 @@ function switchCallingMode(mode) {
       }
     }
 
+    function getLuckyWheelStudents() {
+      return Array.isArray(students)
+        ? students.filter(student => student && typeof student === 'object')
+        : [];
+    }
+
     function initLuckyWheel() {
       drawLuckyWheel();
     }
@@ -3494,14 +3500,35 @@ function switchCallingMode(mode) {
       const canvas = document.getElementById('luckyWheelCanvas');
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
       const cx = canvas.width / 2;
       const cy = canvas.height / 2;
-      const radius = cx - 15;
-      const count = students.length || 1;
-      const slice = (Math.PI * 2) / count;
+      const radius = Math.max(10, cx - 15);
+      const wheelStudents = getLuckyWheelStudents();
+      const count = wheelStudents.length;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // Danh sách chưa tải hoặc chưa có học sinh: hiển thị trạng thái chờ,
+      // tuyệt đối không truy cập students[0].name khi phần tử chưa tồn tại.
+      if (count === 0) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#fdf2f8';
+        ctx.fill();
+        ctx.strokeStyle = '#f472b6';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.fillStyle = '#831843';
+        ctx.font = 'bold 15px Nunito, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Chưa có học sinh', cx, cy);
+        return;
+      }
+
+      const slice = (Math.PI * 2) / count;
       ctx.save();
       ctx.translate(cx, cy);
       ctx.rotate(luckyWheelAngle);
@@ -3526,10 +3553,10 @@ function switchCallingMode(mode) {
         ctx.rotate(start + slice / 2);
         ctx.textAlign = 'right';
         ctx.fillStyle = '#831843';
-        ctx.font = 'bold 13px Nunito';
+        ctx.font = 'bold 13px Nunito, sans-serif';
         ctx.shadowColor = 'rgba(255,255,255,0.9)';
         ctx.shadowBlur = 4;
-        ctx.fillText(students[i].name, radius - 20, 4);
+        ctx.fillText(String(wheelStudents[i].name || wheelStudents[i].fullName || 'Chưa có tên'), radius - 20, 4);
         ctx.restore();
       }
 
@@ -3543,7 +3570,7 @@ function switchCallingMode(mode) {
       ctx.lineWidth = 4;
       ctx.stroke();
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 16px Nunito';
+      ctx.font = 'bold 16px Nunito, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('🌸', cx, cy);
@@ -3555,7 +3582,11 @@ function switchCallingMode(mode) {
     }
 
     function spinLuckyWheel() {
-      if (luckyWheelSpinning || !students.length) return;
+      const wheelStudents = getLuckyWheelStudents();
+      if (luckyWheelSpinning || !wheelStudents.length) {
+        if (!wheelStudents.length) showToast('Vui lòng tải danh sách học sinh trước khi quay vòng quay may mắn.');
+        return;
+      }
       // Quan trọng: mở khóa âm thanh ngay trong click, trước mọi await/animation.
       primeClassroomAudioFromGesture();
       luckyWheelSpinning = true;
@@ -3584,12 +3615,12 @@ function switchCallingMode(mode) {
           requestAnimationFrame(animateWheel);
         } else {
           luckyWheelSpinning = false;
-          const count = students.length;
+          const count = wheelStudents.length;
           const slice = (Math.PI * 2) / count;
           const normalized = (Math.PI * 2 - (luckyWheelAngle % (Math.PI * 2)) + (Math.PI * 3 / 2)) % (Math.PI * 2);
           const index = Math.floor(normalized / slice) % count;
 
-          wheelWinnerStudent = students[index];
+          wheelWinnerStudent = wheelStudents[index];
           document.getElementById('wheelWinnerImg').src = getStudentAvatarUrl(wheelWinnerStudent);
           document.getElementById('wheelWinnerName').innerText = wheelWinnerStudent.name;
           document.getElementById('wheelWinnerTeam').innerText = `${wheelWinnerStudent.team} • Mã: ${wheelWinnerStudent.id}`;
