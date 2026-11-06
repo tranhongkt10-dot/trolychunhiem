@@ -2898,10 +2898,18 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     // Mỗi giáo viên chỉ truy vấn được các lớp có teacherUid trùng UID đăng nhập (Firestore Rules).
     async function hydrateAssignedClassesFromCloud() {
       const user=window.secureAuth?.user;
-      if(!user || window.secureAuth.isAdmin || !window.secureAuth.cloudReady) return;
+      if(!user || !window.secureAuth.cloudReady) return;
       const db=firebase.firestore();
-      const assigned=await db.collection('classes').where('teacherUid','==',user.uid).get();
-      if(assigned.empty) return; // Chưa được phân công: không đụng vào dữ liệu riêng hiện có.
+      const isAdminAccount=!!window.secureAuth.isAdmin;
+      // Quản trị viên được tải toàn bộ lớp để chọn lớp cần quản lý sổ đầu bài.
+      // Giáo viên thông thường chỉ tải lớp có teacherUid đúng UID đăng nhập.
+      const assigned=isAdminAccount
+        ? await db.collection('classes').get()
+        : await db.collection('classes').where('teacherUid','==',user.uid).get();
+      if(assigned.empty) {
+        if(isAdminAccount) showToast('Firebase chưa có lớp nào trong danh sách classes.');
+        return; // Không đụng vào dữ liệu riêng hiện có nếu chưa có lớp tập trung.
+      }
       const oldState=JSON.stringify({schools,classRecords,activeClassId});
       try { if(!appStorage.getItem('lophanhphuc_pre_cloud_classes_backup_v1')) appStorage.setItem('lophanhphuc_pre_cloud_classes_backup_v1',oldState); } catch(e) { console.warn('Không tạo được bản sao lưu cục bộ trước khi nạp lớp tập trung:',e); }
       const cloudSchools=[],cloudClasses=[];
@@ -2940,7 +2948,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       if(activeClassId) loadClassSnapshot(getActiveClassRecord());
       persistClassRegistry();
       updateClassTeacherDisplay();
-      showToast('Đã tải '+cloudClasses.length+' lớp được phân công từ dữ liệu tập trung.');
+      showToast(isAdminAccount?'Quản trị viên đã tải '+cloudClasses.length+' lớp từ Firebase.':'Đã tải '+cloudClasses.length+' lớp được phân công từ dữ liệu tập trung.');
     }
 
     let centralClassSyncTimer=null;
