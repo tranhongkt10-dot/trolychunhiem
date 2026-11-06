@@ -4726,6 +4726,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     async function loadLessonBook(){
       const active=lbClass(),auth=window.secureAuth,el=id=>document.getElementById(id);
       el('lbClassName').textContent=active?.className||currentClassName||'—';el('lbHomeroomTeacher').textContent=active?.teacherName||currentTeacherName||'—';el('lbStudentCount').textContent=students.length+' học sinh';
+      const today=new Date().toISOString().slice(0,10);if(!el('lbDate').value)el('lbDate').value=today;if(!el('lbWeekDate').value)el('lbWeekDate').value=today;
       if(!auth?.user||!auth.cloudReady||!lbClassId()){lbStatus('Cần đăng nhập và chọn lớp đã được quản trị viên phân công.',true);return;}
       try{const db=firebase.firestore(),range=lbRange(el('lbWeekDate').value||new Date().toISOString().slice(0,10));const snap=await db.collection('classes').doc(lbClassId()).collection('lessonBook').get();lessonBookEntries=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.date>=range.start&&x.date<=range.end).sort((a,b)=>a.date.localeCompare(b.date)||a.period-b.period);const ws=await db.collection('classes').doc(lbClassId()).collection('lessonBookWeeks').doc(range.start).get();el('lbWeeklyComment').value=ws.exists?(ws.data().comment||''):'';renderLessonBook();lbStatus('Đã tải '+lessonBookEntries.length+' tiết trong tuần '+range.start+' đến '+range.end+'.');}catch(e){console.error(e);lbStatus('Không tải được dữ liệu: '+(e.message||e),true);}
     }
