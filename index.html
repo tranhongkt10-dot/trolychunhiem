@@ -4578,7 +4578,7 @@ function shootDuck(idx) {
         console.error('Đồng bộ Firebase thất bại:', error);
         const message = error?.message || window.secureAuth.friendlyError(error);
         showToast('Đồng bộ thất bại. Dữ liệu trên máy vẫn được giữ.');
-        alert('ĐỒNG BỘ CHƯA THÀNH CÔNG\\n\\n' + message + '\\n\\nDữ liệu trên thiết bị vẫn được giữ nguyên. Cô chưa cần xóa hay cài lại ứng dụng.');
+        alert('ĐỒNG BỘ CHƯA THÀNH CÔNG\n\n' + message + '\n\nDữ liệu trên thiết bị vẫn được giữ nguyên. Cô chưa cần xóa hay cài lại ứng dụng.');
       } finally {
         firebaseSyncInProgress = false;
         if (button) { button.disabled = false; button.innerHTML = originalHtml; }
