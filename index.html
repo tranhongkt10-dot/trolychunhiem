@@ -19,6 +19,18 @@
     .font-comfortaa {
       font-family: 'Comfortaa', cursive, sans-serif;
     }
+    /* Hiệu ứng công bố người thắng: ba nhịp sáng rõ, không nhấp nháy liên tục. */
+    @keyframes winnerCelebrationFlash {
+      0%, 100% { opacity: 0; }
+      12%, 32%, 52% { opacity: .72; }
+      22%, 42%, 68% { opacity: 0; }
+    }
+    .winner-celebration-flash {
+      animation: winnerCelebrationFlash 1.05s ease-out both;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .winner-celebration-flash { animation: none; opacity: 0; }
+    }
     .custom-scroll::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -395,6 +407,8 @@
 
   <!-- MÀN FLASH MÁY ẢNH -->
   <div id="cameraFlashScreen" class="fixed inset-0 bg-white z-[100] opacity-0 pointer-events-none transition-opacity duration-300"></div>
+  <!-- FLASH VINH DANH KHI TRÒ CHƠI KẾT THÚC -->
+  <div id="winnerCelebrationFlash" aria-hidden="true" class="fixed inset-0 z-[110] pointer-events-none opacity-0 bg-gradient-to-br from-amber-200 via-white to-pink-200"></div>
 
   <!-- ============================================================== -->
   <!-- MÀN HÌNH CHUYÊN BIỆT DÀNH RIÊNG CHO PHỤ HUYNH KHI ẤN VÀO LINK -->
@@ -3353,6 +3367,19 @@ function switchCallingMode(mode) {
       ctx.fillText('🌸', cx, cy);
     }
 
+    // Gọi đồng thời nhạc chúc mừng, pháo giấy và flash khi vòng quay dừng.
+    function triggerWinnerCelebration() {
+      const flash = document.getElementById('winnerCelebrationFlash');
+      if (flash) {
+        flash.classList.remove('winner-celebration-flash');
+        // Buộc trình duyệt khởi động lại animation khi có nhiều lượt chơi liên tiếp.
+        void flash.offsetWidth;
+        flash.classList.add('winner-celebration-flash');
+        window.setTimeout(() => flash.classList.remove('winner-celebration-flash'), 1200);
+      }
+      playCelebrationSound();
+    }
+
     async function spinLuckyWheel() {
       if (luckyWheelSpinning || !students.length) return;
       await unlockClassroomAudio();
@@ -3392,7 +3419,7 @@ function switchCallingMode(mode) {
           document.getElementById('wheelWinnerName').innerText = wheelWinnerStudent.name;
           document.getElementById('wheelWinnerTeam').innerText = `${wheelWinnerStudent.team} • Mã: ${wheelWinnerStudent.id}`;
           document.getElementById('wheelWinnerModal').classList.remove('hidden');
-          playCelebrationSound();
+          triggerWinnerCelebration();
         }
       }
       requestAnimationFrame(animateWheel);
