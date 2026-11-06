@@ -2014,13 +2014,13 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       const ready = await unlockClassroomAudio();
       const ctx = classroomAudioContext;
       if (!ready || !ctx || ctx.state !== 'running') {
-        console.warn('Trình duyệt chưa mở khóa âm thanh lớp học.');
-        showToast('Thiết bị đang chặn âm thanh. Cô hãy chạm màn hình rồi thử lại.');
+        console.warn('Trình duyệt chưa mở khóa âm thanh lớp học. Trạng thái:', ctx?.state || 'không có AudioContext');
+        showToast('Âm thanh chưa được mở khóa. Cô hãy bấm nút Bật âm thanh rồi quay lại trò chơi.');
         return false;
       }
 
       try {
-        const now = ctx.currentTime + 0.04;
+        const now = ctx.currentTime + 0.06;
 
         // Giai điệu vui ngắn, âm lượng vừa phải.
         const melody = [
@@ -2141,15 +2141,52 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       } catch (error) { console.warn('Không phát được tiếng nấc vòng quay:', error); }
     }
 
-    // Dùng một AudioContext dùng chung; mở khóa âm thanh ngay trong thao tác bấm của giáo viên.
+    // Một AudioContext dùng chung. Khởi tạo và resume đồng bộ ngay trong cú chạm/bấm,
+    // không chờ await trước khi trình duyệt ghi nhận thao tác người dùng.
     let classroomAudioContext = null;
-    async function unlockClassroomAudio() {
+    function ensureClassroomAudioContext() {
       const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContextClass) return false;
+      if (!AudioContextClass) return null;
+      if (!classroomAudioContext || classroomAudioContext.state === 'closed') {
+        classroomAudioContext = new AudioContextClass();
+      }
+      return classroomAudioContext;
+    }
+    function primeClassroomAudioFromGesture() {
       try {
-        if (!classroomAudioContext || classroomAudioContext.state === 'closed') classroomAudioContext = new AudioContextClass();
-        if (classroomAudioContext.state === 'suspended') await classroomAudioContext.resume();
-        return classroomAudioContext.state === 'running';
+        const ctx = ensureClassroomAudioContext();
+        if (!ctx) return false;
+        if (ctx.state !== 'running') {
+          const resumePromise = ctx.resume();
+          if (resumePromise && typeof resumePromise.catch === 'function') {
+            resumePromise.catch(error => console.warn('Không mở khóa được âm thanh:', error));
+          }
+        }
+        // Phát một tiếng xác nhận rất ngắn ngay trong thao tác bấm để mở khóa audio trên mobile.
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const at = ctx.currentTime + 0.015;
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(660, at);
+        gain.gain.setValueAtTime(0.0001, at);
+        gain.gain.linearRampToValueAtTime(0.035, at + 0.012);
+        gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.11);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(at);
+        osc.stop(at + 0.12);
+        return true;
+      } catch (error) {
+        console.warn('Không khởi tạo được âm thanh lớp học:', error);
+        return false;
+      }
+    }
+    async function unlockClassroomAudio() {
+      try {
+        const ctx = ensureClassroomAudioContext();
+        if (!ctx) return false;
+        if (ctx.state !== 'running') await ctx.resume();
+        return ctx.state === 'running';
       } catch (error) {
         console.warn('Trình duyệt chưa cho phép phát âm thanh:', error);
         return false;
@@ -3377,12 +3414,15 @@ function switchCallingMode(mode) {
         flash.classList.add('winner-celebration-flash');
         window.setTimeout(() => flash.classList.remove('winner-celebration-flash'), 1200);
       }
-      playCelebrationSound();
+      playCelebrationSound().then(ok => {
+        if (!ok) console.warn('Hiệu ứng hình ảnh đã chạy nhưng âm thanh không phát được.');
+      }).catch(err => console.error('Lỗi âm thanh lúc công bố người thắng:', err));
     }
 
-    async function spinLuckyWheel() {
+    function spinLuckyWheel() {
       if (luckyWheelSpinning || !students.length) return;
-      await unlockClassroomAudio();
+      // Quan trọng: mở khóa âm thanh ngay trong click, trước mọi await/animation.
+      primeClassroomAudioFromGesture();
       luckyWheelSpinning = true;
 
       const spins = 6 + Math.random() * 4;
