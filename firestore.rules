@@ -19,6 +19,7 @@ service cloud.firestore {
           'studentName',
           'className',
           'teacherName',
+          'customAvatar',
           'team',
           'desk',
           'flowers',
@@ -44,6 +45,7 @@ service cloud.firestore {
         && request.resource.data.teacherName.size() <= 120
         && request.resource.data.flowers is int
         && request.resource.data.flowers >= 0
+        && (!('customAvatar' in request.resource.data) || (request.resource.data.customAvatar is string && request.resource.data.customAvatar.size() <= 700000))
         && (!('team' in request.resource.data) || request.resource.data.team is string)
         && (!('desk' in request.resource.data) || request.resource.data.desk is int)
         && (!('teacherNote' in request.resource.data) || (request.resource.data.teacherNote is string && request.resource.data.teacherNote.size() <= 1200))
