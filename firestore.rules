@@ -139,6 +139,18 @@ service cloud.firestore {
           || (signedIn()
             && get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid);
       }
+
+      // Sổ đầu bài: chỉ quản trị viên hoặc giáo viên chủ nhiệm được phân công lớp.
+      match /lessonBook/{entryId} {
+        allow read, create, update, delete: if isAdmin()
+          || (signedIn()
+            && get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid);
+      }
+      match /lessonBookWeeks/{weekId} {
+        allow read, create, update, delete: if isAdmin()
+          || (signedIn()
+            && get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid);
+      }
     }
 
     // Thống kê lượt mở ứng dụng: giáo viên đã đăng nhập được ghi lượt của chính mình;
