@@ -1727,6 +1727,19 @@
   <input type="file" id="globalAvatarInput" accept="image/*" class="hidden" onchange="handleGlobalAvatarUpload(event)" />
 
   <!-- SỬA TƯƠNG PHẢN CHỮ TRONG BẢNG QUẢN TRỊ -->
+    #adminAccountsModal button[onclick*="adminBackupAllData"] {
+      background-color: #a7f3d0 !important;
+      color: #064e3b !important;
+      border: 1px solid #047857 !important;
+    }
+    #adminAccountsModal button[onclick*="adminFullRestoreFile"] {
+      background-color: #bfdbfe !important;
+      color: #1e3a8a !important;
+      border: 1px solid #1d4ed8 !important;
+    }
+    #adminAccountsModal button[onclick*="adminBackupAllData"]:hover { background-color: #6ee7b7 !important; }
+    #adminAccountsModal button[onclick*="adminFullRestoreFile"]:hover { background-color: #93c5fd !important; }
+
   <style id="admin-modal-readable-text">
     #adminAccountsModal > div.bg-white { color: #1e293b !important; }
     #adminAccountsModal > div.bg-white > .overflow-y-auto,
