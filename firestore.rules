@@ -136,6 +136,21 @@ service cloud.firestore {
       }
     }
 
+    // Thống kê lượt mở ứng dụng: giáo viên đã đăng nhập được ghi lượt của chính mình;
+    // chỉ quản trị viên được xem danh sách thống kê tổng.
+    match /appVisits/{visitId} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['teacherUid', 'teacherName', 'className', 'visitedAt'])
+        && request.resource.data.teacherUid == request.auth.uid
+        && request.resource.data.teacherName is string
+        && request.resource.data.teacherName.size() <= 120
+        && request.resource.data.className is string
+        && request.resource.data.className.size() <= 80
+        && request.resource.data.visitedAt is timestamp;
+      allow get, list: if isAdmin();
+      allow update, delete: if false;
+    }
+
     // Các đường dẫn chưa được thiết kế đều mặc định bị từ chối.
     match /{document=**} {
       allow read, write: if false;
