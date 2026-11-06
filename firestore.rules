@@ -68,8 +68,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow get, list: if isAdmin() || (signedIn() && request.auth.uid == userId);
 
-      allow create: if
-        (isAdmin() && request.auth.uid == userId)
+      allow create: if isAdmin()
         || (
           signedIn()
           && request.auth.uid == userId
@@ -92,28 +91,34 @@ service cloud.firestore {
 
     // Kho dữ liệu riêng của từng giáo viên.
     match /userData/{userId}/items/{itemId} {
-      allow read, write: if signedIn() && request.auth.uid == userId;
+      // Giáo viên chỉ truy cập kho riêng; UID quản trị được phép sao lưu/khôi phục toàn hệ thống.
+      allow read, write: if isAdmin() || (signedIn() && request.auth.uid == userId);
     }
 
     // Cổng phụ huynh: token ngẫu nhiên là khóa truy cập riêng cho đúng một học sinh.
     // Chỉ cho phép đọc từng tài liệu; tuyệt đối không cho phép liệt kê toàn bộ cổng.
     match /parentViews/{token} {
       allow get: if true;
-      allow list: if false;
+      // Chỉ UID quản trị được liệt kê toàn bộ sổ phụ huynh để sao lưu hệ thống.
+      allow list: if isAdmin();
 
-      allow create: if signedIn()
+      allow create: if isAdmin() || (
+        signedIn()
         && request.resource.data.teacherUid == request.auth.uid
-        && validParentView();
+        && validParentView()
+      );
 
-      allow update: if (
+      allow update: if isAdmin() || (
           signedIn()
           && resource.data.teacherUid == request.auth.uid
           && request.resource.data.teacherUid == resource.data.teacherUid
           && validParentView()
         ) || validParentReplyOnly();
 
-      allow delete: if signedIn()
-        && resource.data.teacherUid == request.auth.uid;
+      allow delete: if isAdmin() || (
+        signedIn()
+        && resource.data.teacherUid == request.auth.uid
+      );
     }
 
     // Hồ sơ lớp tập trung: chỉ quản trị viên được tạo/sửa/xóa metadata.
