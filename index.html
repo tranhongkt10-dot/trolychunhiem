@@ -3810,6 +3810,11 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
           if (window.secureAuth?.user && window.secureAuth.cloudReady) {
             try {
               const synced = await window.secureAuth.syncAllData();
+              if (imported.accountData) {
+                alert('Đã phục hồi ' + synced.count + ' mục dữ liệu toàn tài khoản và đồng bộ lên Firebase. Ứng dụng sẽ tải lại để hiển thị đúng dữ liệu vừa phục hồi.');
+                location.reload();
+                return;
+              }
               showToast('Đã nạp dữ liệu và đồng bộ ' + synced.count + ' mục lên Firebase.');
             } catch (syncError) {
               alert('Dữ liệu đã được nạp và giữ trên thiết bị, nhưng chưa đồng bộ Firebase: ' + (syncError.message || syncError) + '. Cô hãy bấm Đồng Bộ Firebase khi mạng ổn định.');
