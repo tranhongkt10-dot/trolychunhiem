@@ -319,6 +319,9 @@
           // Bước 3: chỉ khôi phục sau khi dữ liệu cloud đã được xác thực đầy đủ.
           // Bản máy khác biệt đã được giữ ở khóa dự phòng phía trên.
           for (const [key, value] of restoredValues.entries()) {
+            // Bản dự phòng xung đột cũ chỉ lưu trữ trên Firebase, không khôi phục
+            // vào localStorage vì có thể rất lớn và làm vượt giới hạn bộ nhớ trình duyệt.
+            if (key.startsWith('__recovery_conflict__')) continue;
             localStorage.setItem(prefix + key, value);
           }
           if (conflictCount) {
