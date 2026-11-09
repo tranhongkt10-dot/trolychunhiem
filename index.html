@@ -4087,7 +4087,7 @@ function switchCallingMode(mode) {
   if (mode !== 'duck') {
     closeDuckGame();
   }
-  if (mode === 'ferry') renderFerryPassengers();
+  if (mode === 'ferry') { renderFerryPassengers(); renderFerryDeck(); }
 }
 
     function startStageCountdown() {
