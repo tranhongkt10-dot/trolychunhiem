@@ -309,8 +309,9 @@
             if (localValues.has(key) && localValues.get(key) !== cloudValue) {
               const backupKey = '__recovery_conflict__' + Date.now() + '__' + key;
               const localValue = localValues.get(key);
-              await writeUserDataValue(col, backupKey, localValue);
-              localStorage.setItem(prefix + backupKey, localValue);
+              // Bản xung đột đã được lưu an toàn lên Firestore ở dòng trên.
+              // Không nhân đôi bản dữ liệu lớn trong localStorage vì có thể làm đầy quota
+              // và chặn toàn bộ quá trình đăng nhập/khôi phục trên thiết bị.
               conflictCount++;
             }
           }
