@@ -5456,5 +5456,96 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
 })();
 </script>
 
+
+<script>
+/* LÁI ĐÒ TRI THỨC — lớp cảnh 3D thời gian thực bằng Three.js */
+(function(){
+  let ferry3DReady=false, ferry3D=null, ferry3DStudents=[], ferry3DLastIndex=0;
+  function loadThree(){
+    if(window.THREE){initFerry3D();return;}
+    const tag=document.createElement('script');
+    tag.src='https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js';
+    tag.onload=initFerry3D;
+    tag.onerror=()=>{const st=document.getElementById('ferryStatus');if(st)st.textContent='Không tải được thư viện 3D. Hãy kiểm tra kết nối Internet.';};
+    document.head.appendChild(tag);
+  }
+  function initFerry3D(){
+    if(ferry3DReady||!window.THREE)return;
+    const host=document.getElementById('ferryScene');if(!host)return;
+    ferry3DReady=true;
+    ['ferry-rain','ferry-lightning','ferryTeacher','ferryBoat','ferryShore','ferryStartBank','ferryBridge','ferryBridgeLabel','ferrySwimmers'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
+    host.style.background='linear-gradient(#8cccf5,#d8f2ff 43%,#087eaa 44%,#075985)';
+    const canvas=document.createElement('canvas');canvas.id='ferry3DCanvas';canvas.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:4;display:block;';
+    host.insertBefore(canvas,host.firstChild);
+    const T=THREE, scene=new T.Scene();scene.background=new T.Color(0x9bd8f5);scene.fog=new T.Fog(0x9bd8f5,32,85);
+    const camera=new T.PerspectiveCamera(42,1,.1,200);camera.position.set(0,18,31);camera.lookAt(0,0,0);
+    const renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
+    scene.add(new T.HemisphereLight(0xdff4ff,0x38516b,2));
+    const sun=new T.DirectionalLight(0xfff1d1,2.5);sun.position.set(-10,22,14);sun.castShadow=true;scene.add(sun);
+    const mat=(c,rough=.75)=>new T.MeshStandardMaterial({color:c,roughness:rough});
+    const waterMat=mat(0x087eaa,.28), wood=mat(0x92501f), woodLight=mat(0xc88742), white=mat(0xffffff), skin=mat(0xf2bd91), hair=mat(0x211b1a), red=mat(0xd91e32), navy=mat(0x173b70), pink=mat(0xe83e91);
+    const water=new T.Mesh(new T.PlaneGeometry(100,70,48,36),waterMat);water.rotation.x=-Math.PI/2;water.position.y=-.55;water.receiveShadow=true;scene.add(water);
+    const waves=[];
+    for(let i=0;i<90;i++){const m=new T.Mesh(new T.SphereGeometry(.12+Math.random()*.18,8,6),mat(i%3?0x55c9e8:0xc9f6ff,.25));m.scale.set(1.7,.18,.6);m.position.set((Math.random()-.5)*38,-.35,(Math.random()-.5)*25);scene.add(m);waves.push(m);}
+    function box(w,h,d,material,x,y,z){const o=new T.Mesh(new T.BoxGeometry(w,h,d),material);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;scene.add(o);return o;}
+    // Bờ xuất phát và bến trường đối diện
+    box(10,1.2,8,mat(0x578b35),-17,-.2,0);
+    box(11,1.2,8,mat(0x57913a),17,-.2,0);
+    // cầu gỗ nối từ bến phải ra giữa sông
+    for(let i=0;i<9;i++)box(1.15,.22,4.2,woodLight,12-i*1.05,.25,-1.2);
+    for(const z of [-3.1,.7])box(10,.25,.22,wood,7,.55,z);
+    for(let i=0;i<6;i++){box(.22,1.15,.22,wood,11-i*1.7,.72,-3.1);box(.22,1.15,.22,wood,11-i*1.7,.72,.7);}
+    // Cổng trường đơn giản 3D
+    box(6,1.2,.5,mat(0xf4d18b),19,2.1,-4);box(.5,3,.6,mat(0xf4d18b),16,1.2,-4);box(.5,3,.6,mat(0xf4d18b),22,1.2,-4);
+    // Thuyền gỗ
+    const boat=new T.Group();scene.add(boat);
+    const hull=new T.Mesh(new T.CylinderGeometry(2.2,2.8,10,12,1,false,0,Math.PI),wood);hull.rotation.z=Math.PI/2;hull.rotation.x=Math.PI;hull.position.y=.1;hull.scale.set(1,.42,1);hull.castShadow=true;boat.add(hull);
+    const deck=new T.Mesh(new T.BoxGeometry(9.1,.22,3.5),woodLight);deck.position.y=.55;deck.castShadow=true;boat.add(deck);
+    for(let z of [-1.65,1.65]){const rail=new T.Mesh(new T.BoxGeometry(9,.5,.18),wood);rail.position.set(0,.9,z);boat.add(rail);}
+    const people=[];
+    function makePerson(student,isTeacher=false){
+      const g=new T.Group();const body=new T.Mesh(new T.CylinderGeometry(.34,.43,.9,10),isTeacher?pink:white);body.position.y=1.12;body.castShadow=true;g.add(body);
+      const head=new T.Mesh(new T.SphereGeometry(.43,16,12),skin);head.position.y=1.92;head.castShadow=true;g.add(head);
+      const hairCap=new T.Mesh(new T.SphereGeometry(.445,16,10,0,Math.PI*2,0,Math.PI*.58),hair);hairCap.position.set(0,2.02,0);g.add(hairCap);
+      const eyeMat=mat(0x201713);for(const x of [-.15,.15]){const eye=new T.Mesh(new T.SphereGeometry(.045,8,6),eyeMat);eye.position.set(x,1.98,.39);g.add(eye);}
+      const scarf=new T.Mesh(new T.ConeGeometry(.15,.42,3),red);scarf.position.set(0,1.48,.37);scarf.rotation.x=.2;g.add(scarf);
+      for(const x of [-.23,.23]){const arm=new T.Mesh(new T.CapsuleGeometry(.11,.48,4,8),skin);arm.position.set(x,1.25,0);arm.rotation.z=x<0?-.55:.55;g.add(arm);}
+      for(const x of [-.17,.17]){const leg=new T.Mesh(new T.CapsuleGeometry(.12,.42,4,8),navy);leg.position.set(x,.45,0);g.add(leg);}
+      if(isTeacher){const hat=new T.Mesh(new T.ConeGeometry(.78,.35,24),mat(0xe8c77d));hat.position.y=2.42;hat.rotation.x=Math.PI;g.add(hat);const brim=new T.Mesh(new T.CylinderGeometry(.82,.82,.08,24),mat(0xc69b50));brim.position.y=2.28;g.add(brim);}
+      const label=document.createElement('canvas');label.width=512;label.height=128;const ctx=label.getContext('2d');ctx.fillStyle='rgba(255,255,255,.96)';ctx.strokeStyle='#1d4ed8';ctx.lineWidth=8;ctx.beginPath();ctx.roundRect(8,8,496,112,28);ctx.fill();ctx.stroke();ctx.fillStyle='#102a56';ctx.font='bold 48px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(isTeacher?'CÔ GIÁO':(student.name||'Học sinh'),256,64,470);
+      const tex=new T.CanvasTexture(label);const sprite=new T.Sprite(new T.SpriteMaterial({map:tex,transparent:true}));sprite.scale.set(2.3,.58,1);sprite.position.y=2.9;g.add(sprite);
+      return g;
+    }
+    const teacher=makePerson({},true);teacher.position.set(-2.8,.62,0);boat.add(teacher);
+    function populate(){
+      ferry3DStudents.forEach(p=>boat.remove(p.mesh));ferry3DStudents=[];
+      const roster=Array.isArray(window.students)?window.students:[];
+      const sleeping=window.ferrySleepingPassenger;
+      roster.forEach((st,i)=>{const mesh=makePerson(st);const col=i%8,row=Math.floor(i/8);mesh.position.set(-3.6+col*.92,.62,-1.15+row*.76);if(st===sleeping){mesh.rotation.z=-Math.PI/2;mesh.position.y=.65;}boat.add(mesh);ferry3DStudents.push({mesh,student:st,home:mesh.position.clone(),sleeping:st===sleeping});});
+    }
+    populate();
+    const rainGroup=new T.Group();scene.add(rainGroup);const rainMat=new T.LineBasicMaterial({color:0xd8f4ff,transparent:true,opacity:.65});
+    for(let i=0;i<150;i++){const geo=new T.BufferGeometry().setFromPoints([new T.Vector3((Math.random()-.5)*45,Math.random()*18,-12+Math.random()*24),new T.Vector3((Math.random()-.5)*45,Math.random()*18-1,-12+Math.random()*24)]);rainGroup.add(new T.Line(geo,rainMat));}
+    const clock=new T.Clock();let elapsed=0,walkIndex=-1,walkT=0,storm=true;
+    function resize(){const w=host.clientWidth||900,h=host.clientHeight||420;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+    window.addEventListener('resize',resize);resize();
+    ferry3D={scene,camera,renderer,boat,teacher,waves,clock,people,populate,rainGroup};
+    function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);elapsed+=dt;
+      water.position.y=-.55+Math.sin(elapsed*1.7)*.035;
+      waves.forEach((w,i)=>{w.position.x+=dt*(.6+(i%5)*.12);if(w.position.x>22)w.position.x=-22;w.position.y=-.35+Math.sin(elapsed*2+i)*.08;});
+      const running=!!window.ferryTripRunning;boat.position.x=running?Math.sin(elapsed*.45)*.35:0;boat.rotation.z=running?Math.sin(elapsed*2.4)*.035:0;
+      teacher.rotation.z=running?Math.sin(elapsed*5)*.12:Math.sin(elapsed)*.015;
+      rainGroup.visible=running;
+      const idx=Number(window.ferryCurrentIndex||0);
+      if(idx!==ferry3DLastIndex){ferry3DLastIndex=idx;const p=ferry3DStudents.find(x=>x.student===window.ferryTripQueue?.[idx-1]);if(p&&!p.sleeping){const start=p.mesh.position.clone();const target=new T.Vector3(15,0,0);let t=0;(function step(){t+=.045;p.mesh.position.lerpVectors(start,target,Math.min(t,1));if(t<1)requestAnimationFrame(step);else{p.mesh.visible=false;}})();}}
+      renderer.render(scene,camera);
+    }animate();
+  }
+  function start(){if(document.getElementById('ferryScene'))loadThree();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+  const launch=document.getElementById('ferryLaunchBtn');
+  if(launch)launch.addEventListener('click',()=>{setTimeout(()=>{if(ferry3D)ferry3D.populate();},80);});
+})();
+</script>
 </body>
 </html>
