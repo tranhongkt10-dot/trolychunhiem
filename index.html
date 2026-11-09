@@ -1101,6 +1101,7 @@
         <button onclick="switchCallingMode('duck')" id="callMode-duck" class="calling-mode-btn px-4 py-2.5 rounded-xl bg-gray-100 text-gray-600 hover:bg-pink-50">🦆 Bắn Vịt Carnival</button>
       </div>
 
+      <button onclick="switchCallingMode('ferry')" id="callMode-ferry" class="calling-mode-btn px-4 py-2.5 rounded-xl bg-gray-100 text-gray-600 hover:bg-pink-50">⛵ Lái Đò Tri Thức</button>
       <!-- CHẾ ĐỘ 1: SÂN KHẤU MÁY ẢNH RETRO -->
       <div id="callingView-stage" class="calling-stage-card rounded-3xl p-6 sm:p-8 text-center max-w-lg mx-auto space-y-6">
         <div class="relative bg-gradient-to-b from-pink-400 via-rose-400 to-pink-500 p-5 rounded-[40px] shadow-2xl border-4 border-white max-w-xs mx-auto">
@@ -1183,6 +1184,68 @@
   </div>
   <div class="duck-bottom-stars relative z-10">🎪　⭐　🎈　⭐　🎪</div>
 </div>
+
+      <!-- CHẾ ĐỘ 4: LÁI ĐÒ TRI THỨC -->
+      <div id="callingView-ferry" class="hidden rounded-3xl overflow-hidden shadow-xl border-4 border-amber-100 bg-gradient-to-b from-sky-100 to-cyan-50">
+        <div class="bg-gradient-to-r from-cyan-800 via-teal-700 to-emerald-700 text-white text-center p-5 sm:p-7">
+          <div class="text-4xl mb-1">⛵ 🌊 🏮</div>
+          <h3 class="text-2xl sm:text-3xl font-black tracking-wide">LÁI ĐÒ TRI THỨC</h3>
+          <p class="text-sm text-cyan-50 font-bold mt-1">Chuyến đò ngẫu nhiên đưa một hành khách lên trả lời câu hỏi!</p>
+          <div class="mt-3 inline-flex items-center gap-2 bg-white/15 border border-white/30 rounded-full px-4 py-1.5 text-xs font-black">
+            <span id="ferryClassName">Lớp hiện tại</span><span>•</span><span id="ferryRosterCount">0 hành khách</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1.1fr)_minmax(260px,.9fr)] gap-4 p-4 sm:p-6">
+          <div class="space-y-4">
+            <div class="bg-white/90 rounded-2xl border border-cyan-100 p-4 shadow-sm">
+              <h4 class="font-black text-teal-900 mb-3">🧭 CÀI ĐẶT CHUYẾN ĐÒ</h4>
+              <div class="grid grid-cols-2 gap-3">
+                <label class="text-xs font-bold text-gray-600">Người lái đò
+                  <select id="ferryDriver" class="mt-1 w-full border border-cyan-200 rounded-xl p-2.5 text-sm font-bold"><option value="Cô">Cô</option><option value="Thầy">Thầy</option></select>
+                </label>
+                <label class="text-xs font-bold text-gray-600">Tốc độ chuyến đò
+                  <select id="ferrySpeed" class="mt-1 w-full border border-cyan-200 rounded-xl p-2.5 text-sm font-bold"><option value="slow">Chậm rãi</option><option value="normal" selected>Vừa phải</option><option value="fast">Hồi hộp</option></select>
+                </label>
+                <label class="text-xs font-bold text-gray-600 col-span-2">Thời gian chọn hành khách
+                  <select id="ferryDuration" class="mt-1 w-full border border-cyan-200 rounded-xl p-2.5 text-sm font-bold"><option value="3">3 giây</option><option value="5" selected>5 giây</option><option value="8">8 giây</option><option value="10">10 giây</option></select>
+                </label>
+              </div>
+              <label class="flex items-center gap-2 mt-4 text-sm font-bold text-gray-700"><input id="ferryAskEnabled" type="checkbox" class="w-4 h-4 accent-teal-600" checked> Hỏi bài khi hành khách lên bờ</label>
+              <label class="block mt-2 text-xs font-bold text-gray-600">Câu hỏi dành cho hành khách
+                <textarea id="ferryQuestion" rows="2" class="mt-1 w-full border border-cyan-200 rounded-xl p-3 text-sm font-medium" placeholder="Ví dụ: Em hãy nêu kết quả phép tính 7 × 8?"></textarea>
+              </label>
+              <label class="block mt-2 text-xs font-bold text-gray-600">Thời gian trả lời
+                <div class="flex items-center gap-2 mt-1"><input id="ferryAnswerSeconds" type="number" min="5" max="120" value="15" class="w-24 border border-cyan-200 rounded-xl p-2.5 text-sm font-bold"><span class="text-xs text-gray-500">giây</span></div>
+              </label>
+            </div>
+            <div class="rounded-2xl bg-white/90 border border-cyan-100 p-4 shadow-sm">
+              <div class="flex items-center justify-between gap-2 mb-2"><h4 class="font-black text-teal-900">👥 DANH SÁCH HÀNH KHÁCH</h4><button onclick="resetFerryPassengers()" class="text-xs font-black text-teal-700 bg-teal-50 rounded-lg px-3 py-2">↻ Cho đi lại</button></div>
+              <p class="text-xs text-gray-500 mb-2">Sử dụng danh sách học sinh của lớp đang mở. Học sinh đã được gọi sẽ được đánh dấu để hạn chế lặp lại.</p>
+              <div id="ferryPassengerList" class="max-h-44 overflow-y-auto space-y-1 text-sm"></div>
+            </div>
+          </div>
+          <div class="space-y-4">
+            <div class="ferry-river-scene relative overflow-hidden rounded-2xl min-h-[300px] flex flex-col items-center justify-center p-4 border-4 border-white shadow-inner">
+              <div class="absolute inset-0 opacity-30 pointer-events-none" style="background:repeating-linear-gradient(175deg,transparent 0 25px,rgba(255,255,255,.65) 26px 29px,transparent 30px 54px)"></div>
+              <div class="relative z-10 text-center text-white drop-shadow-lg"><div class="text-5xl mb-2">🏞️</div><div class="text-xs font-black tracking-widest">BẾN SÔNG TRI THỨC</div></div>
+              <div id="ferryBoat" class="relative z-10 text-center my-4 transition-transform duration-300">
+                <div class="text-7xl sm:text-8xl drop-shadow-xl">⛵</div>
+                <div id="ferryCurrentName" class="bg-white text-teal-900 rounded-full px-4 py-2 mt-1 font-black text-sm shadow-lg min-w-[190px]">Sẵn sàng đón khách!</div>
+              </div>
+              <div class="relative z-10 text-white text-xs font-black drop-shadow">🌊 ~~~~~ DÒNG SÔNG ƯỚC MƠ ~~~~~ 🌊</div>
+              <div id="ferryResult" class="hidden relative z-10 bg-amber-100 text-amber-950 border-2 border-amber-300 rounded-2xl p-4 mt-4 w-full text-center shadow-xl">
+                <div class="text-3xl">🎉 🏆 🎉</div><div class="text-xs font-black mt-1">HÀNH KHÁCH ĐÃ CẬP BẾN</div>
+                <div id="ferryWinnerName" class="text-2xl font-black mt-1"></div>
+                <div id="ferryWinnerMeta" class="text-xs font-bold mt-1"></div>
+                <div id="ferryQuestionCard" class="hidden mt-3 bg-white rounded-xl p-3 text-sm font-bold"></div>
+              </div>
+            </div>
+            <button id="ferryLaunchBtn" onclick="startFerryTrip()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white text-lg font-black shadow-lg border-2 border-white hover:brightness-105 active:scale-95">⛵ KHỞI HÀNH CHUYẾN ĐÒ</button>
+            <div class="flex justify-center gap-2 text-xs font-bold text-teal-800"><span>🛶 Công bằng</span><span>•</span><span>🎵 Vui nhộn</span><span>•</span><span>🌟 Không trùng lượt</span></div>
+            <p id="ferryStatus" class="text-center text-xs font-bold text-teal-800" role="status" aria-live="polite">Đã sẵn sàng. Cô hãy bấm Khởi hành!</p>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- 8. CÔNG CỤ LỚP HỌC -->
@@ -3987,14 +4050,15 @@ function switchCallingMode(mode) {
   const stage = document.getElementById('callingView-stage');
   const wheel = document.getElementById('callingView-wheel');
   const duck = document.getElementById('callingView-duck');
+  const ferry = document.getElementById('callingView-ferry');
 
-  // Chuyển đổi giữa 3 chế độ
   if (stage) stage.classList.toggle('hidden', mode !== 'stage');
   if (wheel) wheel.classList.toggle('hidden', mode !== 'wheel');
   if (duck) duck.classList.toggle('hidden', mode !== 'duck');
+  if (ferry) ferry.classList.toggle('hidden', mode !== 'ferry');
 
   // Đổi màu nút đang được chọn
-  ['stage', 'wheel', 'duck'].forEach(m => {
+  ['stage', 'wheel', 'duck', 'ferry'].forEach(m => {
     const btn = document.getElementById(`callMode-${m}`);
 
     if (btn) {
@@ -4308,6 +4372,101 @@ function shootDuck(idx) {
   const status = document.getElementById('duckGameStatus');
   if (status) status.textContent = '🎉 Đã chọn ' + (s.name || 'học sinh') + '. Chúc mừng!';
 }
+
+    // LÁI ĐÒ TRI THỨC – chọn ngẫu nhiên học sinh trong lớp, không lặp cho đến khi hết lượt.
+    let ferryTripTimer = null;
+    let ferryUsedPassengerIds = new Set();
+    let ferryTripRunning = false;
+    function ferryEscape(value) {
+      return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    }
+    function renderFerryPassengers() {
+      const list = document.getElementById('ferryPassengerList');
+      const count = document.getElementById('ferryRosterCount');
+      const className = document.getElementById('ferryClassName');
+      if (count) count.textContent = (students || []).length + ' hành khách';
+      if (className) className.textContent = currentClassName || 'Lớp hiện tại';
+      if (!list) return;
+      if (!Array.isArray(students) || !students.length) {
+        list.innerHTML = '<p class="text-rose-600 font-bold p-2">Lớp chưa có học sinh. Hãy thêm danh sách ở mục Học sinh.</p>';
+        return;
+      }
+      list.innerHTML = students.map((s, i) => {
+        const id = String(s.id || s.name || i);
+        const used = ferryUsedPassengerIds.has(id);
+        return '<div class="flex items-center justify-between gap-2 rounded-lg px-3 py-2 ' + (used ? 'bg-gray-100 text-gray-400' : 'bg-cyan-50 text-gray-700') + '"><span class="truncate"><b>' + (i+1) + '.</b> ' + ferryEscape(s.name || 'Chưa có tên') + '</span><span class="text-[10px] font-black whitespace-nowrap">' + (used ? '✓ ĐÃ LÊN ĐÒ' : (s.team ? ferryEscape(s.team) : 'CHỜ ĐÒ')) + '</span></div>';
+      }).join('');
+    }
+    function resetFerryPassengers() {
+      ferryUsedPassengerIds.clear();
+      renderFerryPassengers();
+      const status = document.getElementById('ferryStatus');
+      if (status) status.textContent = 'Đã làm mới danh sách. Tất cả hành khách đều có cơ hội như nhau!';
+    }
+    function startFerryTrip() {
+      if (ferryTripRunning) return;
+      if (!Array.isArray(students) || !students.length) {
+        showToast('Lớp chưa có học sinh. Hãy thêm danh sách trước nhé!');
+        return;
+      }
+      let available = students.filter((s, i) => !ferryUsedPassengerIds.has(String(s.id || s.name || i)));
+      if (!available.length) {
+        ferryUsedPassengerIds.clear();
+        available = students.slice();
+        renderFerryPassengers();
+        showToast('Tất cả học sinh đã được gọi. Đã làm mới lượt để cả lớp tiếp tục!');
+      }
+      primeClassroomAudioFromGesture();
+      ferryTripRunning = true;
+      const launch = document.getElementById('ferryLaunchBtn');
+      const boat = document.getElementById('ferryBoat');
+      const current = document.getElementById('ferryCurrentName');
+      const result = document.getElementById('ferryResult');
+      const status = document.getElementById('ferryStatus');
+      if (launch) { launch.disabled = true; launch.textContent = '🌊 ĐÒ ĐANG RỜI BẾN...'; launch.classList.add('opacity-60'); }
+      if (result) result.classList.add('hidden');
+      const speed = document.getElementById('ferrySpeed')?.value || 'normal';
+      const duration = Number(document.getElementById('ferryDuration')?.value || 5) * 1000;
+      const interval = speed === 'fast' ? 75 : speed === 'slow' ? 190 : 120;
+      const started = performance.now();
+      let chosen = available[Math.floor(Math.random() * available.length)];
+      let tick = 0;
+      if (status) status.textContent = '⛵ ' + (document.getElementById('ferryDriver')?.value || 'Cô') + ' đang chèo đò... Hành khách nào sẽ cập bến đây?';
+      if (boat) boat.style.transform = 'translateX(0) rotate(-2deg)';
+      ferryTripTimer = setInterval(() => {
+        const elapsed = performance.now() - started;
+        const progress = Math.min(1, elapsed / duration);
+        chosen = available[Math.floor(Math.random() * available.length)];
+        if (current) current.textContent = '👤 ' + (chosen.name || 'Hành khách');
+        if (boat) boat.style.transform = 'translateX(' + (Math.sin(progress * Math.PI) * 34) + 'px) translateY(' + (Math.sin(tick++ * .65) * 5) + 'px) rotate(' + (Math.sin(tick * .65) * 3) + 'deg)';
+        if (progress >= 1) {
+          clearInterval(ferryTripTimer);
+          ferryTripTimer = null;
+          const finalPool = available;
+          const winner = finalPool[Math.floor(Math.random() * finalPool.length)];
+          ferryUsedPassengerIds.add(String(winner.id || winner.name || students.indexOf(winner)));
+          ferryTripRunning = false;
+          if (current) current.textContent = '🎉 ' + (winner.name || 'Hành khách') + ' đã cập bến!';
+          if (boat) boat.style.transform = 'translateX(0) rotate(0deg)';
+          const name = document.getElementById('ferryWinnerName');
+          const meta = document.getElementById('ferryWinnerMeta');
+          const card = document.getElementById('ferryQuestionCard');
+          const ask = document.getElementById('ferryAskEnabled')?.checked;
+          const question = document.getElementById('ferryQuestion')?.value.trim();
+          if (name) name.textContent = winner.name || 'Học sinh';
+          if (meta) meta.textContent = (winner.team || 'Học sinh') + ' • Mã: ' + (winner.id || '—');
+          if (card) {
+            card.classList.toggle('hidden', !ask);
+            card.textContent = ask ? (question || 'Cô hãy đặt câu hỏi trực tiếp cho bạn nhé!') + ' • Thời gian trả lời: ' + (document.getElementById('ferryAnswerSeconds')?.value || 15) + ' giây' : '';
+          }
+          if (result) result.classList.remove('hidden');
+          if (status) status.textContent = '🏁 Chuyến đò đã cập bến. Xin mời ' + (winner.name || 'bạn học sinh') + ' lên trả lời!';
+          if (launch) { launch.disabled = false; launch.textContent = '⛵ KHỞI HÀNH CHUYẾN ĐÒ TIẾP THEO'; launch.classList.remove('opacity-60'); }
+          renderFerryPassengers();
+          playApplauseSound();
+        }
+      }, interval);
+    }
 
     // SƠ ĐỒ LỚP (19 BÀN ĐÔI)
     function renderSeatingDesks() {
