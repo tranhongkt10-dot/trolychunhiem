@@ -5519,8 +5519,8 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     const teacher=makePerson({},true);teacher.position.set(-2.8,.62,0);boat.add(teacher);
     function populate(){
       ferry3DStudents.forEach(p=>boat.remove(p.mesh));ferry3DStudents=[];
-      const roster=Array.isArray(window.students)?window.students:[];
-      const sleeping=window.ferrySleepingPassenger;
+      const roster=Array.isArray(students)?students:[];
+      const sleeping=ferrySleepingPassenger;
       roster.forEach((st,i)=>{const mesh=makePerson(st);const col=i%8,row=Math.floor(i/8);mesh.position.set(-3.6+col*.92,.62,-1.15+row*.76);if(st===sleeping){mesh.rotation.z=-Math.PI/2;mesh.position.y=.65;}boat.add(mesh);ferry3DStudents.push({mesh,student:st,home:mesh.position.clone(),sleeping:st===sleeping});});
     }
     populate();
@@ -5533,11 +5533,11 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);elapsed+=dt;
       water.position.y=-.55+Math.sin(elapsed*1.7)*.035;
       waves.forEach((w,i)=>{w.position.x+=dt*(.6+(i%5)*.12);if(w.position.x>22)w.position.x=-22;w.position.y=-.35+Math.sin(elapsed*2+i)*.08;});
-      const running=!!window.ferryTripRunning;boat.position.x=running?Math.sin(elapsed*.45)*.35:0;boat.rotation.z=running?Math.sin(elapsed*2.4)*.035:0;
+      const running=!!ferryTripRunning;boat.position.x=running?Math.sin(elapsed*.45)*.35:0;boat.rotation.z=running?Math.sin(elapsed*2.4)*.035:0;
       teacher.rotation.z=running?Math.sin(elapsed*5)*.12:Math.sin(elapsed)*.015;
       rainGroup.visible=running;
-      const idx=Number(window.ferryCurrentIndex||0);
-      if(idx!==ferry3DLastIndex){ferry3DLastIndex=idx;const p=ferry3DStudents.find(x=>x.student===window.ferryTripQueue?.[idx-1]);if(p&&!p.sleeping){const start=p.mesh.position.clone();const target=new T.Vector3(15,0,0);let t=0;(function step(){t+=.045;p.mesh.position.lerpVectors(start,target,Math.min(t,1));if(t<1)requestAnimationFrame(step);else{p.mesh.visible=false;}})();}}
+      const idx=Number(ferryCurrentIndex||0);
+      if(idx!==ferry3DLastIndex){ferry3DLastIndex=idx;const p=ferry3DStudents.find(x=>x.student===ferryTripQueue?.[idx-1]);if(p&&!p.sleeping){const start=p.mesh.position.clone();const target=new T.Vector3(15,0,0);let t=0;(function step(){t+=.045;p.mesh.position.lerpVectors(start,target,Math.min(t,1));if(t<1)requestAnimationFrame(step);else{p.mesh.visible=false;}})();}}
       renderer.render(scene,camera);
     }animate();
   }
