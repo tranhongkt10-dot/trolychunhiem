@@ -5517,12 +5517,21 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
   let game = null;
   const status = message => { const el = document.getElementById('ferryStatus'); if (el) el.textContent = message; };
   function loadThree() {
-    if (window.THREE) { init(); return; }
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js';
-    script.onload = init;
-    script.onerror = () => { status('Không tải được thư viện 3D. Kiểm tra Internet rồi tải lại trang.'); readyReject(new Error('Three.js CDN unavailable')); };
-    document.head.appendChild(script);
+    try {
+      if (window.THREE) { init(); return; }
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js';
+      script.onload = () => {
+        try { init(); }
+        catch (error) { console.error('Không khởi tạo được cảnh 3D:', error); status('Thiết bị chưa khởi tạo được đồ họa 3D. Cô hãy tải lại trang hoặc thử trên máy tính có hỗ trợ WebGL.'); readyReject(error); }
+      };
+      script.onerror = () => { status('Không tải được thư viện 3D. Kiểm tra Internet rồi tải lại trang.'); readyReject(new Error('Three.js CDN unavailable')); };
+      document.head.appendChild(script);
+    } catch (error) {
+      console.error('Lỗi tải cảnh 3D:', error);
+      status('Thiết bị chưa hỗ trợ hoặc chưa khởi tạo được cảnh 3D.');
+      readyReject(error);
+    }
   }
   function init() {
     if (game || !window.THREE) return;
