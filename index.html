@@ -5721,9 +5721,9 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     const proceduralBoatParts = boat.children.slice();
     loadRealGLB('boat').then(data => {
       const realBoat = cloneRigged(data.scene);
-      realBoat.scale.set(2.55, 2.15, 1.25);
+      realBoat.scale.set(2.55, 1.2, 1.25);
       realBoat.position.set(0, .35, 0);
-      realBoat.rotation.y = Math.PI / 2;
+      
       proceduralBoatParts.forEach(part => { part.visible = false; });
       boat.add(realBoat);
       boat.userData.realBoat = realBoat;
@@ -5850,7 +5850,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       const model = cloneRigged(data.scene);
       fitRealModel(model, 1.68);
       model.position.set(0, .05, 0);
-      teacher.children.forEach(child => { child.visible = child.userData && (child.userData.keepOnRealTeacher === true); });
+      teacher.children.forEach(child => { child.visible = child === teacher.userData.paddle || child.isSprite; });
       teacher.add(model);
       teacher.userData.realModel = model;
       const mixer = new T.AnimationMixer(model);
@@ -5883,6 +5883,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
           entry.mesh.children.forEach(child => { child.visible = false; });
           entry.mesh.add(model);
           entry.realModel = model;
+          entry.clips = data.animations || [];
           entry.mixer = new T.AnimationMixer(model);
           const idle = data.animations && data.animations.find(a => /idle|stand/i.test(a.name));
           if (idle) entry.mixer.clipAction(idle).play();
@@ -5910,11 +5911,12 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       async disembark(student){
         const p=findStudent(student);if(!p||p.mesh.userData.sleeping)return;
         const mesh=p.mesh;mesh.userData.walking=true;
-        if (p.realModel && p.mixer) {
-          const walkClip = (realAssetCache[String(p.student?.gender||'').toLowerCase().match(/nữ|nu|female|girl/) ? 'girl' : 'boy'] && null);
-          const clips = p.realModel.animations || [];
-          const clip = clips.find(a => /walk/i.test(a.name));
-          if (clip) p.mixer.clipAction(clip).reset().play();
+        if (p.realModel && p.mixer && p.clips) {
+          const walkClip = p.clips.find(a => /walk/i.test(a.name));
+          if (walkClip) {
+            p.mixer.stopAllAction();
+            p.mixer.clipAction(walkClip).reset().play();
+          }
         }
         const from=mesh.position.clone(),to=new T.Vector3(6.5,1.0,2.85);
         const start=performance.now(),duration=1550;
