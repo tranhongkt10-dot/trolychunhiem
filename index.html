@@ -5526,16 +5526,8 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
   async function loadThree() {
     try {
       // Three.js r149 không còn thư mục examples/js; nạp đúng bản ES module.
-      const [threeModule, loaderModule, skeletonModule] = await Promise.all([
-        import('https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.module.js'),
-        import('https://cdn.jsdelivr.net/npm/three@0.149.0/examples/jsm/loaders/GLTFLoader.js'),
-        import('https://cdn.jsdelivr.net/npm/three@0.149.0/examples/jsm/utils/SkeletonUtils.js')
-      ]);
-      window.THREE = {
-        ...threeModule,
-        GLTFLoader: loaderModule.GLTFLoader,
-        SkeletonUtils: skeletonModule
-      };
+      const threeModule = await import('https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.module.js');
+      window.THREE = threeModule;
       init();
     } catch (error) {
       console.error('Không nạp được Three.js/GLTFLoader dạng module:', error);
@@ -5548,38 +5540,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     const host = document.getElementById('ferryScene');
     if (!host) { readyReject(new Error('Không tìm thấy khu vực trò chơi')); return; }
     const T = window.THREE;
-    // Dùng URL tệp GLB công khai trực tiếp; không gọi API JSON bị CORS chặn.
-    // Tên tệp dưới đây là tên hiển thị trên trang mô hình Grab3D.
-    const realAssetURLs = {
-      boat: 'https://grab3d.com/dl/rowboat/rowboat.glb',
-      boy: 'https://grab3d.com/dl/teen-character/teen-character.glb',
-      girl: 'https://grab3d.com/dl/woman-base-character/woman-base-character.glb'
-    };
-    const realAssetCache = {};
-    const realMixers = [];
-    function loadRealGLB(key) {
-      if (realAssetCache[key]) return realAssetCache[key];
-      realAssetCache[key] = new Promise((resolve, reject) => {
-        if (!T.GLTFLoader) { reject(new Error('GLTFLoader chưa sẵn sàng')); return; }
-        new T.GLTFLoader().load(realAssetURLs[key], resolve, undefined, reject);
-      });
-      return realAssetCache[key];
-    }
-    function cloneRigged(source) {
-      return T.SkeletonUtils && T.SkeletonUtils.clone ? T.SkeletonUtils.clone(source) : source.clone(true);
-    }
-    function fitRealModel(model, targetHeight) {
-      const bounds = new T.Box3().setFromObject(model);
-      const size = bounds.getSize(new T.Vector3());
-      const center = bounds.getCenter(new T.Vector3());
-      const factor = targetHeight / Math.max(size.y, .001);
-      model.scale.setScalar(factor);
-      model.position.set(-center.x * factor, -bounds.min.y * factor, -center.z * factor);
-      model.traverse(node => {
-        if (node.isMesh) { node.castShadow = true; node.receiveShadow = true; }
-      });
-      return model;
-    }
+    // Dùng mô hình 3D dự phòng tích hợp; không gọi các URL GLB chưa hợp lệ.
     ['ferry-rain','ferry-lightning','ferryTeacher','ferryBoat','ferryShore','ferryStartBank','ferryBridge','ferryBridgeLabel','ferrySwimmers'].forEach(id => {
       const el = document.getElementById(id); if (el) el.style.display = 'none';
     });
@@ -5718,19 +5679,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       for(let i=0;i<9;i++)box(boat,.14,.75,.14,M.wood,-6+i*1.5,1.48,z);
     }
     const prow=new T.Mesh(new T.ConeGeometry(.65,1.2,4),M.gold);prow.rotation.z=-Math.PI/2;prow.position.set(6.65,1.05,0);boat.add(prow);
-    // Thay thân thuyền dựng hình bằng mô hình xuồng gỗ PBR có ván ghép và mái chèo rời.
-    const proceduralBoatParts = boat.children.slice();
-    loadRealGLB('boat').then(data => {
-      const realBoat = cloneRigged(data.scene);
-      realBoat.scale.set(2.55, 1.2, 1.25);
-      realBoat.position.set(0, .35, 0);
-      
-      proceduralBoatParts.forEach(part => { part.visible = false; });
-      boat.add(realBoat);
-      boat.userData.realBoat = realBoat;
-      status('Đã tải mô hình thuyền gỗ 3D có vật liệu thật.');
-    }).catch(error => { console.error('GLB boat failed:', error); status('Không tải được mô hình thuyền 3D từ máy chủ mô hình. Kiểm tra kết nối rồi tải lại.'); });
-    // Mô hình nhân vật 3D có khung xương và chất liệu PBR.
+    // Giữ thuyền 3D dự phòng tích hợp, không ẩn các bộ phận khi thiếu tệp GLB.
     function capsule(parent,r,len,material,x,y,z) {
       const mesh=new T.Mesh(new T.CapsuleGeometry(r,len,5,12),material);
       mesh.position.set(x,y,z);mesh.castShadow=true;parent.add(mesh);return mesh;
@@ -5846,22 +5795,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       g.userData={arms,paddle};g.add(labelSprite('CÔ GIÁO',true));g.scale.setScalar(.82);return g;
     }
     const teacher=makeTeacher();teacher.position.set(-5.45,.95,0);boat.add(teacher);
-    // Tải cô giáo dạng người 3D có da/tóc PBR và bộ xương; giữ mái chèo và bảng tên.
-    loadRealGLB('girl').then(data => {
-      const model = cloneRigged(data.scene);
-      fitRealModel(model, 1.68);
-      model.position.set(0, .05, 0);
-      teacher.children.forEach(child => { child.visible = child === teacher.userData.paddle || child.isSprite; });
-      teacher.add(model);
-      teacher.userData.realModel = model;
-      const mixer = new T.AnimationMixer(model);
-      if (data.animations && data.animations.length) {
-        const idle = data.animations.find(a => /idle|stand/i.test(a.name));
-        if (idle) mixer.clipAction(idle).play();
-      }
-      realMixers.push(mixer);
-      status('Đã tải nhân vật cô giáo 3D chất liệu PBR.');
-    }).catch(error => { console.error('GLB teacher failed:', error); status('Không tải được mô hình cô giáo 3D. Đang hiển thị nhân vật dự phòng.'); });
+    // Cô giáo dùng nhân vật dự phòng tích hợp, vẫn giữ mái chèo và bảng tên.
     let studentMeshes=[];
     function populate() {
       studentMeshes.forEach(p=>boat.remove(p.mesh));studentMeshes=[];
@@ -5874,23 +5808,8 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
         if(student===sleeping){mesh.userData.sleeping=true;mesh.rotation.z=-.18;mesh.position.y=1.05;}
         boat.add(mesh);studentMeshes.push({student,mesh,home:mesh.position.clone(),walk:null});
       });
-      // Thay từng hình nhân vật ghép khối bằng mô hình người GLB có da/tóc PBR và rig.
-      studentMeshes.forEach((entry,index) => {
-        const gender = String(entry.student?.gender || entry.student?.sex || '').toLowerCase();
-        const assetKey = /nữ|nu|female|girl/.test(gender) ? 'girl' : 'boy';
-        loadRealGLB(assetKey).then(data => {
-          const model = cloneRigged(data.scene);
-          fitRealModel(model, 1.22);
-          entry.mesh.children.forEach(child => { child.visible = false; });
-          entry.mesh.add(model);
-          entry.realModel = model;
-          entry.clips = data.animations || [];
-          entry.mixer = new T.AnimationMixer(model);
-          const idle = data.animations && data.animations.find(a => /idle|stand/i.test(a.name));
-          if (idle) entry.mixer.clipAction(idle).play();
-          realMixers.push(entry.mixer);
-        }).catch(error => { console.error('GLB student failed:', error); status('Không tải được một số mô hình học sinh 3D. Đang hiển thị nhân vật dự phòng.'); });
-      });
+      // Giữ nhân vật học sinh dự phòng tích hợp, không tải GLB ngoài.
+
     }
     populate();
     // Mưa xiên, sấm chớp và hạt nước bắn khi bão.
@@ -5940,7 +5859,6 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     function animate(){
       requestAnimationFrame(animate);
       const dt=Math.min(clock.getDelta(),.05);elapsed+=dt;
-      realMixers.forEach(mixer => mixer.update(dt));
       const pos=water.geometry.attributes.position;
       for(let i=0;i<pos.count;i++){
         const x=waterBase[i*3],z=waterBase[i*3+2];
