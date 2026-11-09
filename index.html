@@ -5701,97 +5701,174 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       sprite.scale.set(isTeacher?2.3:1.85,.39,1);sprite.position.y=3.15;return sprite;
     }
     const pupils=[];
+    // Tạo chi tiết cơ thể bằng khối chuyển tiếp và chi tiết giải phẫu mềm hơn,
+    // thay cho cách ghép toàn bộ cơ thể từ các quả cầu/capsule đồng đều.
+    function limbBetween(parent,a,b,rTop,rBottom,material,segments=14) {
+      const start=new T.Vector3(a[0],a[1],a[2]), end=new T.Vector3(b[0],b[1],b[2]);
+      const delta=new T.Vector3().subVectors(end,start);
+      const mesh=new T.Mesh(new T.CylinderGeometry(rBottom,rTop,delta.length(),segments,1),material);
+      mesh.position.copy(start).add(end).multiplyScalar(.5);
+      mesh.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),delta.normalize());
+      mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
+    }
     function makeChild(student,index) {
       const g=new T.Group();
       const name=String(student?.name||student?.fullName||'Bạn nhỏ');
       const gender=String(student?.gender||student?.sex||'').toLowerCase();
       const girl=/nữ|nu|female|girl/.test(gender);
-      const skinTones=[0xf8d3b7,0xeebc98,0xffd9bc,0xdca77f];
-      const skins=skinTones[index%skinTones.length];
-      const skinMat=mat(skins,.72), hairColors=[0x251913,0x3b2921,0x171717,0x63432e,0x352b39];
-      const hairMat=mat(hairColors[index%hairColors.length],.84);
-      const shirt=mat(index%5===0?0xfff5ec:0xffffff,.62);
-      const shorts=mat(0x263f76,.72), skirt=mat(0x263f76,.62);
-      const shoe=mat(index%3===0?0x4b3028:0x29303d,.55);
-      const blush=mat(0xf18c9a,.85), eyeWhite=mat(0xffffff,.24), iris=mat([0x38241e,0x263b5b,0x4b3026][index%3],.2), glint=mat(0xffffff,.1);
-      // Thân và cổ áo đồng phục.
-      capsule(g,.29,.43,shirt,0,1.12,0);
-      sphere(g,.32,shirt,0,1.12,0,1,.85,.8);
-      capsule(g,.105,.12,skinMat,0,1.48,0);
-      const collar1=new T.Mesh(new T.ConeGeometry(.15,.19,3),M.white);collar1.position.set(-.12,1.46,.23);collar1.rotation.z=-.5;g.add(collar1);
-      const collar2=collar1.clone();collar2.position.x=.12;collar2.rotation.z=.5;g.add(collar2);
-      const tie=new T.Mesh(new T.ConeGeometry(.075,.25,4),M.red);tie.position.set(0,1.28,.29);g.add(tie);
-      // Chân váy hoặc quần tùy giới tính.
+      const skinTones=[0xf3c5a5,0xe6b28f,0xffd4b7,0xd5a17c,0xf0c09c];
+      const hairColors=[0x211812,0x38271f,0x171717,0x62442f,0x302633];
+      const skinMat=mat(skinTones[index%skinTones.length],.76);
+      const hairMat=mat(hairColors[index%hairColors.length],.82);
+      const shirt=mat(0xfaf8f0,.68), shorts=mat(0x263f76,.78);
+      const skirt=mat(0x263f76,.72), shoe=mat(index%3===0?0x49332c:0x29313c,.62);
+      const blush=mat(0xe99591,.9), eyeWhite=mat(0xfffdf8,.22);
+      const iris=mat([0x38241e,0x263b5b,0x4b3026][index%3],.22), glint=mat(0xffffff,.12);
+      const accent=mat([0x3b9caa,0xe58b55,0x8b83c9,0x55a879][index%4],.55);
+      // Thân áo sơ mi có eo và vai rõ hơn.
+      const torsoProfile=[
+        new T.Vector2(.19,.48),new T.Vector2(.22,.62),new T.Vector2(.25,.92),
+        new T.Vector2(.34,1.32),new T.Vector2(.39,1.52),new T.Vector2(.31,1.66),
+        new T.Vector2(.13,1.69)
+      ];
+      const torso=new T.Mesh(new T.LatheGeometry(torsoProfile,24),shirt);
+      torso.position.y=0;torso.castShadow=true;torso.receiveShadow=true;g.add(torso);
+      // Cổ áo, nẹp áo và cà vạt nhỏ.
+      limbBetween(g,[-.105,1.59,.02],[0,1.69,.02],.055,.045,skinMat);
+      limbBetween(g,[.105,1.59,.02],[0,1.69,.02],.055,.045,skinMat);
+      const collarL=new T.Mesh(new T.BufferGeometry(),M.white);
+      const collarShape=new T.Shape();collarShape.moveTo(0,0);collarShape.lineTo(.14,.13);collarShape.lineTo(.04,.22);collarShape.lineTo(-.02,.08);
+      const collarGeo=new T.ShapeGeometry(collarShape);
+      const c1=new T.Mesh(collarGeo,M.white);c1.position.set(-.15,1.53,.27);c1.rotation.z=-.12;g.add(c1);
+      const c2=new T.Mesh(collarGeo,M.white);c2.position.set(.15,1.53,.27);c2.rotation.y=Math.PI;c2.rotation.z=.12;g.add(c2);
+      const tie=new T.Mesh(new T.ConeGeometry(.065,.24,4),M.red);tie.position.set(0,1.42,.29);tie.rotation.x=.12;g.add(tie);
       if(girl) {
-        const dress=new T.Mesh(new T.CylinderGeometry(.25,.48,.48,16),skirt);dress.position.set(0,.76,0);dress.castShadow=true;g.add(dress);
-      }
-      // Đầu, tai, má, mũi và mắt có chiều sâu.
-      sphere(g,.56,skinMat,0,2.08,0,1,.99,.91);
-      sphere(g,.12,skinMat,-.54,2.08,0,.85,1,1);sphere(g,.12,skinMat,.54,2.08,0,.85,1,1);
-      sphere(g,.105,blush,-.31,1.91,.48,1.25,.7,.32);sphere(g,.105,blush,.31,1.91,.48,1.25,.7,.32);
-      sphere(g,.055,skinMat,0,1.99,.54,1,.8,.8);
-      // Mái tóc riêng: tóc ngắn cho bé trai, tóc dài/bím cho bé gái.
-      sphere(g,.575,hairMat,0,2.31,-.045,1,.66,.96);
-      if(girl) {
-        sphere(g,.17,hairMat,-.51,2.02,.03,.8,1.65,.85);
-        sphere(g,.17,hairMat,.51,2.02,.03,.8,1.65,.85);
-        const pony=sphere(g,.22,hairMat,.49,2.45,-.42,.9,1.2,.85);
-        const ribbon=new T.Mesh(new T.TorusGeometry(.13,.045,8,16),mat([0xf472b6,0xfbbf24,0x60a5fa][index%3]));ribbon.position.set(.49,2.48,-.18);g.add(ribbon);
+        const skirtMesh=new T.Mesh(new T.LatheGeometry([
+          new T.Vector2(.19,.48),new T.Vector2(.25,.57),new T.Vector2(.34,.77),new T.Vector2(.46,.91)
+        ],24),skirt);
+        skirtMesh.position.y=0;skirtMesh.castShadow=true;g.add(skirtMesh);
+        // Viền gấu váy.
+        const hem=new T.Mesh(new T.TorusGeometry(.455,.018,8,32),M.gold);hem.rotation.x=Math.PI/2;hem.position.y=.49;g.add(hem);
       } else {
-        sphere(g,.16,hairMat,-.5,2.18,.04,.8,1.2,.8);
-        sphere(g,.16,hairMat,.5,2.18,.04,.8,1.2,.8);
+        const waist=new T.Mesh(new T.CylinderGeometry(.23,.22,.16,18),shorts);waist.position.y=.49;g.add(waist);
       }
-      for(let j=-1;j<=1;j++){
-        const bang=sphere(g,.19,hairMat,j*.24,2.26,.45,1,.72,.62);
+      // Chân có đầu gối, ống quần và giày tách khối.
+      const legs=[];
+      for(const side of [-1,1]){
+        const leg=new T.Group();leg.position.set(side*.145,.52,0);g.add(leg);
+        limbBetween(leg,[0,0,0],[side*.012,-.29,.015],.105,.082,shorts);
+        sphere(leg,.09,skinMat,side*.012,-.31,.02,.95,1,.95);
+        limbBetween(leg,[side*.012,-.31,.02],[side*.018,-.57,.04],.078,.062,skinMat);
+        const foot=new T.Mesh(new T.SphereGeometry(.13,18,12),shoe);foot.scale.set(1.35,.58,1.8);foot.position.set(side*.018,-.61,.12);foot.castShadow=true;leg.add(foot);
+        legs.push(leg);
       }
-      for(const x of [-.215,.215]) {
-        sphere(g,.135,eyeWhite,x,2.12,.49,.94,1.16,.48);
-        sphere(g,.075,iris,x+.012,2.105,.545,.92,1.12,.5);
-        sphere(g,.032,glint,x-.012,2.15,.58,1,1,1);
-        const brow=new T.Mesh(new T.CapsuleGeometry(.022,.11,3,8),hairMat);brow.position.set(x,2.31,.48);brow.rotation.z=x<0?-.13:.13;g.add(brow);
+      // Đầu tạo hình oval, có hàm và gò má thay vì một khối cầu tròn.
+      sphere(g,.455,skinMat,0,2.13,0,.91,1.12,.84);
+      sphere(g,.115,skinMat,-.43,2.12,-.005,.75,1.05,.9);
+      sphere(g,.115,skinMat,.43,2.12,-.005,.75,1.05,.9);
+      sphere(g,.085,blush,-.27,1.98,.355,1.3,.62,.3);
+      sphere(g,.085,blush,.27,1.98,.355,1.3,.62,.3);
+      sphere(g,.052,skinMat,0,2.02,.405,.78,1.05,.85);
+      // Mái tóc ôm đầu, tóc mái nhiều lọn và kiểu tóc phân biệt theo giới tính.
+      sphere(g,.475,hairMat,0,2.39,-.055,.99,.63,.91);
+      sphere(g,.27,hairMat,0,2.18,.31,1.42,.52,.55);
+      if(girl){
+        sphere(g,.105,hairMat,-.43,2.0,-.015,.85,1.7,.95);
+        sphere(g,.105,hairMat,.43,2.0,-.015,.85,1.7,.95);
+        sphere(g,.16,hairMat,.43,2.57,-.31,1,1.12,.9);
+        const ponyTail=limbBetween(g,[.43,2.49,-.29],[.53,1.91,-.38],.12,.085,hairMat);
+        ponyTail.rotation.z=-.08;
+        const ribbon=new T.Mesh(new T.TorusGeometry(.12,.035,8,18),mat([0xf472b6,0xfbbf24,0x60a5fa][index%3]));
+        ribbon.position.set(.43,2.5,-.22);g.add(ribbon);
+      } else {
+        sphere(g,.12,hairMat,-.42,2.28,.01,.85,1.25,.8);
+        sphere(g,.12,hairMat,.42,2.28,.01,.85,1.25,.8);
       }
-      const smilePts=[new T.Vector3(-.105,1.86,.53),new T.Vector3(0,1.82,.56),new T.Vector3(.105,1.86,.53)];
-      g.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(smilePts),12,.018,6,false),mat(0x9d4b55)));
-      // Tay và chân gắn vào pivot, có thể vung tự nhiên.
-      const arms=[],legs=[];
-      for(const side of [-1,1]) {
-        const arm=new T.Group();arm.position.set(side*.35,1.37,0);g.add(arm);
-        capsule(arm,.095,.35,skinMat,side*.035,-.25,.02);
-        sphere(arm,.115,skinMat,side*.04,-.48,.04,.95,.9,.95);arms.push(arm);
-        const leg=new T.Group();leg.position.set(side*.15,.63,0);g.add(leg);
-        capsule(leg,.115,.34,shorts,0,-.19,0);
-        sphere(leg,.14,shoe,0,-.42,.1,1.15,.68,1.4);legs.push(leg);
+      // Mắt nhỏ hơn, có mí, tròng, phản quang và lông mày.
+      for(const x of [-.18,.18]){
+        const eyeSocket=sphere(g,.105,hairMat,x,2.18,.365,1.12,1.05,.42);
+        sphere(g,.088,eyeWhite,x,2.17,.397,.92,1.08,.48);
+        sphere(g,.049,iris,x+.008,2.165,.433,.92,1.12,.5);
+        sphere(g,.021,glint,x-.012,2.19,.453,1,1,1);
+        const brow=limbBetween(g,[x-.075,2.31,.37],[x+.07,2.33,.36],.018,.016,hairMat);
       }
-      // Cặp sách và phù hiệu.
-      const backpack=box(g,.42,.48,.22,mat([0x38a6b5,0xe88d53,0x8b83c9,0x55a879][index%4]),0,1.04,-.36);
-      sphere(g,.055,M.gold,-.2,1.28,.27,.8,1,.35);
+      // Miệng cười cong nhẹ.
+      const smilePts=[new T.Vector3(-.075,1.96,.405),new T.Vector3(0,1.935,.425),new T.Vector3(.075,1.96,.405)];
+      g.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(smilePts),16,.014,8,false),mat(0x9d4b55)));
+      // Hai tay có vai, khuỷu và bàn tay; các nhóm tay/chân vẫn có thể hoạt ảnh.
+      const arms=[];
+      for(const side of [-1,1]){
+        const arm=new T.Group();arm.position.set(side*.34,1.48,0);g.add(arm);
+        limbBetween(arm,[0,0,0],[side*.09,-.26,.015],.105,.082,shirt);
+        sphere(arm,.085,shirt,side*.09,-.27,.015);
+        limbBetween(arm,[side*.09,-.27,.015],[side*.12,-.52,.07],.073,.055,skinMat);
+        sphere(arm,.072,skinMat,side*.12,-.55,.08,.95,1,.9);
+        arms.push(arm);
+      }
+      // Ba lô có quai và túi trước, phù hiệu nhỏ trên ngực.
+      const backpack=box(g,.36,.43,.19,accent,0,1.02,-.31);
+      backpack.rotation.x=-.08;
+      for(const side of [-1,1]){
+        const strap=box(g,.055,.42,.045,mat(0x4c5967),side*.23,1.25,-.08);
+        strap.rotation.z=side*.16;
+      }
+      sphere(g,.045,M.gold,-.19,1.43,.27,.8,1,.35);
       g.add(labelSprite(name,false));
       g.userData={student,arms,legs,phase:index*.71,gender:girl?'Nữ':'Nam',sleeping:false,walking:false};
       g.scale.setScalar(.67);
       return g;
     }
-    // Cô giáo áo dài hồng, tóc dài, gương mặt thân thiện và mái chèo có chuyển động.
+    // Cô giáo với áo dài dáng rủ, tay áo, tóc búi và nón lá có vành.
     function makeTeacher() {
       const g=new T.Group();
-      const skin=mat(0xffd0ae), hair=mat(0x241913), robe=mat(0xe96fa8,.48), gold=mat(0xf7d78a,.4);
-      capsule(g,.34,.65,robe,0,1.22,0);
-      const robeTail=new T.Mesh(new T.ConeGeometry(.57,1.15,20),robe);robeTail.position.set(0,.62,0);robeTail.scale.z=.62;g.add(robeTail);
-      capsule(g,.11,.15,skin,0,1.7,0);
-      sphere(g,.55,skin,0,2.2,0,1,.98,.9);
-      sphere(g,.57,hair,0,2.42,-.08,1,.68,.95);
-      sphere(g,.18,hair,-.49,2.1,-.05,.8,1.5,.8);sphere(g,.18,hair,.49,2.1,-.05,.8,1.5,.8);
-      sphere(g,.2,hair,.42,2.55,-.3,1,1,.9);
-      for(const x of [-.2,.2]){sphere(g,.13,M.white,x,2.22,.49,.9,1.1,.5);sphere(g,.07,mat(0x33232a),x,2.21,.55,.9,1.1,.5);sphere(g,.028,M.white,x-.02,2.25,.59);}
-      sphere(g,.09,M.blush||mat(0xf18c9a),-.31,2.03,.44,1.2,.7,.35);sphere(g,.09,mat(0xf18c9a),.31,2.03,.44,1.2,.7,.35);
-      const smile=new T.CatmullRomCurve3([new T.Vector3(-.1,1.99,.5),new T.Vector3(0,1.95,.54),new T.Vector3(.1,1.99,.5)]);
-      g.add(new T.Mesh(new T.TubeGeometry(smile,12,.02,6,false),mat(0x9d4b55)));
+      const skin=mat(0xf0c4a5,.76), hair=mat(0x211813,.82), robe=mat(0xe66b9f,.5), robeLight=mat(0xf4a0bf,.52), gold=mat(0xe9c77d,.48,.08);
+      const dressProfile=[
+        new T.Vector2(.19,.18),new T.Vector2(.22,.48),new T.Vector2(.25,.86),
+        new T.Vector2(.29,1.22),new T.Vector2(.35,1.58),new T.Vector2(.28,1.77),
+        new T.Vector2(.12,1.81)
+      ];
+      const dress=new T.Mesh(new T.LatheGeometry(dressProfile,32),robe);
+      dress.position.y=0;dress.castShadow=true;dress.receiveShadow=true;g.add(dress);
+      const frontPanel=new T.Mesh(new T.PlaneGeometry(.12,1.42),robeLight);
+      frontPanel.position.set(0,1.0,.255);g.add(frontPanel);
+      const collar=new T.Mesh(new T.TorusGeometry(.14,.035,8,24),gold);
+      collar.position.set(0,1.76,.02);collar.rotation.x=Math.PI/2;g.add(collar);
+      limbBetween(g,[-.09,1.67,0],[0,1.82,0],.055,.05,skin);
+      sphere(g,.43,skin,0,2.18,0,.92,1.12,.86);
+      sphere(g,.45,hair,0,2.42,-.08,1,.66,.92);
+      sphere(g,.15,hair,-.4,2.12,-.05,.8,1.45,.85);
+      sphere(g,.15,hair,.4,2.12,-.05,.8,1.45,.85);
+      sphere(g,.19,hair,.38,2.58,-.3,1,1,.9);
+      for(const x of [-.18,.18]){
+        sphere(g,.095,M.white,x,2.22,.39,.92,1.12,.5);
+        sphere(g,.052,mat(0x33232a),x,2.21,.435,.92,1.1,.5);
+        sphere(g,.02,M.white,x-.014,2.245,.455);
+        limbBetween(g,[x-.07,2.35,.37],[x+.065,2.36,.36],.016,.014,hair);
+      }
+      sphere(g,.075,mat(0xe99591),-.27,2.02,.34,1.2,.65,.3);
+      sphere(g,.075,mat(0xe99591),.27,2.02,.34,1.2,.65,.3);
+      sphere(g,.045,skin,0,2.08,.42,.8,1,.85);
+      const smile=new T.CatmullRomCurve3([new T.Vector3(-.085,1.99,.4),new T.Vector3(0,1.965,.425),new T.Vector3(.085,1.99,.4)]);
+      g.add(new T.Mesh(new T.TubeGeometry(smile,16,.016,8,false),mat(0x984956)));
       const arms=[];
-      for(const side of [-1,1]){const arm=new T.Group();arm.position.set(side*.34,1.48,0);g.add(arm);capsule(arm,.105,.5,skin,side*.1,-.25,.1);sphere(arm,.12,skin,side*.1,-.51,.12);arms.push(arm);}
-      const hat=new T.Mesh(new T.CylinderGeometry(.46,.62,.11,28),gold);hat.position.y=2.78;g.add(hat);
-      const cone=new T.Mesh(new T.SphereGeometry(.36,20,12),mat(0xf5dfa9));cone.scale.set(1,.38,1);cone.position.y=2.85;g.add(cone);
-      const paddle=new T.Group();paddle.position.set(1.1,.75,.1);g.add(paddle);
-      const shaft=new T.Mesh(new T.CylinderGeometry(.045,.055,3.2,10),M.wood);shaft.rotation.z=-.7;paddle.add(shaft);
-      const blade=new T.Mesh(new T.BoxGeometry(.22,.95,.1),M.wood2);blade.position.set(1.05,-1.15,0);blade.rotation.z=-.7;paddle.add(blade);
+      for(const side of [-1,1]){
+        const arm=new T.Group();arm.position.set(side*.31,1.48,0);g.add(arm);
+        limbBetween(arm,[0,0,0],[side*.12,-.27,.02],.13,.105,robe);
+        sphere(arm,.105,robe,side*.12,-.28,.02);
+        limbBetween(arm,[side*.12,-.28,.02],[side*.19,-.51,.11],.085,.062,skin);
+        sphere(arm,.075,skin,side*.19,-.55,.12);
+        arms.push(arm);
+      }
+      // Nón lá: vành rộng, chóp thấp và các nan mảnh.
+      const brim=new T.Mesh(new T.CylinderGeometry(.67,.67,.045,40),gold);brim.position.y=2.72;g.add(brim);
+      const hat=new T.Mesh(new T.ConeGeometry(.53,.42,40),mat(0xe8d39e,.86));hat.position.y=2.94;g.add(hat);
+      for(let i=0;i<12;i++){
+        const a=i*Math.PI/6;
+        const rib=limbBetween(g,[0,2.75,0],[Math.cos(a)*.58,2.75,Math.sin(a)*.58],.008,.006,mat(0xb89a65,.9));
+      }
+      const paddle=new T.Group();paddle.position.set(1.05,.85,.1);g.add(paddle);
+      const shaft=new T.Mesh(new T.CylinderGeometry(.04,.055,3.15,12),M.wood);shaft.rotation.z=-.7;paddle.add(shaft);
+      const blade=new T.Mesh(new T.BoxGeometry(.24,1.02,.12),M.wood2);blade.position.set(1.02,-1.12,0);blade.rotation.z=-.7;paddle.add(blade);
       g.userData={arms,paddle};g.add(labelSprite('CÔ GIÁO',true));g.scale.setScalar(.82);return g;
     }
     const teacher=makeTeacher();teacher.position.set(-5.45,.95,0);boat.add(teacher);
