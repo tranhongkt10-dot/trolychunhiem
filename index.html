@@ -1238,19 +1238,50 @@
 .ferry-mini-passenger{display:flex;flex-direction:column;align-items:center;width:48px;color:#0f172a;font-size:9px;font-weight:900;text-shadow:0 1px white}
 .ferry-mini-passenger img{width:29px;height:29px;object-fit:cover;border-radius:50%;border:2px solid white}
 .ferry-mini-passenger .emoji{font-size:25px;line-height:29px}
-#ferryTeacher{position:absolute;z-index:7;left:calc(50% - 145px);top:43%;font-size:48px;filter:drop-shadow(0 5px 4px #0008);transform:scaleX(-1)}
+#ferryTeacher{position:absolute;z-index:7;left:calc(50% - 158px);top:34%;width:104px;height:132px;filter:drop-shadow(0 5px 4px #0008);transform-origin:55% 90%;pointer-events:none}
+#ferryTeacher svg{display:block;overflow:visible}
+#ferryBoat.moving~#ferryTeacher{animation:ferryTeacherRock .7s ease-in-out infinite}
+@keyframes ferryTeacherRock{0%,100%{transform:rotate(-5deg) translateY(0)}50%{transform:rotate(7deg) translateY(-5px)}}
+#ferryTeacher::after{content:"";position:absolute;width:5px;height:48px;background:#92400e;right:-6px;bottom:4px;border-radius:5px;transform:rotate(-27deg);transform-origin:top;animation:ferryPaddle .55s ease-in-out infinite alternate}
+@keyframes ferryPaddle{from{transform:rotate(-45deg)}to{transform:rotate(20deg)}}
 #ferryShore{position:absolute;z-index:3;right:0;bottom:70px;width:27%;height:120px;border-radius:80% 0 0 0;background:linear-gradient(135deg,#a3e635,#166534);border-top:7px solid #d9f99d;display:flex;align-items:center;justify-content:center;text-align:center;color:#052e16;font-size:11px;font-weight:1000;padding:10px}
 #ferrySwimmers{position:absolute;z-index:4;left:5%;bottom:22px;display:flex;gap:18px;font-size:30px;filter:drop-shadow(0 3px 3px #082f49)}
 #ferryShoreStudent{position:absolute;z-index:8;right:7%;bottom:100px;display:none;text-align:center;background:#fef3c7;color:#78350f;border:3px solid #fbbf24;border-radius:18px;padding:10px 14px;font-weight:1000;animation:ferryShoreGlow 1.2s infinite}
 #ferryScene.ferry-calm .ferry-rain,#ferryScene.ferry-calm .ferry-lightning{display:none}#ferryScene.ferry-calm{background:linear-gradient(#7dd3fc 0%,#bae6fd 36%,#0e7490 37%,#0891b2 100%)}
 #ferryScene.ferry-calm .ferry-wave{opacity:.35;animation-duration:5s}
-@media(max-width:640px){#ferryScene{min-height:390px}#ferryTeacher{left:calc(50% - 115px);top:44%;font-size:39px}#ferryShore{width:32%;font-size:9px}}
+@media(max-width:640px){#ferryScene{min-height:390px}#ferryTeacher{left:calc(50% - 128px);top:36%;width:88px;height:112px}#ferryTeacher svg{width:88px;height:112px}#ferryShore{width:32%;font-size:9px}}
 </style>
 <div id="ferryScene" class="relative rounded-2xl border-4 border-white shadow-2xl">
 <div class="absolute top-3 left-3 right-3 z-10 flex justify-between gap-2 text-white text-[10px] sm:text-xs font-black"><span class="bg-slate-950/50 rounded-full px-3 py-2">⛈️ VƯỢT SÔNG TRI THỨC</span><span id="ferryProgress" class="bg-slate-950/50 rounded-full px-3 py-2">0/0 đã cập bến</span></div>
 <div class="ferry-rain"></div><div class="ferry-lightning"></div><div class="absolute z-[2] top-16 left-5 text-5xl opacity-80">☁️🌩️</div><div class="absolute z-[2] top-20 right-8 text-4xl opacity-70">🌧️</div>
 <div id="ferryShore">🏝️<br>BẾN BỜ AN TOÀN</div><div class="ferry-wave one"></div><div class="ferry-wave two"></div><div id="ferrySwimmers"><span>🏊</span><span>🏊‍♀️</span><span>🏊</span></div>
-<div id="ferryTeacher">👩🏻‍🏫</div>
+<div id="ferryTeacher" aria-label="Cô giáo mặc áo dài xanh đội nón lá đang chèo thuyền">
+<svg id="ferryTeacherArt" viewBox="0 0 150 190" width="104" height="132" role="img" aria-label="Cô giáo Việt Nam mặc áo dài xanh, đội nón lá">
+<defs>
+ <linearGradient id="aoDaiBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bfdbfe"/><stop offset=".55" stop-color="#38bdf8"/><stop offset="1" stop-color="#0369a1"/></linearGradient>
+ <linearGradient id="nonLa" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff7cc"/><stop offset="1" stop-color="#c49a45"/></linearGradient>
+</defs>
+<!-- tóc phía sau và khuôn mặt -->
+<path d="M48 47 Q25 48 34 91 L43 116 108 116 119 79 Q121 48 98 43Z" fill="#292524"/>
+<ellipse cx="77" cy="62" rx="31" ry="35" fill="#f7c9a5"/>
+<path d="M47 57 Q45 23 80 27 Q112 25 109 62 Q96 43 78 43 Q61 49 47 57Z" fill="#292524"/>
+<path d="M51 67 Q60 61 67 68 M87 68 Q96 61 103 67" fill="none" stroke="#292524" stroke-width="3" stroke-linecap="round"/>
+<ellipse cx="64" cy="73" rx="4" ry="5" fill="#292524"/><ellipse cx="91" cy="73" rx="4" ry="5" fill="#292524"/>
+<path d="M72 88 Q79 94 87 87" fill="none" stroke="#be5550" stroke-width="3" stroke-linecap="round"/>
+<circle cx="54" cy="83" r="6" fill="#f59e9b" opacity=".55"/><circle cx="100" cy="83" r="6" fill="#f59e9b" opacity=".55"/>
+<!-- nón lá -->
+<path d="M23 49 Q75 -3 131 49 Q78 65 23 49Z" fill="url(#nonLa)" stroke="#9a7130" stroke-width="3"/>
+<path d="M30 47 Q77 15 124 47 M43 48 Q77 27 111 48 M77 8 L77 57" fill="none" stroke="#b58a43" stroke-width="1.7"/>
+<path d="M22 49 Q77 66 132 49" fill="none" stroke="#fef3c7" stroke-width="3"/>
+<!-- áo dài xanh -->
+<path d="M51 105 Q77 96 103 105 L119 181 77 169 36 181Z" fill="url(#aoDaiBlue)" stroke="#075985" stroke-width="2"/>
+<path d="M76 105 L77 169 M56 111 L43 178 M97 111 L111 178" stroke="#e0f2fe" stroke-width="2" opacity=".8"/>
+<path d="M52 109 Q39 120 30 139 L41 147 62 126 M101 109 Q115 118 124 133 L115 143 96 126" fill="#f7c9a5" stroke="#d69b79" stroke-width="2"/>
+<!-- tay nắm mái chèo -->
+<path d="M119 133 L140 166" stroke="#92400e" stroke-width="6" stroke-linecap="round"/>
+<path d="M132 157 Q151 167 143 185 Q127 180 132 157Z" fill="#b77935" stroke="#78350f" stroke-width="2"/>
+<path d="M115 129 Q124 125 130 135 L124 144 112 138Z" fill="#f7c9a5"/>
+</svg></div>
 <div id="ferryBoat"><div class="flex justify-center -mb-1"><span class="text-amber-200 text-xs font-black bg-amber-950/50 rounded-full px-3 py-1">CÔ GIÁO ĐANG CHÈO</span></div><div id="ferryPassengerDeck"></div><div class="boat-hull text-center" aria-label="Thuyền gỗ đang vượt sông">
 <svg viewBox="0 0 420 110" class="w-full h-auto drop-shadow-xl" role="img" aria-label="Con thuyền gỗ">
 <defs><linearGradient id="ferryWood" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fbbf24"/><stop offset=".48" stop-color="#b45309"/><stop offset="1" stop-color="#78350f"/></linearGradient></defs>
