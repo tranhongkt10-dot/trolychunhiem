@@ -1245,6 +1245,15 @@
 #ferryTeacher::after{content:"";position:absolute;width:5px;height:48px;background:#92400e;right:-6px;bottom:4px;border-radius:5px;transform:rotate(-27deg);transform-origin:top;animation:ferryPaddle .55s ease-in-out infinite alternate}
 @keyframes ferryPaddle{from{transform:rotate(-45deg)}to{transform:rotate(20deg)}}
 #ferryShore{position:absolute;z-index:3;right:0;bottom:70px;width:27%;height:120px;border-radius:80% 0 0 0;background:linear-gradient(135deg,#a3e635,#166534);border-top:7px solid #d9f99d;display:flex;align-items:center;justify-content:center;text-align:center;color:#052e16;font-size:11px;font-weight:1000;padding:10px}
+#ferryStartBank{position:absolute;z-index:2;left:0;bottom:64px;width:19%;height:92px;background:linear-gradient(145deg,#84cc16,#365314);border-radius:0 75% 0 0;border-top:7px solid #d9f99d;display:flex;align-items:center;justify-content:center;text-align:center;color:#1f2937;font-size:10px;font-weight:1000;padding:8px;box-shadow:inset -8px 8px 0 #ffffff22}
+#ferryStartBank:before{content:"🌴";position:absolute;left:8px;top:-58px;font-size:42px;filter:drop-shadow(0 3px 2px #0005)}
+#ferryBridge{position:absolute;z-index:4;right:0;bottom:83px;width:43%;height:27px;background:repeating-linear-gradient(90deg,#92400e 0 34px,#b45309 35px 39px);border:4px solid #78350f;border-radius:5px;transform:skewY(-3deg);box-shadow:0 8px 0 #422006,0 12px 15px #082f4966}
+#ferryBridge:before,#ferryBridge:after{content:"";position:absolute;left:0;right:0;height:9px;background:#d6a15d;border:2px solid #78350f}
+#ferryBridge:before{top:-15px}#ferryBridge:after{bottom:-15px}
+#ferryBridgeLabel{position:absolute;z-index:5;right:15%;bottom:119px;padding:5px 10px;border-radius:10px;background:#fffbeb;border:2px solid #b45309;color:#78350f;font-size:10px;font-weight:1000;box-shadow:0 3px 6px #0003}
+#ferryBoat{left:31%;width:min(72%,440px)}
+#ferryTeacher{left:calc(31% - 158px);transition:left 1s ease}
+
 #ferrySwimmers{position:absolute;z-index:4;left:5%;bottom:22px;display:flex;gap:18px;font-size:30px;filter:drop-shadow(0 3px 3px #082f49)}
 #ferryShoreStudent{position:absolute;z-index:8;right:7%;bottom:100px;display:none;text-align:center;background:#fef3c7;color:#78350f;border:3px solid #fbbf24;border-radius:18px;padding:10px 14px;font-weight:1000;animation:ferryShoreGlow 1.2s infinite}
 #ferryScene.ferry-calm .ferry-rain,#ferryScene.ferry-calm .ferry-lightning{display:none}#ferryScene.ferry-calm{background:linear-gradient(#7dd3fc 0%,#bae6fd 36%,#0e7490 37%,#0891b2 100%)}
@@ -1254,7 +1263,7 @@
 <div id="ferryScene" class="relative rounded-2xl border-4 border-white shadow-2xl">
 <div class="absolute top-3 left-3 right-3 z-10 flex justify-between gap-2 text-white text-[10px] sm:text-xs font-black"><span class="bg-slate-950/50 rounded-full px-3 py-2">⛈️ VƯỢT SÔNG TRI THỨC</span><span id="ferryProgress" class="bg-slate-950/50 rounded-full px-3 py-2">0/0 đã cập bến</span></div>
 <div class="ferry-rain"></div><div class="ferry-lightning"></div><div class="absolute z-[2] top-16 left-5 text-5xl opacity-80">☁️🌩️</div><div class="absolute z-[2] top-20 right-8 text-4xl opacity-70">🌧️</div>
-<div id="ferryShore">🏝️<br>BẾN BỜ AN TOÀN</div><div class="ferry-wave one"></div><div class="ferry-wave two"></div><div id="ferrySwimmers"><span>🏊</span><span>🏊‍♀️</span><span>🏊</span></div>
+<div id="ferryStartBank">🚩 ĐIỂM XUẤT PHÁT<br>KHỞI HÀNH</div><div id="ferryShore">🏝️<br>BẾN BỜ AN TOÀN</div><div id="ferryBridge"></div><div id="ferryBridgeLabel">🌟 CẦU LÊN BỜ TRI THỨC</div><div class="ferry-wave one"></div><div class="ferry-wave two"></div><div id="ferrySwimmers"><span>🏊</span><span>🏊‍♀️</span><span>🏊</span></div>
 <div id="ferryTeacher" aria-label="Cô giáo mặc áo dài xanh đội nón lá đang chèo thuyền">
 <svg id="ferryTeacherArt" viewBox="0 0 150 190" width="104" height="132" role="img" aria-label="Cô giáo Việt Nam mặc áo dài xanh, đội nón lá">
 <defs>
@@ -4482,20 +4491,20 @@ function shootDuck(idx) {
       if(launch){launch.disabled=true;launch.textContent='⛈️ ĐANG VƯỢT SÔNG...';launch.classList.add('opacity-60');}
       const shuffled=students.slice().sort(()=>Math.random()-.5);ferrySleepingPassenger=shuffled.pop();ferryTripQueue=shuffled;renderFerryDeck();renderFerryPassengers();
       if(status)status.textContent='⛈️ Gió nổi lên, sóng đánh dữ dội! Cô giáo vẫn cố chèo đưa các con qua sông...';if(current)current.textContent='🌩️ BÃO ĐANG ẬP ĐẾN!';
-      if(boat){boat.classList.add('moving');boat.style.left='50%';boat.style.top='47%';}if(teacher)teacher.classList.add('moving');
+      if(boat){boat.classList.add('moving');boat.style.left='31%';boat.style.top='47%';}if(teacher){teacher.classList.add('moving');teacher.style.left='calc(31% - 158px)';}
       const speed=document.getElementById('ferrySpeed')?.value||'normal',base=Number(document.getElementById('ferryDuration')?.value||5)*1000,stopDelay=speed==='fast'?Math.max(1300,base*.55):speed==='slow'?base*1.35:base,journeyDelay=Math.max(1200,Math.min(3200,stopDelay*.55));
       const announce=(student,done)=>{
-        if(current)current.textContent='🛶 Cô đang đưa '+student.name+' vào bờ...';if(boat){boat.style.left='68%';boat.style.top='46%';}
+        if(current)current.textContent='🛶 Cô đang chèo từ bến xuất phát qua cầu đưa '+student.name+' lên bờ...';if(boat){boat.style.left='68%';boat.style.top='46%';}if(teacher)teacher.style.left='calc(68% - 158px)';
         setTimeout(()=>{ferryCurrentIndex++;ferryUsedPassengerIds.add(String(student.id||student.name||ferryCurrentIndex));
           if(shoreStudent){shoreStudent.innerHTML='🎉 CHÚC MỪNG!<br><span class="text-lg">'+ferryEscape(student.name||'Bạn nhỏ')+'</span><br>ĐÃ CẬP BẾN AN TOÀN!';shoreStudent.style.display='block';}
           if(current)current.textContent='🏆 Chúc mừng '+student.name+' đã lên bờ!';if(status)status.textContent='👏 Cả lớp cùng chúc mừng '+student.name+' đã cập bến an toàn!';
           renderFerryDeck();renderFerryPassengers();playApplauseSound();
-          setTimeout(()=>{if(shoreStudent)shoreStudent.style.display='none';if(boat){boat.style.left='50%';boat.style.top='47%';}done();},Math.max(900,stopDelay*.55));
+          setTimeout(()=>{if(shoreStudent)shoreStudent.style.display='none';if(boat){boat.style.left='31%';boat.style.top='47%';}if(teacher)teacher.style.left='calc(31% - 158px)';done();},Math.max(900,stopDelay*.55));
         },journeyDelay);
       };
       const next=()=>{
         if(ferryCurrentIndex<ferryTripQueue.length){announce(ferryTripQueue[ferryCurrentIndex],next);return;}
-        if(scene)scene.classList.add('ferry-calm');if(teacher)teacher.classList.remove('moving');if(boat){boat.classList.remove('moving');boat.style.left='50%';boat.style.top='47%';}
+        if(scene)scene.classList.add('ferry-calm');if(teacher)teacher.classList.remove('moving');if(boat){boat.classList.remove('moving');boat.style.left='31%';boat.style.top='47%';}if(teacher)teacher.style.left='calc(31% - 158px)';
         if(current)current.textContent='😴 Ơ kìa! Có một bạn vẫn ngủ quên trên thuyền!';if(status)status.textContent='🌈 Bão đã qua, các bạn đã lên bờ. Cô phát hiện còn một hành khách ngủ quên!';
         if(shoreStudent){shoreStudent.innerHTML='💤 BẠN NHỎ NGỦ QUÊN<br><span class="text-lg">'+ferryEscape(ferrySleepingPassenger?.name||'Hành khách cuối')+'</span><br>VẪN Ở TRÊN THUYỀN!';shoreStudent.style.display='block';}
         const title=document.getElementById('ferryWinnerTitle'),name=document.getElementById('ferryWinnerName'),meta=document.getElementById('ferryWinnerMeta'),card=document.getElementById('ferryQuestionCard');
