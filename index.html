@@ -5464,7 +5464,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
   function loadThree(){
     if(window.THREE){initFerry3D();return;}
     const tag=document.createElement('script');
-    tag.src='https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js';
+    tag.src='https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js';
     tag.onload=initFerry3D;
     tag.onerror=()=>{const st=document.getElementById('ferryStatus');if(st)st.textContent='Không tải được thư viện 3D. Hãy kiểm tra kết nối Internet.';};
     document.head.appendChild(tag);
