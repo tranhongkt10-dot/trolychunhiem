@@ -5516,31 +5516,23 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
   window.ferry3DGameReady = new Promise((resolve, reject) => { readyResolve = resolve; readyReject = reject; });
   let game = null;
   const status = message => { const el = document.getElementById('ferryStatus'); if (el) el.textContent = message; };
-  function loadThree() {
+  async function loadThree() {
     try {
-      if (window.THREE) { init(); return; }
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js';
-      script.onload = () => {
-        const loadSupport = (src, next) => {
-          const tag = document.createElement('script');
-          tag.src = src;
-          tag.onload = next;
-          tag.onerror = () => { console.warn('Không tải được thư viện mô hình GLB:', src); next(); };
-          document.head.appendChild(tag);
-        };
-        loadSupport('https://cdn.jsdelivr.net/npm/three@0.149.0/examples/js/loaders/GLTFLoader.js', () => {
-          loadSupport('https://cdn.jsdelivr.net/npm/three@0.149.0/examples/js/utils/SkeletonUtils.js', () => {
-            try { init(); }
-            catch (error) { console.error('Không khởi tạo được cảnh 3D:', error); status('Thiết bị chưa khởi tạo được đồ họa 3D. Cô hãy tải lại trang hoặc thử trên máy tính có hỗ trợ WebGL.'); readyReject(error); }
-          });
-        });
+      // Three.js r149 không còn thư mục examples/js; nạp đúng bản ES module.
+      const [threeModule, loaderModule, skeletonModule] = await Promise.all([
+        import('https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.module.js'),
+        import('https://cdn.jsdelivr.net/npm/three@0.149.0/examples/jsm/loaders/GLTFLoader.js'),
+        import('https://cdn.jsdelivr.net/npm/three@0.149.0/examples/jsm/utils/SkeletonUtils.js')
+      ]);
+      window.THREE = {
+        ...threeModule,
+        GLTFLoader: loaderModule.GLTFLoader,
+        SkeletonUtils: skeletonModule
       };
-      script.onerror = () => { status('Không tải được thư viện 3D. Kiểm tra Internet rồi tải lại trang.'); readyReject(new Error('Three.js CDN unavailable')); };
-      document.head.appendChild(script);
+      init();
     } catch (error) {
-      console.error('Lỗi tải cảnh 3D:', error);
-      status('Thiết bị chưa hỗ trợ hoặc chưa khởi tạo được cảnh 3D.');
+      console.error('Không nạp được Three.js/GLTFLoader dạng module:', error);
+      status('Không tải được bộ dựng mô hình 3D. Cô kiểm tra kết nối Internet rồi tải lại trang.');
       readyReject(error);
     }
   }
@@ -5549,20 +5541,33 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     const host = document.getElementById('ferryScene');
     if (!host) { readyReject(new Error('Không tìm thấy khu vực trò chơi')); return; }
     const T = window.THREE;
-    // URL GLB chính xác theo tên file công bố trong thư viện CC0 Grab3D.
-    const realAssetURLs = {
-      boat: 'https://grab3d.com/dl/rowboat/rowboat.glb',
-      boy: 'https://grab3d.com/dl/teen-character/teen-character-rigged.glb',
-      girl: 'https://grab3d.com/dl/woman-base-character/woman-base-character-rigged.glb'
+    // Lấy đúng URL tệp từ API công khai, không tự đoán tên file rigged.
+    const realAssetSlugs = {
+      boat: 'rowboat',
+      boy: 'teen-character',
+      girl: 'woman-base-character'
     };
     const realAssetCache = {};
     const realMixers = [];
+    async function resolveRealAssetURL(key) {
+      const response = await fetch('https://grab3d.com/api/v1/models/' + realAssetSlugs[key] + '.json');
+      if (!response.ok) throw new Error('API mô hình trả về HTTP ' + response.status + ' (' + key + ')');
+      const model = await response.json();
+      const files = key === 'boat' ? (model.files || []) : ((model.rigged && model.rigged.files) || []);
+      const file = files.find(item => item.format === 'glb' && (key !== 'boat' || item.variant === 'full'))
+        || files.find(item => item.format === 'glb');
+      if (!file || !file.url) throw new Error('API không công bố tệp GLB phù hợp cho ' + key);
+      return file.url;
+    }
     function loadRealGLB(key) {
       if (realAssetCache[key]) return realAssetCache[key];
-      realAssetCache[key] = new Promise((resolve, reject) => {
-        if (!T.GLTFLoader) { reject(new Error('GLTFLoader chưa sẵn sàng')); return; }
-        new T.GLTFLoader().load(realAssetURLs[key], data => resolve(data), undefined, reject);
-      });
+      realAssetCache[key] = (async () => {
+        if (!T.GLTFLoader) throw new Error('GLTFLoader chưa sẵn sàng');
+        const url = await resolveRealAssetURL(key);
+        return await new Promise((resolve, reject) => {
+          new T.GLTFLoader().load(url, resolve, undefined, reject);
+        });
+      })();
       return realAssetCache[key];
     }
     function cloneRigged(source) {
