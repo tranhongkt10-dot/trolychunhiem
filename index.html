@@ -55,7 +55,6 @@
       messagingSenderId: "740083815651",
       appId: "1:740083815651:web:0d2bc650f8ef9442c7e1d6"
     };
-    const ADMIN_EMAIL = "khachungvietanh8790@gmail.com".toLowerCase().trim();
     const ADMIN_UID = "dqVutQQEqVWlAEqvA2C89cLhDw63";
 
     // App data được tách theo UID. Firebase SDK vẫn dùng localStorage gốc của trình duyệt.
@@ -808,19 +807,19 @@
         <button onclick="switchAuthTab('register')" id="tabBtnRegister" class="flex-1 py-2 rounded-xl text-gray-500 hover:text-pink-600">Đăng Ký Mới</button>
       </div>
 
-      <form onsubmit="handleAuthSubmit(event)" class="space-y-2.5 text-left">
+      <form onsubmit="handleAuthSubmit(event)" class="space-y-2.5 text-left" autocomplete="off">
         <div id="authTeacherNameWrap" class="hidden">
           <label class="block text-[11px] font-black text-gray-600 uppercase mb-1">Họ và tên giáo viên</label>
           <input type="text" id="authTeacherNameInput" autocomplete="name" placeholder="Nhập họ tên giáo viên" class="w-full px-3.5 py-2 rounded-xl border border-pink-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-pink-400" />
         </div>
         <div>
           <label class="block text-[11px] font-black text-gray-600 uppercase mb-1">Email giáo viên</label>
-          <input type="text" id="authEmailInput" value="" type="email" autocomplete="username" required placeholder="Nhập email..." class="w-full px-3.5 py-2 rounded-xl border border-pink-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-pink-400" />
+          <input type="text" id="authEmailInput" name="lhp_login_email" value="" type="email" autocomplete="off" autocapitalize="none" spellcheck="false" readonly required placeholder="Nhập email..." class="w-full px-3.5 py-2 rounded-xl border border-pink-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-pink-400" />
         </div>
         <div>
           <label class="block text-[11px] font-black text-gray-600 uppercase mb-1">Mật khẩu</label>
           <div class="relative">
-            <input type="password" id="authPasswordInput" value="" autocomplete="current-password" required placeholder="Nhập mật khẩu..." class="w-full px-3.5 py-2 rounded-xl border border-pink-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-pink-400 pr-10" />
+            <input type="password" id="authPasswordInput" name="lhp_login_password" value="" autocomplete="new-password" readonly required placeholder="Nhập mật khẩu..." class="w-full px-3.5 py-2 rounded-xl border border-pink-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-pink-400 pr-10" />
             <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-2 text-gray-400 hover:text-gray-600 text-xs">👁️</button>
           </div>
         </div>
@@ -2568,7 +2567,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
           filter.type = 'lowpass';
           filter.frequency.value = 4200;
           gain.gain.setValueAtTime(0.0001, start + note.t);
-          gain.gain.linearRampToValueAtTime(0.075, start + note.t + 0.012);
+          gain.gain.linearRampToValueAtTime(0.19, start + note.t + 0.012);
           gain.gain.exponentialRampToValueAtTime(0.0001, start + note.t + note.d);
           osc.connect(filter);
           filter.connect(gain);
@@ -2585,7 +2584,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
           osc.type = 'sine';
           osc.frequency.value = frequency;
           gain.gain.setValueAtTime(0.0001, at);
-          gain.gain.linearRampToValueAtTime(0.035, at + 0.01);
+          gain.gain.linearRampToValueAtTime(0.085, at + 0.01);
           gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.48);
           osc.connect(gain);
           gain.connect(ctx.destination);
@@ -2610,7 +2609,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(620 + Math.max(0, 1 - progress) * 360, at);
         gain.gain.setValueAtTime(0.0001, at);
-        gain.gain.linearRampToValueAtTime(0.045, at + 0.004);
+        gain.gain.linearRampToValueAtTime(0.12, at + 0.004);
         gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.045);
         osc.connect(gain); gain.connect(ctx.destination);
         osc.start(at); osc.stop(at + 0.05);
@@ -5077,6 +5076,151 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       if (input) input.value = '';
     }
   };
+})();
+</script>
+
+
+<script id="lhp-requested-ui-audio-improvements">
+(function () {
+  function escapeText(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]);
+    });
+  }
+
+  function hardenLoginForm() {
+    const form = document.querySelector('#welcomeScreen form[onsubmit*="handleAuthSubmit"]');
+    const email = document.getElementById('authEmailInput');
+    const password = document.getElementById('authPasswordInput');
+    if (form) form.setAttribute('autocomplete', 'off');
+    [email, password].forEach(function (input) {
+      if (!input) return;
+      input.value = '';
+      input.setAttribute('readonly', 'readonly');
+      input.addEventListener('focus', function () {
+        input.removeAttribute('readonly');
+      }, { once: true });
+      input.addEventListener('pointerdown', function () {
+        input.removeAttribute('readonly');
+      }, { once: true });
+    });
+    if (email) {
+      email.setAttribute('autocomplete', 'off');
+      email.setAttribute('name', 'lhp_login_email');
+    }
+    if (password) {
+      password.setAttribute('autocomplete', 'new-password');
+      password.setAttribute('name', 'lhp_login_password');
+    }
+    // Some browsers apply saved credentials after DOMContentLoaded.
+    window.setTimeout(function () {
+      if (email && !document.activeElement.isSameNode(email)) email.value = '';
+      if (password && !document.activeElement.isSameNode(password)) password.value = '';
+    }, 450);
+  }
+
+  function installHonorAllFilter() {
+    const firstTeamButton = document.getElementById('btnHonorTeam-Tổ 1');
+    if (!firstTeamButton || !firstTeamButton.parentElement) return;
+    const teamBar = firstTeamButton.parentElement;
+    if (!document.getElementById('btnHonorTeam-all')) {
+      const allButton = document.createElement('button');
+      allButton.type = 'button';
+      allButton.id = 'btnHonorTeam-all';
+      allButton.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-pink-500 text-white';
+      allButton.textContent = '👥 Toàn bộ';
+      allButton.addEventListener('click', function () { window.selectHonorTeam('Tất cả'); });
+      teamBar.insertBefore(allButton, teamBar.firstChild);
+    }
+    // Preserve the existing per-team buttons and selection workflow.
+    const oldSelect = window.selectHonorTeam;
+    window.selectHonorTeam = function (team) {
+      if (typeof currentHonorTeam !== 'undefined') currentHonorTeam = team;
+      ['Tất cả', 'Tổ 1', 'Tổ 2', 'Tổ 3', 'Tổ 4'].forEach(function (name) {
+        const id = name === 'Tất cả' ? 'btnHonorTeam-all' : 'btnHonorTeam-' + name;
+        const btn = document.getElementById(id);
+        if (btn) btn.className = name === team
+          ? 'px-4 py-2 rounded-xl text-xs font-bold bg-pink-500 text-white'
+          : 'px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-600 hover:bg-pink-50';
+      });
+      if (typeof window.renderHonorStep1Students === 'function') window.renderHonorStep1Students();
+      else if (typeof oldSelect === 'function') oldSelect(team);
+    };
+    window.renderHonorStep1Students = function () {
+      const container = document.getElementById('honorStep1StudentList');
+      if (!container || !Array.isArray(window.students)) return;
+      const team = typeof currentHonorTeam !== 'undefined' ? currentHonorTeam : 'Tất cả';
+      const roster = window.students.filter(function (student) {
+        return student && (team === 'Tất cả' || student.team === team);
+      });
+      container.innerHTML = roster.map(function (student) {
+        const selected = window.selectedHonorStudentIds && window.selectedHonorStudentIds.has(student.id);
+        return '<div role="button" tabindex="0" onclick="toggleHonorStudentSelection(\'' +
+          String(student.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'") +
+          '\')" class="p-3 rounded-2xl border-2 ' + (selected ? 'border-pink-500 bg-pink-50' : 'border-gray-100 bg-white') +
+          ' text-center cursor-pointer transition-all shadow-sm">' +
+          '<img src="' + escapeText(typeof getStudentAvatarUrl === 'function' ? getStudentAvatarUrl(student) : '') +
+          '" class="w-14 h-14 rounded-full mx-auto object-cover border-2 border-pink-200" />' +
+          '<div class="text-xs font-bold text-gray-800 mt-1">' + escapeText(student.name || student.fullName || 'Chưa có tên') + '</div>' +
+          '<div class="text-[10px] font-black ' + (selected ? 'text-pink-600' : 'text-gray-400') + ' mt-0.5">' +
+          (selected ? '✓ ĐÃ CHỌN' : 'CHỌN BÉ') + '</div></div>';
+      }).join('') || '<p class="col-span-full text-center text-gray-500 py-6">Chưa có học sinh trong lựa chọn này.</p>';
+    };
+  }
+
+  function installCarnivalAudio() {
+    const openButton = document.getElementById('duckOpenBtn');
+    const pond = document.getElementById('duckPondContainer');
+    if (openButton && !openButton.dataset.lhpAudioBound) {
+      openButton.dataset.lhpAudioBound = '1';
+      openButton.addEventListener('click', function () {
+        try {
+          if (typeof primeClassroomAudioFromGesture === 'function') primeClassroomAudioFromGesture();
+          if (typeof playCelebrationSound === 'function') playCelebrationSound();
+        } catch (error) { console.warn('Không phát được nhạc mở hội chợ:', error); }
+      });
+    }
+    if (pond && !pond.dataset.lhpAudioBound) {
+      pond.dataset.lhpAudioBound = '1';
+      pond.addEventListener('click', function (event) {
+        if (!event.target.closest('.duck-target')) return;
+        try {
+          if (typeof primeClassroomAudioFromGesture === 'function') primeClassroomAudioFromGesture();
+          const ctx = typeof ensureClassroomAudioContext === 'function' ? ensureClassroomAudioContext() : null;
+          if (!ctx) return;
+          if (ctx.state !== 'running') ctx.resume();
+          const at = ctx.currentTime + 0.02;
+          // Hiệu ứng "trúng vịt" ngắn, vui tai, tạo bằng Web Audio; không dùng tệp nhạc bên ngoài.
+          [880, 1174.66, 1567.98].forEach(function (frequency, index) {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = index === 1 ? 'triangle' : 'sine';
+            osc.frequency.setValueAtTime(frequency, at + index * 0.075);
+            gain.gain.setValueAtTime(0.0001, at + index * 0.075);
+            gain.gain.linearRampToValueAtTime(0.13, at + index * 0.075 + 0.012);
+            gain.gain.exponentialRampToValueAtTime(0.0001, at + index * 0.075 + 0.23);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(at + index * 0.075);
+            osc.stop(at + index * 0.075 + 0.25);
+          });
+        } catch (error) { console.warn('Không phát được hiệu ứng bắn vịt:', error); }
+      });
+    }
+  }
+
+  function applyRequestedImprovements() {
+    hardenLoginForm();
+    installHonorAllFilter();
+    installCarnivalAudio();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyRequestedImprovements, { once: true });
+  } else {
+    applyRequestedImprovements();
+  }
+  window.addEventListener('pageshow', hardenLoginForm);
 })();
 </script>
 
