@@ -1240,7 +1240,7 @@
 .ferry-mini-passenger .emoji{font-size:25px;line-height:29px}
 #ferryTeacher{position:absolute;z-index:7;left:calc(50% - 158px);top:34%;width:104px;height:132px;filter:drop-shadow(0 5px 4px #0008);transform-origin:55% 90%;pointer-events:none}
 #ferryTeacher svg{display:block;overflow:visible}
-#ferryBoat.moving~#ferryTeacher{animation:ferryTeacherRock .7s ease-in-out infinite}
+#ferryTeacher.moving{animation:ferryTeacherRock .7s ease-in-out infinite}
 @keyframes ferryTeacherRock{0%,100%{transform:rotate(-5deg) translateY(0)}50%{transform:rotate(7deg) translateY(-5px)}}
 #ferryTeacher::after{content:"";position:absolute;width:5px;height:48px;background:#92400e;right:-6px;bottom:4px;border-radius:5px;transform:rotate(-27deg);transform-origin:top;animation:ferryPaddle .55s ease-in-out infinite alternate}
 @keyframes ferryPaddle{from{transform:rotate(-45deg)}to{transform:rotate(20deg)}}
@@ -4477,12 +4477,12 @@ function shootDuck(idx) {
       if(ferryTripRunning)return;
       if(!Array.isArray(students)||students.length<2){showToast('Cần ít nhất 2 học sinh để tổ chức chuyến đò.');return;}
       primeClassroomAudioFromGesture();ferryTripRunning=true;ferryCurrentIndex=0;
-      const launch=document.getElementById('ferryLaunchBtn'),scene=document.getElementById('ferryScene'),boat=document.getElementById('ferryBoat'),result=document.getElementById('ferryResult'),shoreStudent=document.getElementById('ferryShoreStudent'),current=document.getElementById('ferryCurrentName'),status=document.getElementById('ferryStatus');
+      const launch=document.getElementById('ferryLaunchBtn'),scene=document.getElementById('ferryScene'),boat=document.getElementById('ferryBoat'),teacher=document.getElementById('ferryTeacher'),result=document.getElementById('ferryResult'),shoreStudent=document.getElementById('ferryShoreStudent'),current=document.getElementById('ferryCurrentName'),status=document.getElementById('ferryStatus');
       if(result)result.classList.add('hidden');if(shoreStudent)shoreStudent.style.display='none';if(scene)scene.classList.remove('ferry-calm');
       if(launch){launch.disabled=true;launch.textContent='⛈️ ĐANG VƯỢT SÔNG...';launch.classList.add('opacity-60');}
       const shuffled=students.slice().sort(()=>Math.random()-.5);ferrySleepingPassenger=shuffled.pop();ferryTripQueue=shuffled;renderFerryDeck();renderFerryPassengers();
       if(status)status.textContent='⛈️ Gió nổi lên, sóng đánh dữ dội! Cô giáo vẫn cố chèo đưa các con qua sông...';if(current)current.textContent='🌩️ BÃO ĐANG ẬP ĐẾN!';
-      if(boat){boat.classList.add('moving');boat.style.left='50%';boat.style.top='47%';}
+      if(boat){boat.classList.add('moving');boat.style.left='50%';boat.style.top='47%';}if(teacher)teacher.classList.add('moving');
       const speed=document.getElementById('ferrySpeed')?.value||'normal',base=Number(document.getElementById('ferryDuration')?.value||5)*1000,stopDelay=speed==='fast'?Math.max(1300,base*.55):speed==='slow'?base*1.35:base,journeyDelay=Math.max(1200,Math.min(3200,stopDelay*.55));
       const announce=(student,done)=>{
         if(current)current.textContent='🛶 Cô đang đưa '+student.name+' vào bờ...';if(boat){boat.style.left='68%';boat.style.top='46%';}
@@ -4495,7 +4495,7 @@ function shootDuck(idx) {
       };
       const next=()=>{
         if(ferryCurrentIndex<ferryTripQueue.length){announce(ferryTripQueue[ferryCurrentIndex],next);return;}
-        if(scene)scene.classList.add('ferry-calm');if(boat){boat.classList.remove('moving');boat.style.left='50%';boat.style.top='47%';}
+        if(scene)scene.classList.add('ferry-calm');if(teacher)teacher.classList.remove('moving');if(boat){boat.classList.remove('moving');boat.style.left='50%';boat.style.top='47%';}
         if(current)current.textContent='😴 Ơ kìa! Có một bạn vẫn ngủ quên trên thuyền!';if(status)status.textContent='🌈 Bão đã qua, các bạn đã lên bờ. Cô phát hiện còn một hành khách ngủ quên!';
         if(shoreStudent){shoreStudent.innerHTML='💤 BẠN NHỎ NGỦ QUÊN<br><span class="text-lg">'+ferryEscape(ferrySleepingPassenger?.name||'Hành khách cuối')+'</span><br>VẪN Ở TRÊN THUYỀN!';shoreStudent.style.display='block';}
         const title=document.getElementById('ferryWinnerTitle'),name=document.getElementById('ferryWinnerName'),meta=document.getElementById('ferryWinnerMeta'),card=document.getElementById('ferryQuestionCard');
