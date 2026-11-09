@@ -5734,7 +5734,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     function limbBetween(parent,a,b,rTop,rBottom,material,segments=14) {
       const start=new T.Vector3(a[0],a[1],a[2]), end=new T.Vector3(b[0],b[1],b[2]);
       const delta=new T.Vector3().subVectors(end,start);
-      const mesh=new T.Mesh(new T.CylinderGeometry(rBottom,rTop,delta.length(),segments,1),material);
+      const mesh=new T.Mesh(new T.CylinderGeometry(rTop,rBottom,delta.length(),segments,1),material);
       mesh.position.copy(start).add(end).multiplyScalar(.5);
       mesh.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),delta.normalize());
       mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
@@ -5764,7 +5764,6 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       // Cổ áo, nẹp áo và cà vạt nhỏ.
       limbBetween(g,[-.105,1.59,.02],[0,1.69,.02],.055,.045,skinMat);
       limbBetween(g,[.105,1.59,.02],[0,1.69,.02],.055,.045,skinMat);
-      const collarL=new T.Mesh(new T.BufferGeometry(),M.white);
       const collarShape=new T.Shape();collarShape.moveTo(0,0);collarShape.lineTo(.14,.13);collarShape.lineTo(.04,.22);collarShape.lineTo(-.02,.08);
       const collarGeo=new T.ShapeGeometry(collarShape);
       const c1=new T.Mesh(collarGeo,M.white);c1.position.set(-.15,1.53,.27);c1.rotation.z=-.12;g.add(c1);
