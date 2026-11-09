@@ -1250,8 +1250,16 @@
 <div class="absolute top-3 left-3 right-3 z-10 flex justify-between gap-2 text-white text-[10px] sm:text-xs font-black"><span class="bg-slate-950/50 rounded-full px-3 py-2">⛈️ VƯỢT SÔNG TRI THỨC</span><span id="ferryProgress" class="bg-slate-950/50 rounded-full px-3 py-2">0/0 đã cập bến</span></div>
 <div class="ferry-rain"></div><div class="ferry-lightning"></div><div class="absolute z-[2] top-16 left-5 text-5xl opacity-80">☁️🌩️</div><div class="absolute z-[2] top-20 right-8 text-4xl opacity-70">🌧️</div>
 <div id="ferryShore">🏝️<br>BẾN BỜ AN TOÀN</div><div class="ferry-wave one"></div><div class="ferry-wave two"></div><div id="ferrySwimmers"><span>🏊</span><span>🏊‍♀️</span><span>🏊</span></div>
-<div id="ferryTeacher">👩‍🦰</div>
-<div id="ferryBoat"><div class="flex justify-center -mb-1"><span class="text-amber-200 text-xs font-black bg-amber-950/50 rounded-full px-3 py-1">CÔ GIÁO ĐANG CHÈO</span></div><div id="ferryPassengerDeck"></div><div class="boat-hull text-center">🛶</div></div>
+<div id="ferryTeacher">👩🏻‍🏫</div>
+<div id="ferryBoat"><div class="flex justify-center -mb-1"><span class="text-amber-200 text-xs font-black bg-amber-950/50 rounded-full px-3 py-1">CÔ GIÁO ĐANG CHÈO</span></div><div id="ferryPassengerDeck"></div><div class="boat-hull text-center" aria-label="Thuyền gỗ đang vượt sông">
+<svg viewBox="0 0 420 110" class="w-full h-auto drop-shadow-xl" role="img" aria-label="Con thuyền gỗ">
+<defs><linearGradient id="ferryWood" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fbbf24"/><stop offset=".48" stop-color="#b45309"/><stop offset="1" stop-color="#78350f"/></linearGradient></defs>
+<path d="M22 30 Q210 58 398 30 L355 88 Q210 108 65 88 Z" fill="url(#ferryWood)" stroke="#451a03" stroke-width="7"/>
+<path d="M45 43 Q210 68 375 43 M63 60 Q210 83 357 60 M82 76 Q210 95 338 76" fill="none" stroke="#fde68a" stroke-width="5" opacity=".8"/>
+<path d="M30 28 Q210 50 390 28" fill="none" stroke="#fff7ed" stroke-width="7" stroke-linecap="round"/>
+<path d="M112 22 L65 -4 M308 22 L355 -4" stroke="#fef3c7" stroke-width="8" stroke-linecap="round"/>
+<path d="M65 -4 L45 8 M355 -4 L375 8" stroke="#92400e" stroke-width="5" stroke-linecap="round"/>
+</svg></div></div>
 <div id="ferryShoreStudent"></div><div class="absolute z-[9] left-3 bottom-3 text-white text-[10px] font-black drop-shadow">🌊 SÓNG LỚN • GIÓ MẠNH • SẤM CHỚP</div><div id="ferryCurrentName" class="absolute z-[10] left-1/2 -translate-x-1/2 bottom-3 bg-white/95 text-slate-900 rounded-full px-4 py-2 font-black text-xs shadow-lg whitespace-nowrap">Sẵn sàng khởi hành!</div>
 </div>
 <div id="ferryResult" class="hidden bg-gradient-to-r from-amber-100 via-yellow-50 to-orange-100 text-amber-950 border-2 border-amber-300 rounded-2xl p-4 text-center shadow-xl"><div class="text-3xl">🎉🏆🎊</div><div id="ferryWinnerTitle" class="text-xs font-black mt-1">CHÚC MỪNG HÀNH KHÁCH CẬP BẾN!</div><div id="ferryWinnerName" class="text-2xl font-black mt-1"></div><div id="ferryWinnerMeta" class="text-xs font-bold mt-1"></div><div id="ferryQuestionCard" class="hidden mt-3 bg-white rounded-xl p-3 text-sm font-bold"></div></div>
