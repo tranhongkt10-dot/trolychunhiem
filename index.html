@@ -5148,13 +5148,13 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     };
     window.renderHonorStep1Students = function () {
       const container = document.getElementById('honorStep1StudentList');
-      if (!container || !Array.isArray(window.students)) return;
+      if (!container || typeof students === 'undefined' || !Array.isArray(students)) return;
       const team = typeof currentHonorTeam !== 'undefined' ? currentHonorTeam : 'Tất cả';
-      const roster = window.students.filter(function (student) {
+      const roster = students.filter(function (student) {
         return student && (team === 'Tất cả' || student.team === team);
       });
       container.innerHTML = roster.map(function (student) {
-        const selected = window.selectedHonorStudentIds && window.selectedHonorStudentIds.has(student.id);
+        const selected = typeof selectedHonorStudentIds !== 'undefined' && selectedHonorStudentIds.has(student.id);
         return '<div role="button" tabindex="0" onclick="toggleHonorStudentSelection(\'' +
           String(student.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'") +
           '\')" class="p-3 rounded-2xl border-2 ' + (selected ? 'border-pink-500 bg-pink-50' : 'border-gray-100 bg-white') +
