@@ -5522,8 +5522,19 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       const script = document.createElement('script');
       script.src = 'https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js';
       script.onload = () => {
-        try { init(); }
-        catch (error) { console.error('Không khởi tạo được cảnh 3D:', error); status('Thiết bị chưa khởi tạo được đồ họa 3D. Cô hãy tải lại trang hoặc thử trên máy tính có hỗ trợ WebGL.'); readyReject(error); }
+        const loadSupport = (src, next) => {
+          const tag = document.createElement('script');
+          tag.src = src;
+          tag.onload = next;
+          tag.onerror = () => { console.warn('Không tải được thư viện mô hình GLB:', src); next(); };
+          document.head.appendChild(tag);
+        };
+        loadSupport('https://cdn.jsdelivr.net/npm/three@0.149.0/examples/js/loaders/GLTFLoader.js', () => {
+          loadSupport('https://cdn.jsdelivr.net/npm/three@0.149.0/examples/js/utils/SkeletonUtils.js', () => {
+            try { init(); }
+            catch (error) { console.error('Không khởi tạo được cảnh 3D:', error); status('Thiết bị chưa khởi tạo được đồ họa 3D. Cô hãy tải lại trang hoặc thử trên máy tính có hỗ trợ WebGL.'); readyReject(error); }
+          });
+        });
       };
       script.onerror = () => { status('Không tải được thư viện 3D. Kiểm tra Internet rồi tải lại trang.'); readyReject(new Error('Three.js CDN unavailable')); };
       document.head.appendChild(script);
@@ -5538,6 +5549,36 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     const host = document.getElementById('ferryScene');
     if (!host) { readyReject(new Error('Không tìm thấy khu vực trò chơi')); return; }
     const T = window.THREE;
+    const realAssetURLs = {
+      boat: 'https://grab3d.com/dl/rowboat/rowboat.glb',
+      boy: 'https://grab3d.com/dl/teen-character/teen-character-rigged.glb',
+      girl: 'https://grab3d.com/dl/woman-base-character/woman-base-character-rigged.glb'
+    };
+    const realAssetCache = {};
+    const realMixers = [];
+    function loadRealGLB(key) {
+      if (realAssetCache[key]) return realAssetCache[key];
+      realAssetCache[key] = new Promise((resolve, reject) => {
+        if (!T.GLTFLoader) { reject(new Error('GLTFLoader chưa sẵn sàng')); return; }
+        new T.GLTFLoader().load(realAssetURLs[key], data => resolve(data), undefined, reject);
+      });
+      return realAssetCache[key];
+    }
+    function cloneRigged(source) {
+      return T.SkeletonUtils && T.SkeletonUtils.clone ? T.SkeletonUtils.clone(source) : source.clone(true);
+    }
+    function fitRealModel(model, targetHeight) {
+      const bounds = new T.Box3().setFromObject(model);
+      const size = bounds.getSize(new T.Vector3());
+      const center = bounds.getCenter(new T.Vector3());
+      const factor = targetHeight / Math.max(size.y, .001);
+      model.scale.setScalar(factor);
+      model.position.set(-center.x * factor, -bounds.min.y * factor, -center.z * factor);
+      model.traverse(node => {
+        if (node.isMesh) { node.castShadow = true; node.receiveShadow = true; }
+      });
+      return model;
+    }
     ['ferry-rain','ferry-lightning','ferryTeacher','ferryBoat','ferryShore','ferryStartBank','ferryBridge','ferryBridgeLabel','ferrySwimmers'].forEach(id => {
       const el = document.getElementById(id); if (el) el.style.display = 'none';
     });
@@ -5676,7 +5717,19 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       for(let i=0;i<9;i++)box(boat,.14,.75,.14,M.wood,-6+i*1.5,1.48,z);
     }
     const prow=new T.Mesh(new T.ConeGeometry(.65,1.2,4),M.gold);prow.rotation.z=-Math.PI/2;prow.position.set(6.65,1.05,0);boat.add(prow);
-    // Mô hình nhân vật hoạt hình 3D có khuôn mặt, tóc, trang phục và khớp chuyển động.
+    // Thay thân thuyền dựng hình bằng mô hình xuồng gỗ PBR có ván ghép và mái chèo rời.
+    const proceduralBoatParts = boat.children.slice();
+    loadRealGLB('boat').then(data => {
+      const realBoat = cloneRigged(data.scene);
+      realBoat.scale.set(2.55, 2.15, 1.25);
+      realBoat.position.set(0, .35, 0);
+      realBoat.rotation.y = Math.PI / 2;
+      proceduralBoatParts.forEach(part => { part.visible = false; });
+      boat.add(realBoat);
+      boat.userData.realBoat = realBoat;
+      status('Đã tải mô hình thuyền gỗ 3D có vật liệu thật.');
+    }).catch(error => console.warn('Không tải được mô hình thuyền GLB, giữ thuyền dự phòng:', error));
+    // Mô hình nhân vật 3D có khung xương và chất liệu PBR.
     function capsule(parent,r,len,material,x,y,z) {
       const mesh=new T.Mesh(new T.CapsuleGeometry(r,len,5,12),material);
       mesh.position.set(x,y,z);mesh.castShadow=true;parent.add(mesh);return mesh;
@@ -5792,6 +5845,22 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       g.userData={arms,paddle};g.add(labelSprite('CÔ GIÁO',true));g.scale.setScalar(.82);return g;
     }
     const teacher=makeTeacher();teacher.position.set(-5.45,.95,0);boat.add(teacher);
+    // Tải cô giáo dạng người 3D có da/tóc PBR và bộ xương; giữ mái chèo và bảng tên.
+    loadRealGLB('girl').then(data => {
+      const model = cloneRigged(data.scene);
+      fitRealModel(model, 1.68);
+      model.position.set(0, .05, 0);
+      teacher.children.forEach(child => { child.visible = child.userData && (child.userData.keepOnRealTeacher === true); });
+      teacher.add(model);
+      teacher.userData.realModel = model;
+      const mixer = new T.AnimationMixer(model);
+      if (data.animations && data.animations.length) {
+        const idle = data.animations.find(a => /idle|stand/i.test(a.name));
+        if (idle) mixer.clipAction(idle).play();
+      }
+      realMixers.push(mixer);
+      status('Đã tải nhân vật cô giáo 3D chất liệu PBR.');
+    }).catch(error => console.warn('Không tải được nhân vật cô giáo GLB, giữ nhân vật dự phòng:', error));
     let studentMeshes=[];
     function populate() {
       studentMeshes.forEach(p=>boat.remove(p.mesh));studentMeshes=[];
@@ -5803,6 +5872,22 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
         mesh.position.set(-4.45+col*.96,1.0,rowZ[row]);
         if(student===sleeping){mesh.userData.sleeping=true;mesh.rotation.z=-.18;mesh.position.y=1.05;}
         boat.add(mesh);studentMeshes.push({student,mesh,home:mesh.position.clone(),walk:null});
+      });
+      // Thay từng hình nhân vật ghép khối bằng mô hình người GLB có da/tóc PBR và rig.
+      studentMeshes.forEach((entry,index) => {
+        const gender = String(entry.student?.gender || entry.student?.sex || '').toLowerCase();
+        const assetKey = /nữ|nu|female|girl/.test(gender) ? 'girl' : 'boy';
+        loadRealGLB(assetKey).then(data => {
+          const model = cloneRigged(data.scene);
+          fitRealModel(model, 1.22);
+          entry.mesh.children.forEach(child => { child.visible = false; });
+          entry.mesh.add(model);
+          entry.realModel = model;
+          entry.mixer = new T.AnimationMixer(model);
+          const idle = data.animations && data.animations.find(a => /idle|stand/i.test(a.name));
+          if (idle) entry.mixer.clipAction(idle).play();
+          realMixers.push(entry.mixer);
+        }).catch(error => console.warn('Không tải được nhân vật học sinh GLB:', error));
       });
     }
     populate();
@@ -5825,6 +5910,12 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       async disembark(student){
         const p=findStudent(student);if(!p||p.mesh.userData.sleeping)return;
         const mesh=p.mesh;mesh.userData.walking=true;
+        if (p.realModel && p.mixer) {
+          const walkClip = (realAssetCache[String(p.student?.gender||'').toLowerCase().match(/nữ|nu|female|girl/) ? 'girl' : 'boy'] && null);
+          const clips = p.realModel.animations || [];
+          const clip = clips.find(a => /walk/i.test(a.name));
+          if (clip) p.mixer.clipAction(clip).reset().play();
+        }
         const from=mesh.position.clone(),to=new T.Vector3(6.5,1.0,2.85);
         const start=performance.now(),duration=1550;
         while(performance.now()-start<duration){
@@ -5846,6 +5937,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     function animate(){
       requestAnimationFrame(animate);
       const dt=Math.min(clock.getDelta(),.05);elapsed+=dt;
+      realMixers.forEach(mixer => mixer.update(dt));
       const pos=water.geometry.attributes.position;
       for(let i=0;i<pos.count;i++){
         const x=waterBase[i*3],z=waterBase[i*3+2];
