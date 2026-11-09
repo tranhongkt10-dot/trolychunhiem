@@ -5549,6 +5549,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     const host = document.getElementById('ferryScene');
     if (!host) { readyReject(new Error('Không tìm thấy khu vực trò chơi')); return; }
     const T = window.THREE;
+    // URL GLB chính xác theo tên file công bố trong thư viện CC0 Grab3D.
     const realAssetURLs = {
       boat: 'https://grab3d.com/dl/rowboat/rowboat.glb',
       boy: 'https://grab3d.com/dl/teen-character/teen-character-rigged.glb',
@@ -5728,7 +5729,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       boat.add(realBoat);
       boat.userData.realBoat = realBoat;
       status('Đã tải mô hình thuyền gỗ 3D có vật liệu thật.');
-    }).catch(error => console.warn('Không tải được mô hình thuyền GLB, giữ thuyền dự phòng:', error));
+    }).catch(error => { console.error('GLB boat failed:', error); status('Không tải được mô hình thuyền 3D từ máy chủ mô hình. Kiểm tra kết nối rồi tải lại.'); });
     // Mô hình nhân vật 3D có khung xương và chất liệu PBR.
     function capsule(parent,r,len,material,x,y,z) {
       const mesh=new T.Mesh(new T.CapsuleGeometry(r,len,5,12),material);
@@ -5860,7 +5861,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       }
       realMixers.push(mixer);
       status('Đã tải nhân vật cô giáo 3D chất liệu PBR.');
-    }).catch(error => console.warn('Không tải được nhân vật cô giáo GLB, giữ nhân vật dự phòng:', error));
+    }).catch(error => { console.error('GLB teacher failed:', error); status('Không tải được mô hình cô giáo 3D. Đang hiển thị nhân vật dự phòng.'); });
     let studentMeshes=[];
     function populate() {
       studentMeshes.forEach(p=>boat.remove(p.mesh));studentMeshes=[];
@@ -5888,7 +5889,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
           const idle = data.animations && data.animations.find(a => /idle|stand/i.test(a.name));
           if (idle) entry.mixer.clipAction(idle).play();
           realMixers.push(entry.mixer);
-        }).catch(error => console.warn('Không tải được nhân vật học sinh GLB:', error));
+        }).catch(error => { console.error('GLB student failed:', error); status('Không tải được một số mô hình học sinh 3D. Đang hiển thị nhân vật dự phòng.'); });
       });
     }
     populate();
