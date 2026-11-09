@@ -1225,7 +1225,7 @@
             </div>
           </div>
           <div class="space-y-4">
-            <div class="ferry-river-scene relative overflow-hidden rounded-2xl min-h-[300px] flex flex-col items-center justify-center p-4 border-4 border-white shadow-inner">
+            <div class="ferry-river-scene relative overflow-hidden rounded-2xl min-h-[300px] flex flex-col items-center justify-center p-4 border-4 border-white shadow-inner" style="background:linear-gradient(180deg,#9bd9ee 0%,#60c4d5 48%,#167f9d 49%,#08738d 100%)">
               <div class="absolute inset-0 opacity-30 pointer-events-none" style="background:repeating-linear-gradient(175deg,transparent 0 25px,rgba(255,255,255,.65) 26px 29px,transparent 30px 54px)"></div>
               <div class="relative z-10 text-center text-white drop-shadow-lg"><div class="text-5xl mb-2">🏞️</div><div class="text-xs font-black tracking-widest">BẾN SÔNG TRI THỨC</div></div>
               <div id="ferryBoat" class="relative z-10 text-center my-4 transition-transform duration-300">
@@ -4072,6 +4072,7 @@ function switchCallingMode(mode) {
   if (mode !== 'duck') {
     closeDuckGame();
   }
+  if (mode === 'ferry') renderFerryPassengers();
 }
 
     function startStageCountdown() {
