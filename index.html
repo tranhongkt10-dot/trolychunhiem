@@ -5601,7 +5601,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     const teacher=makePerson({},true);teacher.position.set(-2.8,.62,0);boat.add(teacher);
     function populate(){
       ferry3DStudents.forEach(p=>boat.remove(p.mesh));ferry3DStudents=[];
-      const roster=Array.isArray(students)?students:[];
+      const roster=typeof students!=='undefined'&&Array.isArray(students)?students:[];
       const sleeping=typeof ferrySleepingPassenger!=='undefined'?ferrySleepingPassenger:null;
       roster.forEach((st,i)=>{const mesh=makePerson(st);const col=i%8,row=Math.floor(i/8);mesh.scale.setScalar(.68);mesh.position.set(-3.45+col*.98,.62,-1.22+row*.55);if(st===sleeping){mesh.rotation.z=-Math.PI/2;mesh.position.y=.65;}boat.add(mesh);ferry3DStudents.push({mesh,student:st,home:mesh.position.clone(),sleeping:st===sleeping});});
     }
