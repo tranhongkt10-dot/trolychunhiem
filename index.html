@@ -5679,6 +5679,34 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       for(let i=0;i<9;i++)box(boat,.14,.75,.14,M.wood,-6+i*1.5,1.48,z);
     }
     const prow=new T.Mesh(new T.ConeGeometry(.65,1.2,4),M.gold);prow.rotation.z=-Math.PI/2;prow.position.set(6.65,1.05,0);boat.add(prow);
+    // Nâng cấp hoàn thiện thuyền gỗ: nẹp mạn cong, đinh tán, phao cứu sinh và đèn mũi.
+    const hullTrim=mat(0xd9a45e,.42,.12), darkWood=mat(0x56301d,.78);
+    for(const side of [-1,1]){
+      const trimCurve=new T.CatmullRomCurve3([
+        new T.Vector3(-6.35,.55,side*2.13),new T.Vector3(-4.8,.43,side*2.42),
+        new T.Vector3(0,.42,side*2.48),new T.Vector3(4.9,.45,side*2.38),
+        new T.Vector3(6.25,.66,side*2.12)
+      ]);
+      const trim=new T.Mesh(new T.TubeGeometry(trimCurve,64,.065,10,false),hullTrim);boat.add(trim);
+      for(let k=0;k<8;k++){
+        const nail=new T.Mesh(new T.SphereGeometry(.055,10,8),M.gold);
+        nail.position.set(-5.35+k*1.5,.57,side*2.31);boat.add(nail);
+      }
+      const ring=new T.Mesh(new T.TorusGeometry(.38,.095,12,32),M.white);
+      ring.position.set(-4.25,1.22,side*2.42);boat.add(ring);
+      for(let k=0;k<4;k++){
+        const a=k*Math.PI/2;
+        const band=new T.Mesh(new T.SphereGeometry(.105,12,8),M.red);
+        band.position.set(-4.25+Math.cos(a)*.38,1.22+Math.sin(a)*.38,side*2.42);boat.add(band);
+      }
+    }
+    // Đèn lồng nhỏ ở mũi thuyền, có lõi phát sáng ấm.
+    const lantern=new T.Group();lantern.position.set(5.65,1.48,0);boat.add(lantern);
+    const lanternBody=new T.Mesh(new T.BoxGeometry(.32,.42,.32),mat(0x8b542b,.5,.12));lantern.add(lanternBody);
+    const lanternGlass=new T.Mesh(new T.BoxGeometry(.22,.28,.22),new T.MeshStandardMaterial({color:0xffd78a,emissive:0xffa62b,emissiveIntensity:.7,roughness:.25}));
+    lanternGlass.position.y=.015;lantern.add(lanternGlass);
+    const lanternTop=new T.Mesh(new T.ConeGeometry(.24,.16,4),M.gold);lanternTop.position.y=.29;lantern.add(lanternTop);
+    const lanternLight=new T.PointLight(0xffc46b,.45,5);lanternLight.position.set(0,.05,.2);lantern.add(lanternLight);
     // Giữ thuyền 3D dự phòng tích hợp, không ẩn các bộ phận khi thiếu tệp GLB.
     function capsule(parent,r,len,material,x,y,z) {
       const mesh=new T.Mesh(new T.CapsuleGeometry(r,len,5,12),material);
