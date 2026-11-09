@@ -2507,7 +2507,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
         master.gain.linearRampToValueAtTime(0.95, start + 0.04);
         master.gain.setValueAtTime(0.82, start + 1.85);
         master.gain.exponentialRampToValueAtTime(0.0001, start + 2.45);
-        master.connect(ctx.destination);
+        master.connect(getClassroomAudioOutput(ctx));
         for (let i = 0; i < 46; i++) {
           const at = start + 0.025 + i * (0.043 + Math.random() * 0.022);
           const duration = 0.035 + Math.random() * 0.045;
@@ -2575,7 +2575,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
           gain.gain.exponentialRampToValueAtTime(0.0001, start + note.t + note.d);
           osc.connect(filter);
           filter.connect(gain);
-          gain.connect(ctx.destination);
+          gain.connect(getClassroomAudioOutput(ctx));
           osc.start(start + note.t);
           osc.stop(start + note.t + note.d + 0.02);
         });
@@ -2591,7 +2591,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
           gain.gain.linearRampToValueAtTime(0.085, at + 0.01);
           gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.48);
           osc.connect(gain);
-          gain.connect(ctx.destination);
+          gain.connect(getClassroomAudioOutput(ctx));
           osc.start(at);
           osc.stop(at + 0.5);
         });
@@ -2615,7 +2615,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
         gain.gain.setValueAtTime(0.0001, at);
         gain.gain.linearRampToValueAtTime(0.12, at + 0.004);
         gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.045);
-        osc.connect(gain); gain.connect(ctx.destination);
+        osc.connect(gain); gain.connect(getClassroomAudioOutput(ctx));
         osc.start(at); osc.stop(at + 0.05);
       } catch (error) { console.warn('Không phát được tiếng nấc vòng quay:', error); }
     }
@@ -2623,6 +2623,28 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     // Một AudioContext dùng chung. Khởi tạo và resume đồng bộ ngay trong cú chạm/bấm,
     // không chờ await trước khi trình duyệt ghi nhận thao tác người dùng.
     let classroomAudioContext = null;
+
+    // Bộ khuếch đại âm thanh dùng chung cho TẤT CẢ trò chơi và hiệu ứng lớp học.
+    // Compressor giúp tiếng lớn, rõ hơn nhưng hạn chế méo/rè khi nhiều âm thanh cùng phát.
+    let classroomAudioOutput = null;
+    function getClassroomAudioOutput(ctx) {
+      if (!ctx) return null;
+      if (!classroomAudioOutput || classroomAudioOutput.context !== ctx) {
+        const master = ctx.createGain();
+        const compressor = ctx.createDynamicsCompressor();
+        master.gain.value = 2.0;
+        compressor.threshold.value = -12;
+        compressor.knee.value = 8;
+        compressor.ratio.value = 10;
+        compressor.attack.value = 0.004;
+        compressor.release.value = 0.22;
+        master.connect(compressor);
+        compressor.connect(ctx.destination);
+        classroomAudioOutput = { context: ctx, node: master };
+      }
+      return classroomAudioOutput.node;
+    }
+
     function ensureClassroomAudioContext() {
       const AudioContextClass = window.AudioContext || window.webkitAudioContext;
       if (!AudioContextClass) return null;
@@ -2651,7 +2673,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
         gain.gain.linearRampToValueAtTime(0.035, at + 0.012);
         gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.11);
         osc.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(getClassroomAudioOutput(ctx));
         osc.start(at);
         osc.stop(at + 0.12);
         return true;
@@ -2700,7 +2722,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
           gain.gain.linearRampToValueAtTime(0.22, start + 0.035);
           gain.gain.exponentialRampToValueAtTime(0.0001, start + note.duration);
           osc.connect(gain);
-          gain.connect(ctx.destination);
+          gain.connect(getClassroomAudioOutput(ctx));
           osc.start(start);
           osc.stop(start + note.duration + 0.02);
         });
@@ -2730,7 +2752,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
         gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.055);
         osc.connect(filter);
         filter.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(getClassroomAudioOutput(ctx));
         osc.start(at);
         osc.stop(at + 0.06);
         return true;
@@ -4042,7 +4064,7 @@ function switchCallingMode(mode) {
         gain.gain.linearRampToValueAtTime(0.055, now + 0.008);
         gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
         osc.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(getClassroomAudioOutput(ctx));
         osc.start(now);
         osc.stop(now + 0.065);
       } catch (error) {
@@ -5204,7 +5226,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
             gain.gain.linearRampToValueAtTime(0.13, at + index * 0.075 + 0.012);
             gain.gain.exponentialRampToValueAtTime(0.0001, at + index * 0.075 + 0.23);
             osc.connect(gain);
-            gain.connect(ctx.destination);
+            gain.connect(getClassroomAudioOutput(ctx));
             osc.start(at + index * 0.075);
             osc.stop(at + index * 0.075 + 0.25);
           });
