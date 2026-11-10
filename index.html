@@ -6151,7 +6151,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     function findStudent(st){return studentMeshes.find(p=>p.student===st);}
     game={
       populate,
-      beginTrip(){populate();boat.position.x=-10;boatTarget=-8.5;storm=false;calm=false;sailing=false;rain.visible=false;rainbow.visible=false;dolphins.forEach(d=>d.group.visible=false);scene.background.copy(skyCalm);scene.fog.color.copy(skyCalm);},
+      beginTrip(){populate();teacher.position.set(-5.65,.78,0);setCharacterSeated(teacher,true);boat.position.x=-10;boatTarget=-8.5;storm=false;calm=false;sailing=false;rain.visible=false;rainbow.visible=false;dolphins.forEach(d=>d.group.visible=false);scene.background.copy(skyCalm);scene.fog.color.copy(skyCalm);},
       startStorm(){storm=true;calm=false;boatTarget=0;rain.visible=true;rainbow.visible=false;lightningGroup.visible=true;dolphins.forEach(d=>d.group.visible=true);},
        async sailToShore(){
          sailing=true;boatTarget=10;const t=performance.now();
@@ -6194,7 +6194,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
        
       finishTrip(){storm=false;calm=true;rain.visible=false;lightningGroup.visible=false;rainbow.visible=true;dolphins.forEach(d=>d.group.visible=false);scene.background.copy(skyClear);scene.fog.color.copy(skyClear);},
       showSleeper(st){const p=findStudent(st);if(p){p.mesh.visible=true;p.mesh.userData.sleeping=true;p.mesh.position.copy(p.home);p.mesh.rotation.z=-.25;}},
-      reset(){storm=false;calm=false;rain.visible=false;lightningGroup.visible=false;rainbow.visible=false;dolphins.forEach(d=>d.group.visible=false);boat.position.x=-10;boatTarget=-10;populate();}
+      reset(){storm=false;calm=false;rain.visible=false;lightningGroup.visible=false;rainbow.visible=false;dolphins.forEach(d=>d.group.visible=false);boat.position.x=-10;boatTarget=-10;teacher.position.set(-5.65,.78,0);setCharacterSeated(teacher,true);populate();}
     };
     window.ferry3DGame=game;resolveReady(game);
     function animate(){
