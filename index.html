@@ -691,6 +691,77 @@
 @media(max-height:760px){#callingView-duck{max-height:calc(100dvh - 105px)}#callingView-duck .duck-water-stage{min-height:270px;padding-bottom:58px}#callingView-duck .duck-target-grid{height:clamp(170px,30vh,260px)}}
 @media(max-width:600px){#callingView-duck .duck-target-grid{height:clamp(220px,35vh,300px)}#callingView-duck .duck-target{width:42px;height:48px}#callingView-duck .duck-target-duck{font-size:31px}#callingView-duck .duck-shooter{left:8px;bottom:8px}}
 
+
+/* BẢN SỬA GỌN MÀN HÌNH PC: vòng quay và hồ bắn vịt nằm gọn trong viewport */
+@media (min-width: 900px) {
+  #callingView-wheel {
+    width: min(100%, 690px);
+    max-width: 690px;
+    max-height: calc(100dvh - 150px);
+    padding: 10px 14px !important;
+    gap: 7px !important;
+  }
+  #callingView-wheel > div:first-child .text-3xl { font-size: 22px; line-height: 1; margin-bottom: 0; }
+  #callingView-wheel > div:first-child h3 { font-size: clamp(18px, 2.5vh, 24px); line-height: 1.05; }
+  #callingView-wheel > div:first-child p { font-size: 11px; margin-top: 3px; }
+  #callingView-wheel .wheel-fairground {
+    width: min(36vh, 350px, 36vw);
+    padding: 6px;
+  }
+  #callingView-wheel .wheel-pointer { top: -9px; }
+  #callingView-wheel .relative.z-10.flex.justify-center.gap-2 { font-size: 17px; line-height: 1; }
+  #callingView-wheel #wheelSpinBtn { width: min(70%, 440px); padding: 9px 14px !important; border-width: 2px; }
+  #callingView-duck {
+    width: min(100%, 980px);
+    max-width: 980px;
+    max-height: calc(100dvh - 145px);
+    padding: 8px 12px !important;
+    gap: 6px !important;
+  }
+  #callingView-duck .duck-marquee { padding: 5px 8px 8px; margin-bottom: 3px; }
+  #callingView-duck .duck-bulbs { font-size: 13px; line-height: 1; }
+  #callingView-duck .duck-curtain-title { font-size: clamp(24px, 3.5vh, 38px); }
+  #callingView-duck .duck-marquee p { font-size: 11px; margin-top: 2px; }
+  #callingView-duck .duck-water-stage {
+    min-height: 0;
+    height: clamp(300px, 43vh, 390px);
+    padding: 9px 12px 50px;
+  }
+  #callingView-duck .duck-stage-label { margin-bottom: 3px; font-size: 13px; }
+  #callingView-duck .duck-pond-toolbar { margin-bottom: 2px; gap: 6px; font-size: 11px; }
+  #callingView-duck .duck-pond-toolbar button { padding: 5px 12px; }
+  #callingView-duck .duck-target-grid { height: clamp(175px, 28vh, 245px); min-height: 175px; }
+  #callingView-duck .duck-target { width: clamp(42px, 4.2vw, 58px); height: clamp(48px, 6vh, 65px); }
+  #callingView-duck .duck-target-duck { font-size: clamp(29px, 3.4vw, 42px); }
+  #callingView-duck .duck-shooter { left: 12px; bottom: 7px; padding: 4px 11px; }
+  #callingView-duck .duck-shooter-person { font-size: 34px; }
+  #callingView-duck .duck-shooter-gun { font-size: 31px; transform: rotate(-24deg) translateY(-3px); }
+  #callingView-duck .duck-waterline { margin-top: 0; font-size: 13px; line-height: 1; }
+  #callingView-duck .duck-bottom-stars { font-size: 14px; padding-top: 0; line-height: 1; }
+}
+#callingView-duck .duck-target { will-change: translate, rotate, opacity; }
+#callingView-duck .duck-target:nth-child(3n) { animation-timing-function: ease-in-out; }
+#callingView-duck .duck-target:nth-child(4n) .duck-target-duck { animation-duration: 1.7s; }
+#callingView-duck .duck-shooter { min-width: 122px; }
+#callingView-duck .duck-shooter-gun { display: inline-block; transform: rotate(-24deg) translateY(-3px); }
+#callingView-duck .duck-shooter-firing .duck-shooter-gun { animation: duckGunKick .22s ease-in-out 2; }
+#callingView-duck .duck-shooter-firing:after {
+  content: "✦";
+  position: absolute;
+  left: 83px;
+  top: -12px;
+  color: #fff8b5;
+  font-size: 32px;
+  text-shadow: 0 0 12px #fff, 0 0 18px #ffb000;
+  animation: duckMuzzle .28s ease-out;
+}
+@media (max-height: 700px) and (min-width: 900px) {
+  #callingView-wheel { max-height: calc(100dvh - 125px); padding-top: 6px !important; padding-bottom: 6px !important; }
+  #callingView-wheel .wheel-fairground { width: min(31vh, 280px, 32vw); }
+  #callingView-duck { max-height: calc(100dvh - 120px); }
+  #callingView-duck .duck-water-stage { height: 34vh; min-height: 245px; padding-bottom: 43px; }
+  #callingView-duck .duck-target-grid { height: 22vh; min-height: 145px; }
+}
 </style>
 
 <style id="modern-classroom-tools">
@@ -4475,19 +4546,36 @@ function switchCallingMode(mode) {
         pond.innerHTML = '<p class="text-center text-white font-black py-8">Chưa có học sinh trong lớp để tham gia trò chơi.</p>';
         return;
       }
-      const columns = Math.max(3, Math.ceil(Math.sqrt(roster.length * 1.55)));
+      // Chia mặt hồ thành các vùng rộng, xáo trộn vùng trước khi thả vịt
+      // để đàn vịt không còn xếp thành hàng cố định.
+      const columns = Math.max(4, Math.ceil(Math.sqrt(roster.length * 1.7)));
       const rows = Math.ceil(roster.length / columns);
+      const slots = [];
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < columns; col++) {
+          slots.push({ col, row });
+        }
+      }
+      for (let i = slots.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [slots[i], slots[j]] = [slots[j], slots[i]];
+      }
       const positions = roster.map((student, idx) => {
-        const col = idx % columns, row = Math.floor(idx / columns);
+        const slot = slots[idx];
         const cellW = 100 / columns, cellH = 100 / rows;
         return {
           student, idx,
-          left: Math.max(5, Math.min(95, (col + .5 + (Math.random() - .5) * .42) * cellW)),
-          top: Math.max(12, Math.min(88, (row + .5 + (Math.random() - .5) * .38) * cellH)),
-          delay: (Math.random() * -4).toFixed(2),
-          duration: (2.8 + Math.random() * 3.8).toFixed(2)
+          left: Math.max(5, Math.min(95, (slot.col + .5 + (Math.random() - .5) * .72) * cellW)),
+          top: Math.max(12, Math.min(88, (slot.row + .5 + (Math.random() - .5) * .62) * cellH)),
+          delay: (Math.random() * -5).toFixed(2),
+          duration: (2.2 + Math.random() * 4.4).toFixed(2)
         };
-      }).sort(() => Math.random() - .5);
+      });
+      // Xáo thứ tự DOM độc lập với vị trí để đàn vịt có cảm giác bơi lộn xộn tự nhiên.
+      for (let i = positions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [positions[i], positions[j]] = [positions[j], positions[i]];
+      }
       pond.innerHTML = positions.map(({student:s,idx,left,top,delay,duration}) => `
         <button type="button" data-student-index="${idx}" onclick="shootDuck(${idx})" class="duck-target" style="--duck-left:${left}%;--duck-top:${top}%;--duck-delay:${delay}s;--duck-duration:${duration}s" aria-label="Bắn vịt số ${idx + 1}">
           <span class="duck-target-duck" aria-hidden="true">🦆</span>
