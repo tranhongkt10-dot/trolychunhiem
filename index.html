@@ -1367,6 +1367,14 @@
 
 #ferrySwimmers{position:absolute;z-index:4;left:5%;bottom:22px;display:flex;gap:18px;font-size:30px;filter:drop-shadow(0 3px 3px #082f49)}
 #ferryShoreStudent{position:absolute;z-index:8;right:7%;bottom:100px;display:none;text-align:center;background:#fef3c7;color:#78350f;border:3px solid #fbbf24;border-radius:18px;padding:10px 14px;font-weight:1000;animation:ferryShoreGlow 1.2s infinite}
+ #ferryTeacherBoard{position:absolute;z-index:12;left:50%;top:17%;transform:translateX(-50%) scale(.92);width:min(78%,470px);padding:12px 16px 14px;background:linear-gradient(145deg,#14532d,#064e3b 55%,#052e16);border:9px solid #a16207;border-radius:12px;box-shadow:0 8px 0 #713f12,0 15px 28px #082f49aa,inset 0 0 0 2px #facc15;display:none;text-align:center;color:#fef9c3}
+ #ferryTeacherBoard.show{display:block;animation:ferryBoardPop .65s cubic-bezier(.2,.8,.2,1) forwards}
+ #ferryTeacherBoard .board-heading{font-size:clamp(10px,1.8vw,14px);font-weight:1000;letter-spacing:.13em;color:#fde68a;text-shadow:0 1px 3px #000}
+ #ferryTeacherBoard .board-message{margin-top:5px;min-height:52px;font-size:clamp(14px,2.7vw,23px);line-height:1.35;font-weight:1000;white-space:pre-line;text-shadow:0 0 7px #fef08a88;font-family:Georgia,serif}
+ #ferryTeacherBoard .board-name{margin-top:5px;font-size:clamp(11px,1.8vw,15px);font-weight:900;color:#fff}
+ @keyframes ferryBoardPop{from{opacity:0;transform:translateX(-50%) translateY(16px) scale(.8)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+ @media(max-width:640px){#ferryTeacherBoard{top:19%;width:84%;padding:8px 10px;border-width:6px}#ferryTeacherBoard .board-message{min-height:42px}}
+
 #ferryScene.ferry-calm .ferry-rain,#ferryScene.ferry-calm .ferry-lightning{display:none}#ferryScene.ferry-calm{background:linear-gradient(#7dd3fc 0%,#bae6fd 36%,#0e7490 37%,#0891b2 100%)}
 #ferryScene.ferry-calm .ferry-wave{opacity:.35;animation-duration:5s}
 @media(max-width:640px){#ferryScene{min-height:390px}#ferryTeacher{left:calc(50% - 128px);top:36%;width:88px;height:112px}#ferryTeacher svg{width:88px;height:112px}#ferryShore{width:32%;font-size:9px}}
@@ -1431,6 +1439,7 @@
 <div class="absolute top-3 left-3 right-3 z-10 flex justify-between gap-2 text-white text-[10px] sm:text-xs font-black"><span class="bg-slate-950/50 rounded-full px-3 py-2">⛈️ VƯỢT SÔNG TRI THỨC</span><span id="ferryProgress" class="bg-slate-950/50 rounded-full px-3 py-2">0/0 đã cập bến</span></div>
 <div class="ferry-rain"></div><div class="ferry-lightning"></div><div class="absolute z-[2] top-16 left-5 text-5xl opacity-80">☁️🌩️</div><div class="absolute z-[2] top-20 right-8 text-4xl opacity-70">🌧️</div>
 <div id="ferryStartBank">🚩 ĐIỂM XUẤT PHÁT<br>KHỞI HÀNH</div><div id="ferryShore">🏝️<br>BẾN BỜ AN TOÀN</div><div id="ferryBridge"></div><div id="ferryBridgeLabel">🌟 CẦU LÊN BỜ TRI THỨC</div><div class="ferry-wave one"></div><div class="ferry-wave two"></div><div id="ferrySwimmers"><span>🏊</span><span>🏊‍♀️</span><span>🏊</span></div>
+<div id="ferryTeacherBoard" aria-live="polite"><div class="board-heading">📜 BẢNG THÔNG BÁO CỦA CÔ</div><div id="ferryTeacherBoardMessage" class="board-message"></div><div id="ferryTeacherBoardName" class="board-name"></div></div>
 <div id="ferryTeacher" aria-label="Cô giáo mặc áo dài xanh đội nón lá đang chèo thuyền">
 <svg id="ferryTeacherArt" viewBox="0 0 150 190" width="104" height="132" role="img" aria-label="Cô giáo Việt Nam mặc áo dài xanh, đội nón lá">
 <defs>
@@ -4701,6 +4710,15 @@ function shootDuck(idx) {
       const status=document.getElementById('ferryStatus');if(status)status.textContent='Đã làm mới danh sách. Cả lớp sẵn sàng cho chuyến đò mới!';
       const result=document.getElementById('ferryResult');if(result)result.classList.add('hidden');
     }
+    async function writeFerryTeacherBoard(studentName) {
+      const board=document.getElementById('ferryTeacherBoard'),message=document.getElementById('ferryTeacherBoardMessage'),name=document.getElementById('ferryTeacherBoardName');
+      if(!board||!message)return;
+      board.classList.remove('show');board.style.display='block';board.offsetHeight;board.classList.add('show');
+      message.textContent='';if(name)name.textContent='CÔ MỜI: '+(studentName||'BẠN NHỎ');
+      const words='ĐÃ ĐẾN BẾN!\\nMỜI EM XUỐNG THUYỀN\\nVÀ LÊN BẢNG!';
+      for(let i=0;i<words.length;i++){message.textContent+=words[i];await new Promise(resolve=>setTimeout(resolve,75));}
+      await new Promise(resolve=>setTimeout(resolve,1100));
+    }
     async function startFerryTrip() {
       if (ferryTripRunning) return;
       if (!Array.isArray(students) || students.length < 2) {
@@ -4719,6 +4737,7 @@ function shootDuck(idx) {
       const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
       if (result) result.classList.add('hidden');
       if (shoreStudent) shoreStudent.style.display = 'none';
+      const teacherBoard=document.getElementById('ferryTeacherBoard');if(teacherBoard){teacherBoard.classList.remove('show');teacherBoard.style.display='none';}
       if (scene) scene.classList.remove('ferry-calm');
       if (launch) { launch.disabled = true; launch.textContent = '⛈️ ĐANG VƯỢT SÔNG...'; launch.classList.add('opacity-60'); }
       const shuffled = students.slice().sort(() => Math.random() - .5);
@@ -4762,6 +4781,7 @@ function shootDuck(idx) {
         if (current) current.textContent = '😴 Ơ kìa! Còn một bạn đang ngủ quên trên thuyền!';
         if (status) status.textContent = '💗 Cô giáo đã đưa các bạn lên bờ an toàn. Cô quay lại gọi bạn nhỏ vẫn ngủ quên trên thuyền.';
         if (window.ferry3DGame) window.ferry3DGame.showSleeper(ferrySleepingPassenger);
+        await writeFerryTeacherBoard(ferrySleepingPassenger?.name || 'Bạn nhỏ');
         const title = document.getElementById('ferryWinnerTitle');
         const name = document.getElementById('ferryWinnerName');
         const meta = document.getElementById('ferryWinnerMeta');
