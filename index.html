@@ -5899,10 +5899,11 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       sphere(g,.15,hair,.4,2.12,-.05,.8,1.45,.85);
       sphere(g,.19,hair,.38,2.58,-.3,1,1,.9);
       for(const x of [-.18,.18]){
-        sphere(g,.095,M.white,x,2.22,.39,.92,1.12,.5);
-        sphere(g,.052,mat(0x33232a),x,2.21,.435,.92,1.1,.5);
+        const eye=sphere(g,.095,M.white,x,2.22,.39,.92,1.12,.5);
+        const irisPart=sphere(g,.052,mat(0x33232a),x,2.21,.435,.92,1.1,.5);
         sphere(g,.02,M.white,x-.014,2.245,.455);
         limbBetween(g,[x-.07,2.35,.37],[x+.065,2.36,.36],.016,.014,hair);
+        teacherEyes.push({eye,irisPart,eyeY:eye.scale.y,irisY:irisPart.scale.y});
       }
       sphere(g,.075,mat(0xe99591),-.27,2.02,.34,1.2,.65,.3);
       sphere(g,.075,mat(0xe99591),.27,2.02,.34,1.2,.65,.3);
@@ -5910,12 +5911,6 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       const smile=new T.CatmullRomCurve3([new T.Vector3(-.085,1.99,.4),new T.Vector3(0,1.965,.425),new T.Vector3(.085,1.99,.4)]);
       g.add(new T.Mesh(new T.TubeGeometry(smile,16,.016,8,false),mat(0x984956)));
       // Gương mặt cô giáo có mí mắt, sống mũi và tóc mái uốn lọn.
-      const teacherEyes=[];
-      for(const x of [-.18,.18]){
-        const eye=sphere(g,.095,M.white,x,2.22,.39,.92,1.12,.5);
-        const irisPart=sphere(g,.052,mat(0x33232a),x,2.21,.435,.92,1.1,.5);
-        teacherEyes.push({eye,irisPart,eyeY:eye.scale.y,irisY:irisPart.scale.y});
-      }
       for(let k=0;k<5;k++){
         const x=(k-2)*.105;
         const curl=new T.CatmullRomCurve3([new T.Vector3(x-.07,2.49,.28),new T.Vector3(x,2.58,.31),new T.Vector3(x+.06,2.48,.33)]);
