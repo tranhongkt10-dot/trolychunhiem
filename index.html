@@ -654,6 +654,43 @@
 .wheel-center-cap span{font-size:clamp(18px,3vw,29px);line-height:1}
 .wheel-center-cap b{font-size:clamp(8px,1.5vw,12px);letter-spacing:1px}
 @media(max-width:420px){.wheel-fairground{width:min(84vw,360px)}}
+/* Thu gọn sân chơi theo cả chiều rộng lẫn chiều cao màn hình */
+#callingView-wheel{width:min(100%,780px);max-width:780px;max-height:calc(100dvh - 150px);overflow-y:auto;overflow-x:hidden;padding:clamp(9px,1.4vh,16px)!important;gap:clamp(7px,1vh,12px)!important}
+#callingView-wheel .wheel-fairground{width:min(72vw,440px,46vh,100%);max-width:100%;padding:clamp(5px,1vh,9px)}
+#callingView-wheel .wheel-pointer{border-left-width:clamp(14px,2vw,23px);border-right-width:clamp(14px,2vw,23px);border-bottom-width:clamp(28px,5vh,43px)}
+#callingView-wheel .wheel-rim{padding:4px}
+#callingView-wheel #wheelSpinBtn{padding:clamp(9px,1.5vh,15px)!important;font-size:clamp(13px,1.8vh,17px)!important}
+@media(max-height:760px){#callingView-wheel{max-height:calc(100dvh - 115px)}#callingView-wheel .wheel-fairground{width:min(64vw,390px,43vh,100%)}#callingView-wheel .text-3xl{font-size:22px;line-height:1.1}#callingView-wheel h3{font-size:20px}}
+@media(max-width:600px){#callingView-wheel{width:100%;padding:9px!important}.carnival-wheel-scene:before,.carnival-wheel-scene:after{font-size:20px}.wheel-fairground{width:min(84vw,360px,43vh)}}
+/* Bắn vịt: hồ rộng, vịt tản đàn và tự bơi đổi hướng */
+#callingView-duck{width:min(100%,1100px);max-width:1100px;max-height:calc(100dvh - 135px);overflow-y:auto;overflow-x:hidden;padding:clamp(8px,1.2vh,14px)!important;gap:clamp(7px,1vh,12px)!important}
+#callingView-duck .duck-marquee{margin-bottom:7px;padding:6px 8px 11px;max-width:760px}
+#callingView-duck .duck-curtain-title{font-size:clamp(25px,4vh,43px);line-height:1.05}
+#callingView-duck .duck-water-stage{padding:12px 12px 66px;min-height:clamp(300px,52vh,500px);border-radius:18px}
+#callingView-duck .duck-stage-label{margin-bottom:7px;font-size:clamp(13px,1.8vh,18px)}
+#callingView-duck .duck-pond-toolbar{position:relative;z-index:3;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;margin:0 auto 6px;color:#effcff;font-size:12px;font-weight:900;text-shadow:0 1px 3px #063d70}
+#callingView-duck .duck-pond-toolbar button{border:2px solid #fff3b0;border-radius:999px;padding:7px 14px;background:linear-gradient(110deg,#f59e0b,#ea580c);color:#fff;font-weight:1000;font-size:11px;box-shadow:0 4px 10px #053c6877;cursor:pointer}
+#callingView-duck .duck-target-grid{position:relative;display:block;width:100%;height:clamp(190px,34vh,330px);min-height:190px;max-width:100%;margin:0 auto;padding:0;overflow:hidden}
+#callingView-duck .duck-target{position:absolute;left:var(--duck-left);top:var(--duck-top);width:clamp(42px,5.5vw,66px);height:clamp(48px,7vh,76px);min-height:0;padding:2px;border:1px solid #ffffff55;border-radius:45% 45% 40% 40%;background:linear-gradient(145deg,#ffffff55,#d8f7ff22);box-shadow:0 5px 12px #064b7a35;transform:translate(-50%,-50%);animation:duckSwim var(--duck-duration,4s) ease-in-out var(--duck-delay,0s) infinite alternate;z-index:2}
+#callingView-duck .duck-target:before,#callingView-duck .duck-target:after{display:none}
+#callingView-duck .duck-target-duck{font-size:clamp(30px,4vw,48px);line-height:1;filter:drop-shadow(0 3px 2px #07598566)}
+#callingView-duck .duck-target-number{font-size:8px;line-height:1;color:#fff;text-shadow:0 1px 3px #06456b}
+#callingView-duck .duck-target-hit{font-size:8px;line-height:1;color:#fff4a8;margin-top:2px}
+#callingView-duck .duck-target:hover{z-index:5;filter:brightness(1.2);transform:translate(-50%,-50%) scale(1.12)}
+#callingView-duck .duck-target.duck-shot{animation:duckShot .45s ease-out forwards;pointer-events:none}
+@keyframes duckSwim{0%{translate:0 0;rotate:-5deg}25%{translate:12px -7px;rotate:4deg}55%{translate:-9px 8px;rotate:-2deg}80%{translate:8px 5px;rotate:6deg}100%{translate:-12px -5px;rotate:-5deg}}
+@keyframes duckShot{0%{opacity:1;scale:1}35%{opacity:1;scale:1.35;filter:brightness(2)}100%{opacity:0;scale:.2;translate:0 -35px}}
+#callingView-duck .duck-shooter{position:absolute;z-index:4;left:18px;bottom:11px;display:flex;align-items:center;gap:3px;padding:4px 9px;border:2px solid #ffe6a1;border-radius:15px;background:linear-gradient(110deg,#123d68dd,#176c91dd);box-shadow:0 4px 12px #06345b77;color:#fff;font-size:10px;font-weight:1000}
+#callingView-duck .duck-shooter-person{font-size:30px;line-height:1}
+#callingView-duck .duck-shooter-gun{font-size:25px;transform:rotate(-15deg);transform-origin:left center}
+#callingView-duck .duck-shooter-firing .duck-shooter-gun{animation:duckGunKick .22s ease-in-out 2}
+#callingView-duck .duck-shooter-firing:after{content:"✦";position:absolute;left:78px;top:-7px;color:#fff5a1;font-size:28px;animation:duckMuzzle .28s ease-out}
+@keyframes duckGunKick{50%{transform:translateX(-5px) rotate(-24deg)}}
+@keyframes duckMuzzle{to{opacity:0;transform:scale(2)}}
+#callingView-duck .duck-waterline{margin-top:4px;font-size:17px}
+@media(max-height:760px){#callingView-duck{max-height:calc(100dvh - 105px)}#callingView-duck .duck-water-stage{min-height:270px;padding-bottom:58px}#callingView-duck .duck-target-grid{height:clamp(170px,30vh,260px)}}
+@media(max-width:600px){#callingView-duck .duck-target-grid{height:clamp(220px,35vh,300px)}#callingView-duck .duck-target{width:42px;height:48px}#callingView-duck .duck-target-duck{font-size:31px}#callingView-duck .duck-shooter{left:8px;bottom:8px}}
+
 </style>
 
 <style id="modern-classroom-tools">
@@ -1184,8 +1221,15 @@
   <p id="duckGameStatus" role="status" aria-live="polite" class="relative z-10 text-center text-xs font-bold text-white">🔒 Trò chơi đang đóng. Nhấn MỞ TRÒ CHƠI khi cô sẵn sàng.</p>
   <div id="duckGameBoard" class="hidden relative z-10 space-y-3">
     <div class="duck-water-stage">
-      <div class="duck-stage-label">🦆 CHỌN MỘT CHÚ VỊT 🦆</div>
+      <div class="duck-stage-label">🦆 ĐÀN VỊT ĐANG BƠI TỰ DO TRÊN HỒ 🦆</div>
+      <div class="duck-pond-toolbar">
+        <span>🎯 Cô hãy ngắm và bắn trúng một chú vịt để gọi tên học sinh!</span>
+        <button type="button" id="duckShuffleBtn" onclick="shuffleDuckFlock()">🎲 TRỘN NGẪU NHIÊN</button>
+      </div>
       <div id="duckPondContainer" class="duck-target-grid"></div>
+      <div class="duck-shooter" id="duckShooter" aria-label="Xạ thủ đang giương súng">
+        <span class="duck-shooter-person">🧑🏻‍🏫</span><span class="duck-shooter-gun">🔫</span><b>XẠ THỦ</b>
+      </div>
       <div class="duck-waterline" aria-hidden="true">〰️　〰️　〰️　〰️　〰️　〰️　〰️</div>
     </div>
   </div>
@@ -4426,13 +4470,39 @@ function switchCallingMode(mode) {
     function renderDuckPond() {
       const pond = document.getElementById('duckPondContainer');
       if (!pond) return;
-      pond.innerHTML = students.map((s, idx) => `
-        <button type="button" onclick="shootDuck(${idx})" class="duck-target" aria-label="Chọn vịt số ${idx + 1}">
+      const roster = Array.isArray(students) ? students : [];
+      if (!roster.length) {
+        pond.innerHTML = '<p class="text-center text-white font-black py-8">Chưa có học sinh trong lớp để tham gia trò chơi.</p>';
+        return;
+      }
+      const columns = Math.max(3, Math.ceil(Math.sqrt(roster.length * 1.55)));
+      const rows = Math.ceil(roster.length / columns);
+      const positions = roster.map((student, idx) => {
+        const col = idx % columns, row = Math.floor(idx / columns);
+        const cellW = 100 / columns, cellH = 100 / rows;
+        return {
+          student, idx,
+          left: Math.max(5, Math.min(95, (col + .5 + (Math.random() - .5) * .42) * cellW)),
+          top: Math.max(12, Math.min(88, (row + .5 + (Math.random() - .5) * .38) * cellH)),
+          delay: (Math.random() * -4).toFixed(2),
+          duration: (2.8 + Math.random() * 3.8).toFixed(2)
+        };
+      }).sort(() => Math.random() - .5);
+      pond.innerHTML = positions.map(({student:s,idx,left,top,delay,duration}) => `
+        <button type="button" data-student-index="${idx}" onclick="shootDuck(${idx})" class="duck-target" style="--duck-left:${left}%;--duck-top:${top}%;--duck-delay:${delay}s;--duck-duration:${duration}s" aria-label="Bắn vịt số ${idx + 1}">
           <span class="duck-target-duck" aria-hidden="true">🦆</span>
           <span class="duck-target-number">VỊT ${idx + 1}</span>
-          <span class="duck-target-hit">🎯 CHỌN</span>
+          <span class="duck-target-hit">🎯 BẮN</span>
         </button>
-      `).join('') || '<p class="col-span-full text-center text-white font-black py-8">Chưa có học sinh trong lớp để tham gia trò chơi.</p>';
+      `).join('');
+    }
+
+    function shuffleDuckFlock() {
+      const pond = document.getElementById('duckPondContainer');
+      if (!pond || !document.getElementById('duckGameBoard') || document.getElementById('duckGameBoard').classList.contains('hidden')) return;
+      renderDuckPond();
+      const status = document.getElementById('duckGameStatus');
+      if (status) status.textContent = '🎲 Đàn vịt đã được trộn! Các chú vịt đang bơi tản ra trên mặt hồ.';
     }
 
   // MỞ TRÒ CHƠI BẮN VỊT
@@ -4471,34 +4541,40 @@ function closeDuckGame() {
   }
 }
 
-// BẮN VỊT - CHỌN HỌC SINH
+// BẮN VỊT - XẠ THỦ NGẮM BẮN, GỌI TÊN HỌC SINH
 function shootDuck(idx) {
   const board = document.getElementById('duckGameBoard');
-
-  // Không cho chọn vịt khi trò chơi đang đóng
   if (!board || board.classList.contains('hidden')) return;
-
+  const target = document.querySelector('.duck-target[data-student-index="' + idx + '"]');
+  if (!target || target.disabled) return;
   const s = students[idx];
   if (!s) return;
 
+  target.disabled = true;
+  target.classList.add('duck-shot');
+  const shooter = document.getElementById('duckShooter');
+  if (shooter) {
+    shooter.classList.remove('duck-shooter-firing');
+    void shooter.offsetWidth;
+    shooter.classList.add('duck-shooter-firing');
+    setTimeout(() => shooter.classList.remove('duck-shooter-firing'), 500);
+  }
+  setTimeout(() => target.remove(), 480);
   wheelWinnerStudent = s;
 
   const img = document.getElementById('wheelWinnerImg');
   const name = document.getElementById('wheelWinnerName');
   const team = document.getElementById('wheelWinnerTeam');
   const modal = document.getElementById('wheelWinnerModal');
-
   if (img) img.src = getStudentAvatarUrl(s);
   if (name) name.innerText = s.name || '';
   if (team) team.innerText = `${s.team || ''} • Vịt số ${idx + 1}`;
-
   if (modal) modal.classList.remove('hidden');
 
-  // Mở khóa âm thanh ngay trong thao tác chạm và phát nhạc chúc mừng nhẹ.
   primeClassroomAudioFromGesture();
   playCelebrationSound().catch(err => console.error('Lỗi nhạc bắn vịt:', err));
   const status = document.getElementById('duckGameStatus');
-  if (status) status.textContent = '🎉 Đã chọn ' + (s.name || 'học sinh') + '. Chúc mừng!';
+  if (status) status.textContent = '💥 BẮN TRÚNG! Chúc mừng ' + (s.name || 'học sinh') + ' được gọi tên!';
 }
 
     // LÁI ĐÒ TRI THỨC – chọn ngẫu nhiên học sinh trong lớp, không lặp cho đến khi hết lượt.
