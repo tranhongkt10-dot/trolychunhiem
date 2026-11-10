@@ -4705,6 +4705,7 @@ function shootDuck(idx) {
       const status=document.getElementById('ferryStatus');if(status)status.textContent='Đã làm mới danh sách. Cả lớp sẵn sàng cho chuyến đò mới!';
       const result=document.getElementById('ferryResult');if(result)result.classList.add('hidden');
     }
+    // Câu hỏi chỉ dành cho học sinh ngủ quên ở cuối chuyến đò.
     const ferryQuizBank = [
       {q:'Phép tính 5 + 3 bằng bao nhiêu?',a:['7','8','9','10'],c:1},
       {q:'Chúng ta đang sống trên hành tinh nào?',a:['Sao Hỏa','Sao Kim','Trái Đất','Sao Mộc'],c:2},
@@ -4721,20 +4722,20 @@ function shootDuck(idx) {
         const feedback=document.getElementById('ferryQuizFeedback');
         const item=ferryQuizBank[index];
         if(!panel||!item){resolve();return;}
-        stage.textContent='CÂU HỎI '+(index+1)+'/5';
+        stage.textContent='CÔ HỎI BẠN NGỦ QUÊN';
         question.textContent=item.q;
-        feedback.textContent='Chọn đáp án đúng để con đò tiếp tục.';
+        feedback.textContent='Con hãy nghe câu hỏi của cô và chọn câu trả lời nhé.';
         answers.innerHTML=item.a.map((answer,i)=>'<button type="button" onclick="window.answerFerryQuestion('+i+')" class="rounded-xl border-2 border-white/30 bg-white/10 hover:bg-amber-300 hover:text-slate-900 px-3 py-3 text-sm sm:text-base font-black text-left transition">'+String.fromCharCode(65+i)+'. '+answer+'</button>').join('');
         panel.classList.remove('hidden');panel.classList.add('flex');
         const status=document.getElementById('ferryStatus');
-        if(status)status.textContent='🧠 Câu hỏi '+(index+1)+'/5: Cả lớp cùng suy nghĩ và chọn đáp án đúng nhé!';
+        if(status)status.textContent='🧠 Cô đang hỏi bạn nhỏ vừa thức dậy. Các con cùng cổ vũ bạn nhé!';
         window.answerFerryQuestion=function(choice){
           if(choice!==item.c){
             feedback.textContent='Chưa đúng rồi! Con thử suy nghĩ và chọn lại nhé.';
             feedback.classList.remove('text-emerald-300');feedback.classList.add('text-amber-200');
             return;
           }
-          feedback.textContent='🎉 Chính xác! Con đò tiếp tục hành trình.';
+          feedback.textContent='🎉 Chính xác! Con đã trả lời đúng câu hỏi của cô. Bây giờ mình cùng lên bờ nhé!';
           feedback.classList.remove('text-amber-200');feedback.classList.add('text-emerald-300');
           answers.querySelectorAll('button').forEach(b=>b.disabled=true);
           setTimeout(()=>{panel.classList.add('hidden');panel.classList.remove('flex');resolve();},650);
@@ -4772,16 +4773,11 @@ function shootDuck(idx) {
         if (status) status.textContent = '☁️ Trời hơi âm u, con đò nhẹ nhàng rời bến. Cô và các bạn bắt đầu hành trình!';
         if (current) current.textContent = '⛵ CON ĐÒ RỜI BẾN — KHỞI ĐẦU HÀNH TRÌNH';
            await wait(700);
-        await askFerryQuestion(0);
-        await askFerryQuestion(1);
         if (window.ferry3DGame && window.ferry3DGame.startStorm) window.ferry3DGame.startStorm();
         if (status) status.textContent = '⛈️ Giông bão bất ngờ kéo đến! Sóng lớn làm con thuyền chòng chành. Cá heo đang bơi theo cổ vũ cả lớp!';
         if (current) current.textContent = '🌊 VƯỢT QUA GIÔNG BÃO — CÁ HEO ĐỒNG HÀNH';
          await wait(650);
-        await askFerryQuestion(2);
-        await askFerryQuestion(3);
         if (window.ferry3DGame) await window.ferry3DGame.sailToShore();
-        await askFerryQuestion(4);
         if (scene) scene.classList.add('ferry-calm');
         if (window.ferry3DGame) window.ferry3DGame.finishTrip();
         if (status) status.textContent = '🌈 Bão đã tan, cầu vồng xuất hiện. Con đò đã cập bến an toàn!';
@@ -4811,13 +4807,27 @@ function shootDuck(idx) {
         const name = document.getElementById('ferryWinnerName');
         const meta = document.getElementById('ferryWinnerMeta');
         const card = document.getElementById('ferryQuestionCard');
-        if (title) title.textContent = '😴 CÔ ĐÃ ĐƯA BẠN ĐẾN BỜ AN TOÀN!';
+        if (title) title.textContent = '😴 CÔ GIÁO GỌI BẠN NHỎ THỨC DẬY';
         if (name) name.textContent = ferrySleepingPassenger?.name || 'Bạn nhỏ';
-        if (meta) meta.textContent = 'Con ngủ quên trên thuyền rồi! Cả lớp cùng gọi bạn thức dậy nào!';
-        if (card) { card.classList.add('hidden'); card.textContent = ''; }
+        if (meta) meta.textContent = 'Con ơi, dậy thôi! Các bạn đã lên bờ rồi. Cô mời con thức dậy, trả lời một câu hỏi rồi cùng lên bờ nhé.';
         if (result) result.classList.remove('hidden');
+        if (status) status.textContent = '💗 Cô giáo nhẹ nhàng gọi ' + (ferrySleepingPassenger?.name || 'bạn nhỏ') + ' thức dậy và mời con trả lời câu hỏi.';
+        await wait(900);
+        await askFerryQuestion(Math.floor(Math.random() * ferryQuizBank.length));
+        if (window.ferry3DGame && window.ferry3DGame.wakeSleeper) await window.ferry3DGame.wakeSleeper(ferrySleepingPassenger);
+        if (current) current.textContent = '🚶 ' + (ferrySleepingPassenger?.name || 'Bạn nhỏ') + ' đã thức dậy, đang bước lên bờ...';
+        if (status) status.textContent = '👏 ' + (ferrySleepingPassenger?.name || 'Bạn nhỏ') + ' đã trả lời đúng và đang được cô mời lên bờ.';
+        if (window.ferry3DGame) await window.ferry3DGame.disembark(ferrySleepingPassenger);
+        ferryCurrentIndex++;
+        ferryUsedPassengerIds.add(String(ferrySleepingPassenger.id || ferrySleepingPassenger.name || ferryCurrentIndex));
+        if (card) { card.classList.remove('hidden'); card.innerHTML = '🌟 Bạn đã thức dậy, trả lời đúng câu hỏi của cô và lên bờ an toàn!'; }
+        if (title) title.textContent = '🎉 CẢ LỚP ĐÃ CẬP BẾN AN TOÀN!';
+        if (meta) meta.textContent = 'Cô khen cả lớp đã hoàn thành chuyến đò tri thức!';
+        if (current) current.textContent = '🏆 CHUYẾN ĐÒ KẾT THÚC — TẤT CẢ HỌC SINH ĐÃ LÊN BỜ';
+        if (status) status.textContent = '🌈 Chúc mừng cả lớp! Bạn nhỏ ngủ quên cũng đã thức dậy, trả lời câu hỏi và lên bờ an toàn.';
         if (launch) { launch.disabled = false; launch.textContent = '🔁 TỔ CHỨC CHUYẾN ĐÒ TIẾP THEO'; launch.classList.remove('opacity-60'); }
         ferryTripRunning = false;
+        renderFerryDeck();
         renderFerryPassengers();
         playApplauseSound();
       } catch (error) {
@@ -6208,6 +6218,34 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
          teacher.userData.seated=false;
          teacher.userData.arms.forEach((a,i)=>a.rotation.z=i===0 ? .12 : -.12);
        },
+       async wakeSleeper(st){
+
+         const p=findStudent(st);if(!p)return;
+
+         const m=p.mesh;
+
+         m.userData.sleeping=false;
+
+         sleeperFocus=null;
+
+         const from=m.rotation.z,tilt=m.rotation.x,start=performance.now(),duration=520;
+
+         while(performance.now()-start<duration){
+
+           const q=Math.min(1,(performance.now()-start)/duration),e=q*q*(3-2*q);
+
+           m.rotation.z=from*(1-e);m.rotation.x=tilt*(1-e);
+
+           m.position.y=p.home.y+.10*Math.sin(q*Math.PI);
+
+           await wait(16);
+
+         }
+
+         m.rotation.z=0;m.rotation.x=0;m.position.copy(p.home);
+
+       },
+
        async disembark(st){
          const p=findStudent(st);if(!p||p.mesh.userData.sleeping)return;
          const m=p.mesh;m.userData.walking=true;
