@@ -4741,9 +4741,13 @@ function shootDuck(idx) {
       try {
         if (window.ferry3DGameReady) await window.ferry3DGameReady;
         if (window.ferry3DGame) window.ferry3DGame.beginTrip();
-        if (status) status.textContent = '⛈️ Mây đen kéo đến, mưa giông và sóng lớn. Cô giáo vững tay chèo đưa cả lớp qua sông!';
-        if (current) current.textContent = '🌩️ CON ĐÒ BẮT ĐẦU VƯỢT GIÓ BÃO';
-        await wait(2600);
+        if (status) status.textContent = '☁️ Trời hơi âm u, con đò nhẹ nhàng rời bến. Cô và các bạn bắt đầu hành trình!';
+        if (current) current.textContent = '⛵ CON ĐÒ RỜI BẾN — KHỞI ĐẦU HÀNH TRÌNH';
+        await wait(3200);
+        if (window.ferry3DGame && window.ferry3DGame.startStorm) window.ferry3DGame.startStorm();
+        if (status) status.textContent = '⛈️ Giông bão bất ngờ kéo đến! Sóng lớn làm con thuyền chòng chành. Cá heo đang bơi theo cổ vũ cả lớp!';
+        if (current) current.textContent = '🌊 VƯỢT QUA GIÔNG BÃO — CÁ HEO ĐỒNG HÀNH';
+        await wait(4200);
         if (window.ferry3DGame) await window.ferry3DGame.sailToShore();
         if (scene) scene.classList.add('ferry-calm');
         if (window.ferry3DGame) window.ferry3DGame.finishTrip();
@@ -5847,6 +5851,21 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       const pts=[];for(let j=0;j<=80;j++){const t=Math.PI*j/80;pts.push(new T.Vector3(12*Math.cos(t),7+7*Math.sin(t)-i*.38,0));}
       rainbow.add(add(rainbow,new T.TubeGeometry(new T.CatmullRomCurve3(pts),100,.17,8,false),mat(c,.42),0,0,-10));
     });rainbow.visible=false;
+    // ĐÀN CÁ HEO 3D: thân thuôn, mõm, vây lưng, vây ngực và đuôi chuyển động.
+    const dolphins=[];
+    const dolphinMat=mat(0x4f9fc4,.34,.12),dolphinLight=mat(0xb9e8ef,.42),dolphinDark=mat(0x285c82,.38);
+    for(let i=0;i<4;i++){
+      const d=new T.Group();scene.add(d);
+      const body=ball(d,.72,dolphinMat,0,0,0,1.65,.72,.78);
+      ball(d,.39,dolphinLight,.72,-.12,.02,1.05,.48,.72);
+      const snout=ball(d,.28,dolphinMat,1.08,-.04,.02,1.1,.55,.62);
+      const dorsal=add(d,new T.ConeGeometry(.28,.72,4),dolphinDark,-.12,.62,0);dorsal.rotation.z=.22;
+      const tail=new T.Group();tail.position.set(-1.05,0,0);d.add(tail);
+      const fluke=add(tail,new T.ConeGeometry(.42,.9,3),dolphinMat,-.22,0,0);fluke.rotation.z=Math.PI/2;fluke.scale.set(1,.62,1);
+      for(const side of [-1,1]){const fin=add(d,new T.ConeGeometry(.2,.62,3),dolphinDark,.05,-.42,side*.48);fin.rotation.z=.8;fin.rotation.x=side*.3;}
+      ball(d,.065,M.white,.9,.17,.48);ball(d,.032,dolphinDark,.93,.17,.53);
+      dolphins.push({group:d,tail,index:i,phase:i*1.7});
+    }
     // Cá hoạt hình bơi sát mặt nước.
     const fish=[];
     for(let i=0;i<12;i++){
@@ -6015,21 +6034,23 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     const rain=new T.Points(rainGeo,new T.PointsMaterial({color:0xe4f6ff,size:.085,transparent:true,opacity:.85}));scene.add(rain);rain.visible=false;
     const flash=new T.PointLight(0xccecff,0,90);flash.position.set(-4,14,3);scene.add(flash);
     const clock=new T.Clock();let elapsed=0,storm=false,calm=false,sailing=false,boatTarget=-8;
+    const skyCalm=new T.Color(0x79c9ee),skyStorm=new T.Color(0x34465f),skyClear=new T.Color(0x82d5fa);
     const wait=ms=>new Promise(r=>setTimeout(r,ms));
     function resize(){const w=host.clientWidth||900,h=host.clientHeight||520;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w/h>2?31:35;camera.updateProjectionMatrix();}
     resize();window.addEventListener('resize',resize);
     function findStudent(st){return studentMeshes.find(p=>p.student===st);}
     game={
       populate,
-      beginTrip(){populate();boat.position.x=-8;boatTarget=-8;storm=true;calm=false;rain.visible=true;rainbow.visible=false;},
-      async sailToShore(){sailing=true;boatTarget=8;const t=performance.now();while(performance.now()-t<5600)await wait(35);boat.position.x=8;sailing=false;storm=false;calm=true;rain.visible=false;rainbow.visible=true;},
+      beginTrip(){populate();boat.position.x=-8;boatTarget=-8;storm=false;calm=false;sailing=false;rain.visible=false;rainbow.visible=false;dolphins.forEach(d=>d.group.visible=false);scene.background.copy(skyCalm);scene.fog.color.copy(skyCalm);},
+      startStorm(){storm=true;calm=false;rain.visible=true;rainbow.visible=false;dolphins.forEach(d=>d.group.visible=true);},
+      async sailToShore(){sailing=true;boatTarget=8;const t=performance.now();while(performance.now()-t<6500)await wait(35);boat.position.x=8;sailing=false;storm=false;calm=true;rain.visible=false;dolphins.forEach(d=>d.group.visible=false);rainbow.visible=true;scene.background.copy(skyClear);scene.fog.color.copy(skyClear);},
       async disembark(st){
         const p=findStudent(st);if(!p||p.mesh.userData.sleeping)return;
         const m=p.mesh;m.userData.walking=true;const from=m.position.clone(),to=new T.Vector3(6.5,1.02,2.8),t=performance.now(),dur=1550;
         while(performance.now()-t<dur){const q=Math.min(1,(performance.now()-t)/dur),e=q*q*(3-2*q);m.position.lerpVectors(from,to,e);const phase=q*Math.PI*9;m.userData.legs.forEach((l,i)=>l.rotation.x=Math.sin(phase+i*Math.PI)*.65*(1-q*.4));m.userData.arms.forEach((a,i)=>a.rotation.z=(i?1:-1)*Math.sin(phase+i*Math.PI)*.3);await wait(28);}
         m.visible=false;m.userData.walking=false;
       },
-      finishTrip(){storm=false;calm=true;rain.visible=false;rainbow.visible=true;},
+      finishTrip(){storm=false;calm=true;rain.visible=false;rainbow.visible=true;dolphins.forEach(d=>d.group.visible=false);scene.background.copy(skyClear);scene.fog.color.copy(skyClear);},
       showSleeper(st){const p=findStudent(st);if(p){p.mesh.visible=true;p.mesh.userData.sleeping=true;p.mesh.position.copy(p.home);p.mesh.rotation.z=-.25;}},
       reset(){storm=false;calm=false;rain.visible=false;rainbow.visible=false;boat.position.x=-8;populate();}
     };
@@ -6037,12 +6058,14 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     function animate(){
       requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);elapsed+=dt;
       const pos=water.geometry.attributes.position;
-      for(let i=0;i<pos.count;i++){const x=waterBase[i*3],z=waterBase[i*3+2];const amp=storm?.28:.11;pos.array[i*3+1]=waterBase[i*3+1]+Math.sin(x*.48+elapsed*2.2)*amp+Math.cos(z*.62-elapsed*1.7)*amp*.55;}
+      for(let i=0;i<pos.count;i++){const x=waterBase[i*3],z=waterBase[i*3+2];const amp=storm?.72:(calm?.10:.075);pos.array[i*3+1]=waterBase[i*3+1]+Math.sin(x*.48+elapsed*2.2)*amp+Math.cos(z*.62-elapsed*1.7)*amp*.55;}
       pos.needsUpdate=true;water.geometry.computeVertexNormals();
       ripples.forEach((r,i)=>{r.position.x+=dt*(storm?1.8:.55);if(r.position.x>23)r.position.x=-23;r.position.y=-.18+Math.sin(elapsed*2+i)*.07;r.rotation.z=Math.sin(elapsed+i)*.18;});
       boat.position.x+=(boatTarget-boat.position.x)*Math.min(1,dt*(sailing?1.05:3));
-      boat.rotation.z=Math.sin(elapsed*(storm?4.8:1.6))*(storm?.065:.014);
-      boat.rotation.x=Math.sin(elapsed*(storm?3.7:1.1))*(storm?.04:.009);
+      boat.rotation.z=Math.sin(elapsed*(storm?7.2:1.6))*(storm?.16:.014);
+      boat.rotation.x=Math.sin(elapsed*(storm?5.6:1.1))*(storm?.105:.009);
+      boat.position.y=storm?Math.sin(elapsed*5.2)*.23:Math.sin(elapsed*1.5)*.035;
+      const targetSky=storm?skyStorm:(calm?skyClear:skyCalm);scene.background.lerp(targetSky,Math.min(1,dt*.32));scene.fog.color.lerp(targetSky,Math.min(1,dt*.32));
       // Camera bám theo thuyền, giữ cô giáo và học sinh ở trung tâm khung hình.
       const followX=boat.position.x*.72;camera.position.x+=(followX-camera.position.x)*Math.min(1,dt*1.8);camera.lookAt(followX,1.35,0);
       teacher.userData.paddle.rotation.z=Math.sin(elapsed*(storm?7:4))*.22;
@@ -6053,8 +6076,9 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       rain.visible=storm;
       if(storm){const a=rain.geometry.attributes.position.array;for(let i=0;i<rainCount;i++){a[i*3]-=dt*2.4;a[i*3+1]-=dt*19;if(a[i*3+1]<0){a[i*3+1]=20+Math.random()*5;a[i*3]=(Math.random()-.5)*50;}}rain.geometry.attributes.position.needsUpdate=true;if(Math.random()<.012){flash.intensity=6+Math.random()*5;setTimeout(()=>flash.intensity=0,90);}}
       else flash.intensity=0;
-      clouds.forEach((c,i)=>c.position.x+=dt*(storm?.12:.22)*(i%2?1:-1));
+      clouds.forEach((c,i)=>{c.position.x+=dt*(storm?.12:.22)*(i%2?1:-1);c.children.forEach(ch=>{if(ch.material&&ch.material.color)ch.material.color.lerp(new T.Color(storm?0x647487:0xffffff),Math.min(1,dt*.55));});});
       fish.forEach(f=>{f.g.position.x=f.x+Math.sin(elapsed*.6+f.p)*2;f.g.position.y=-1.1+Math.sin(elapsed*2+f.p)*.13;f.g.rotation.y=Math.sin(elapsed+f.p)*.12;});
+      dolphins.forEach(d=>{const p=elapsed*1.15+d.phase;const side=d.index%2?1:-1;d.group.position.set(boat.position.x-2.8+Math.sin(p)*2.4,-.15+Math.max(0,Math.sin(p*1.65))*.95,-4.5+side*(2.8+(d.index%2)*1.2));d.group.rotation.z=Math.sin(p*1.65)*.24;d.group.rotation.y=side*.16;d.tail.rotation.z=Math.sin(p*2.2)*.42;});
       studentMeshes.forEach(p=>{
         const m=p.mesh,u=m.userData;if(!m.visible||u.sleeping||u.walking)return;
         const phase=elapsed*2.1+u.phase;m.position.y=p.home.y+Math.sin(phase)*.035;m.rotation.y=Math.sin(phase*.45)*.035;
