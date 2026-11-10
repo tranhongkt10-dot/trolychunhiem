@@ -5925,6 +5925,15 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
      for(let i=0;i<9;i++)box(boat,12.9,.13,.43,i%2?M.wood:M.wood2,0,.77,-1.72+i*.43);
      for(let i=0;i<17;i++)box(boat,.045,.035,4.0,M.gold,-6.8+i*.85,.86,0);
      rod(boat,[-6.9,.1,0],[6.9,.1,0],.16,.12,M.wood);
+     // Bốn băng ghế dọc thân thuyền để học sinh thực sự ngồi trong lúc di chuyển.
+     for(const z of [-1.55,-.52,.52,1.55]){
+       box(boat,10.2,.18,.58,M.wood,-.1,1.12,z);
+       for(const x of [-4.4,4.4])box(boat,.16,.82,.16,M.wood,x,.72,z);
+     }
+     // Ghế riêng cho cô giáo ở đầu thuyền.
+     box(boat,1.55,.18,.9,M.wood,-5.65,1.48,0);
+     box(boat,.16,.82,.16,M.wood,-6.25,1.08,0);
+     box(boat,.16,.82,.16,M.wood,-5.05,1.08,0);
     for(const side of [-1,1]){
       const curve=new T.CatmullRomCurve3([new T.Vector3(-7.1,.9,side*2.28),new T.Vector3(-5.5,.62,side*2.55),new T.Vector3(0,.6,side*2.58),new T.Vector3(5.5,.68,side*2.42),new T.Vector3(7.25,1.0,side*2.12)]);
       add(boat,new T.TubeGeometry(curve,70,.105,12,false),M.gold);
@@ -6060,7 +6069,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       const cols=10,rowZ=[-1.55,-.52,.52,1.55];
       roster.forEach((st,i)=>{
         const mesh=character(st,i,false),col=i%cols,row=Math.floor(i/cols)%4;
-        mesh.position.set(-4.55+col*.98,1.02,rowZ[row]);
+        mesh.position.set(-4.55+col*.98,.76,rowZ[row]);
         if(st===sleeper){mesh.userData.sleeping=true;mesh.rotation.z=-.2;}
         boat.add(mesh);studentMeshes.push({student:st,mesh,home:mesh.position.clone()});
       });
@@ -6096,7 +6105,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
          const m=p.mesh;m.userData.walking=true;
          const standFrom=m.userData.legs.map(l=>l.rotation.x),standAt=performance.now();
          while(performance.now()-standAt<180){const q=Math.min(1,(performance.now()-standAt)/180);m.userData.legs.forEach((l,i)=>l.rotation.x=standFrom[i]*(1-q));await wait(12);}
-         const from=m.position.clone(),to=new T.Vector3(7.65,1.02,2.8),t=performance.now(),dur=460;
+         const from=m.position.clone(),to=new T.Vector3(7.65,.15,2.8),t=performance.now(),dur=460;
          while(performance.now()-t<dur){const q=Math.min(1,(performance.now()-t)/dur),e=q*q*(3-2*q);m.position.lerpVectors(from,to,e);const phase=q*Math.PI*7;m.userData.legs.forEach((l,i)=>l.rotation.x=Math.sin(phase+i*Math.PI)*.58*(1-q*.35));m.userData.arms.forEach((a,i)=>a.rotation.z=(i?1:-1)*Math.sin(phase+i*Math.PI)*.26);await wait(15);}
          m.visible=false;m.userData.walking=false;m.userData.seated=false;
        },
