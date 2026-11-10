@@ -1268,43 +1268,58 @@
 #ferryScene.ferry-calm .ferry-wave{opacity:.35;animation-duration:5s}
 @media(max-width:640px){#ferryScene{min-height:390px}#ferryTeacher{left:calc(50% - 128px);top:36%;width:88px;height:112px}#ferryTeacher svg{width:88px;height:112px}#ferryShore{width:32%;font-size:9px}}
 
-/* BỐ CỤC VỪA MÀN HÌNH: giao diện lái đò gọn, rõ và không tràn khung */
-#callingView-ferry{width:100%;max-width:100%;min-width:0}
-#callingView-ferry>div:first-child{padding:clamp(9px,1.2vh,16px)!important}
-#callingView-ferry>div:first-child .text-4xl{font-size:clamp(22px,3vh,32px);line-height:1.05}
-#callingView-ferry>div:first-child h3{font-size:clamp(19px,2.5vh,27px);line-height:1.15}
-#callingView-ferry>div:nth-child(2){padding:clamp(8px,1.1vh,14px)!important;gap:clamp(8px,1vh,12px)!important;min-width:0}
+/* BỐ CỤC PC: cân đối hai cột, giới hạn chiều cao theo màn hình và tránh tràn ngang/dọc */
+#callingView-ferry{width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+#callingView-ferry,#callingView-ferry *{box-sizing:border-box}
+#callingView-ferry>div:first-child{padding:clamp(8px,1.1vh,13px)!important}
+#callingView-ferry>div:first-child .text-4xl{font-size:clamp(20px,2.8vh,29px);line-height:1}
+#callingView-ferry>div:first-child h3{font-size:clamp(19px,2.6vh,27px);line-height:1.1}
+#callingView-ferry>div:first-child p{font-size:clamp(11px,1.35vh,13px)}
+#callingView-ferry>div:nth-child(2){padding:clamp(8px,1vh,12px)!important;gap:clamp(8px,1vh,12px)!important;min-width:0}
 #callingView-ferry>div:nth-child(2)>div{min-width:0;min-height:0}
-#callingView-ferry h4{font-size:clamp(12px,1.4vh,15px)}
-#callingView-ferry label{line-height:1.25}
-#callingView-ferry input,#callingView-ferry select,#callingView-ferry textarea{font-size:clamp(12px,1.35vh,14px)}
-#ferryScene{width:100%;height:clamp(320px,52vh,620px);min-height:320px}
+#callingView-ferry h4{font-size:clamp(12px,1.45vh,15px);margin-bottom:clamp(5px,.8vh,9px)}
+#callingView-ferry label{line-height:1.2}
+#callingView-ferry input,#callingView-ferry select,#callingView-ferry textarea{font-size:clamp(12px,1.35vh,14px);min-width:0}
+#callingView-ferry>div:nth-child(2)>div:first-child>div{padding:clamp(9px,1vh,13px)!important}
+#ferryScene{width:100%;height:clamp(270px,43vh,490px)!important;min-height:270px!important;max-height:490px;border-radius:18px}
 #ferryCurrentName{max-width:82%;overflow:hidden;text-overflow:ellipsis}
-#ferryResult{max-height:30vh;overflow:auto}
+#ferryResult{max-height:18vh;overflow:auto}
+#ferryPassengerList{max-height:clamp(90px,14vh,150px);overflow-y:auto}
 @media(min-width:1024px){
-  #callingView-ferry>div:nth-child(2){height:calc(100dvh - 170px);min-height:540px;grid-template-columns:minmax(285px,.78fr) minmax(0,1.22fr);overflow:hidden}
-  #callingView-ferry>div:nth-child(2)>div:first-child{overflow-y:auto;overscroll-behavior:contain;padding-right:4px}
-  #callingView-ferry>div:nth-child(2)>div:last-child{display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain}
-  #callingView-ferry>div:nth-child(2)>div:last-child #ferryScene{height:clamp(360px,54vh,620px);flex:0 0 auto}
-  #callingView-ferry>div:nth-child(2)>div:last-child #ferryLaunchBtn{padding-top:clamp(9px,1.3vh,15px);padding-bottom:clamp(9px,1.3vh,15px);font-size:clamp(14px,1.8vh,18px)}
-  #callingView-ferry>div:nth-child(2)>div:last-child .space-y-4{gap:clamp(7px,1vh,12px)}
-  #ferryPassengerList{max-height:clamp(100px,18vh,190px)}
+  #callingView-ferry>div:nth-child(2){height:calc(100vh - 205px);height:calc(100dvh - 205px);min-height:430px;max-height:720px;grid-template-columns:minmax(285px,.82fr) minmax(0,1.18fr);overflow:hidden;align-items:stretch}
+  #callingView-ferry>div:nth-child(2)>div:first-child{display:flex;flex-direction:column;gap:clamp(7px,.9vh,11px);overflow:hidden;padding-right:3px}
+  #callingView-ferry>div:nth-child(2)>div:first-child>div:first-child{flex:0 0 auto}
+  #callingView-ferry>div:nth-child(2)>div:first-child>div:last-child{flex:1 1 auto;min-height:0;overflow:hidden}
+  #callingView-ferry>div:nth-child(2)>div:last-child{display:flex;flex-direction:column;gap:clamp(7px,.9vh,11px);min-height:0;overflow-y:auto;overscroll-behavior:contain}
+  #callingView-ferry>div:nth-child(2)>div:last-child #ferryScene{height:clamp(270px,43vh,490px)!important;flex:0 0 auto}
+  #callingView-ferry>div:nth-child(2)>div:last-child #ferryLaunchBtn{padding-top:9px;padding-bottom:9px;font-size:14px;flex:0 0 auto}
+  #ferryPassengerList{max-height:clamp(90px,14vh,150px)}
+}
+@media(min-width:1024px) and (max-height:760px){
+  #callingView-ferry>div:nth-child(2){height:calc(100dvh - 180px);min-height:390px}
+  #callingView-ferry>div:nth-child(2)>div:first-child>div:first-child{padding:8px!important}
+  #callingView-ferry>div:nth-child(2)>div:first-child>div:last-child{padding:8px!important}
+  #callingView-ferry .grid.grid-cols-2{gap:6px}
+  #callingView-ferry label{font-size:11px}
+  #callingView-ferry input,#callingView-ferry select,#callingView-ferry textarea{padding:7px!important}
+  #ferryScene{height:clamp(250px,39vh,390px)!important;min-height:250px!important}
+  #callingView-ferry>div:nth-child(2)>div:last-child #ferryScene{height:clamp(250px,39vh,390px)!important}
+  #ferryPassengerList{max-height:100px}
 }
 @media(max-width:1023px){
-  #callingView-ferry>div:nth-child(2){grid-template-columns:minmax(0,1fr)!important}
+  #callingView-ferry>div:nth-child(2){grid-template-columns:minmax(0,1fr)!important;height:auto;max-height:none;overflow:visible}
   #callingView-ferry>div:nth-child(2)>div:first-child{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:start}
   #callingView-ferry>div:nth-child(2)>div:first-child>div:first-child{grid-column:1/-1}
   #callingView-ferry>div:nth-child(2)>div:first-child>div:last-child{grid-column:1/-1}
-  #callingView-ferry>div:nth-child(2)>div:last-child #ferryScene{height:clamp(300px,48vh,480px);min-height:300px}
+  #ferryScene{height:clamp(280px,45vh,440px)!important;min-height:280px!important}
 }
 @media(max-width:600px){
   #callingView-ferry>div:first-child{padding:9px!important}
-  #callingView-ferry>div:first-child p{font-size:11px}
   #callingView-ferry>div:nth-child(2)>div:first-child{grid-template-columns:minmax(0,1fr)}
   #callingView-ferry>div:nth-child(2)>div:first-child>div:first-child,
   #callingView-ferry>div:nth-child(2)>div:first-child>div:last-child{grid-column:1}
-  #callingView-ferry>div:nth-child(2)>div:first-child>div{padding:10px!important}
-  #ferryScene{border-radius:14px}
+  #callingView-ferry>div:nth-child(2)>div:first-child>div{padding:9px!important}
+  #ferryScene{height:300px!important;min-height:300px!important;border-radius:14px}
   #ferryScene>div:first-of-type{font-size:9px}
   #ferryProgress{padding:5px 8px!important}
 }
