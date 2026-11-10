@@ -4743,11 +4743,11 @@ function shootDuck(idx) {
         if (window.ferry3DGame) window.ferry3DGame.beginTrip();
         if (status) status.textContent = '☁️ Trời hơi âm u, con đò nhẹ nhàng rời bến. Cô và các bạn bắt đầu hành trình!';
         if (current) current.textContent = '⛵ CON ĐÒ RỜI BẾN — KHỞI ĐẦU HÀNH TRÌNH';
-        await wait(3200);
+           await wait(1800);
         if (window.ferry3DGame && window.ferry3DGame.startStorm) window.ferry3DGame.startStorm();
         if (status) status.textContent = '⛈️ Giông bão bất ngờ kéo đến! Sóng lớn làm con thuyền chòng chành. Cá heo đang bơi theo cổ vũ cả lớp!';
         if (current) current.textContent = '🌊 VƯỢT QUA GIÔNG BÃO — CÁ HEO ĐỒNG HÀNH';
-        await wait(4200);
+         await wait(2800);
         if (window.ferry3DGame) await window.ferry3DGame.sailToShore();
         if (scene) scene.classList.add('ferry-calm');
         if (window.ferry3DGame) window.ferry3DGame.finishTrip();
@@ -4768,7 +4768,7 @@ function shootDuck(idx) {
           renderFerryDeck();
           renderFerryPassengers();
           playApplauseSound();
-          await wait(Math.max(650, stopDelay * .48));
+           await wait(Math.max(100, stopDelay * .10));
         }
         if (shoreStudent) shoreStudent.style.display = 'none';
         if (current) current.textContent = '😴 Ơ kìa! Còn một bạn đang ngủ quên trên thuyền!';
@@ -5881,14 +5881,26 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     const dolphinMat=mat(0x4f9fc4,.34,.12),dolphinLight=mat(0xb9e8ef,.42),dolphinDark=mat(0x285c82,.38);
     for(let i=0;i<4;i++){
       const d=new T.Group();scene.add(d);
-      const body=ball(d,.72,dolphinMat,0,0,0,1.65,.72,.78);
-      ball(d,.39,dolphinLight,.72,-.12,.02,1.05,.48,.72);
-      const snout=ball(d,.28,dolphinMat,1.08,-.04,.02,1.1,.55,.62);
-      const dorsal=add(d,new T.ConeGeometry(.28,.72,4),dolphinDark,-.12,.62,0);dorsal.rotation.z=.22;
-      const tail=new T.Group();tail.position.set(-1.05,0,0);d.add(tail);
-      const fluke=add(tail,new T.ConeGeometry(.42,.9,3),dolphinMat,-.22,0,0);fluke.rotation.z=Math.PI/2;fluke.scale.set(1,.62,1);
-      for(const side of [-1,1]){const fin=add(d,new T.ConeGeometry(.2,.62,3),dolphinDark,.05,-.42,side*.48);fin.rotation.z=.8;fin.rotation.x=side*.3;}
-      ball(d,.065,M.white,.9,.17,.48);ball(d,.032,dolphinDark,.93,.17,.53);
+      // Cá heo có thân thuôn, bụng sáng, mõm dài, vây lưng cong và đuôi chẻ hai thùy.
+      ball(d,.68,dolphinMat,0,0,0,1.85,.72,.72);
+      ball(d,.43,dolphinLight,.12,-.29,.015,1.55,.42,.68);
+      const rostrum=add(d,new T.CapsuleGeometry(.22,.72,5,12),dolphinMat,1.12,-.08,0);
+      rostrum.rotation.z=Math.PI/2;rostrum.scale.set(1,.72,.78);
+      const dorsalShape=new T.Shape();dorsalShape.moveTo(-.42,0);dorsalShape.quadraticCurveTo(-.12,.12,.02,.72);dorsalShape.quadraticCurveTo(.22,.43,.38,0);dorsalShape.closePath();
+      add(d,new T.ExtrudeGeometry(dorsalShape,{depth:.12,bevelEnabled:true,bevelSize:.04,bevelThickness:.035,bevelSegments:2}),dolphinDark,-.2,.48,-.06);
+      const tail=new T.Group();tail.position.set(-1.62,0,0);d.add(tail);
+      for(const side of [-1,1]){
+        const lobe=ball(tail,.42,dolphinMat,-.2,side*.32,0,.72,.42,.3);lobe.rotation.z=side*.45;
+        const finShape=new T.Shape();finShape.moveTo(-.28,0);finShape.quadraticCurveTo(.02,-.12,.52,-.5);finShape.quadraticCurveTo(.42,-.04,.16,.18);finShape.closePath();
+        const fin=add(d,new T.ExtrudeGeometry(finShape,{depth:.1,bevelEnabled:true,bevelSize:.025,bevelThickness:.02,bevelSegments:2}),dolphinDark,-.1,-.35,side*.35);
+        fin.rotation.x=side*.35;
+      }
+      for(const side of [-1,1]){
+        const pectoral=add(d,new T.ConeGeometry(.2,.72,4),dolphinDark,.05,-.43,side*.48);
+        pectoral.rotation.z=1.15;pectoral.rotation.x=side*.38;
+      }
+      ball(d,.075,M.white,.98,.16,.48);ball(d,.038,dolphinDark,1.01,.16,.535);
+      dolphins.push({group:d,tail,index:i,phase:i*1.7});
       dolphins.push({group:d,tail,index:i,phase:i*1.7});
     }
     // Cá hoạt hình bơi sát mặt nước.
@@ -5910,8 +5922,10 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     hullGeo.rotateX(Math.PI/2);
     const hull=add(boat,hullGeo,mat(0x63351f,.56),0,.12,0);hull.castShadow=true;
     // Ván sàn, sống thuyền và nẹp đồng sáng.
-    box(boat,14.1,.22,5.0,M.wood2,0,.82,0);
-    for(let i=0;i<17;i++)box(boat,.045,.035,4.85,M.gold,-6.8+i*.85,.95,0);
+     // Sàn ghép ván ngang, để lộ dáng thân thuyền thuôn hai đầu.
+     for(let i=0;i<9;i++)box(boat,12.9,.13,.43,i%2?M.wood:M.wood2,0,.77,-1.72+i*.43);
+     for(let i=0;i<17;i++)box(boat,.045,.035,4.0,M.gold,-6.8+i*.85,.86,0);
+     rod(boat,[-6.9,.1,0],[6.9,.1,0],.16,.12,M.wood);
     for(const side of [-1,1]){
       const curve=new T.CatmullRomCurve3([new T.Vector3(-7.1,.9,side*2.28),new T.Vector3(-5.5,.62,side*2.55),new T.Vector3(0,.6,side*2.58),new T.Vector3(5.5,.68,side*2.42),new T.Vector3(7.25,1.0,side*2.12)]);
       add(boat,new T.TubeGeometry(curve,70,.105,12,false),M.gold);
@@ -6033,7 +6047,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       }
       const nm=isTeacher?'CÔ GIÁO':String(student?.name||student?.fullName||'Bạn nhỏ');
       g.add(makeLabel(nm,isTeacher));
-      g.userData={...g.userData,student,arms,legs,eyes,phase:index*.71,sleeping:false,walking:false,nextBlink:2+Math.random()*2,blink:0};
+       legs.forEach(l=>{l.rotation.x=isTeacher?-.62:-1.02;});
       g.scale.setScalar(isTeacher?1.22:1.02);
       return g;
     }
@@ -6068,13 +6082,25 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       populate,
       beginTrip(){populate();boat.position.x=-10;boatTarget=-8.5;storm=false;calm=false;sailing=false;rain.visible=false;rainbow.visible=false;dolphins.forEach(d=>d.group.visible=false);scene.background.copy(skyCalm);scene.fog.color.copy(skyCalm);},
       startStorm(){storm=true;calm=false;boatTarget=0;rain.visible=true;rainbow.visible=false;lightningGroup.visible=true;dolphins.forEach(d=>d.group.visible=true);},
-      async sailToShore(){sailing=true;boatTarget=10;const t=performance.now();while(performance.now()-t<6500)await wait(35);boat.position.x=10;sailing=false;storm=false;calm=true;rain.visible=false;dolphins.forEach(d=>d.group.visible=false);lightningGroup.visible=false;rainbow.visible=true;scene.background.copy(skyClear);scene.fog.color.copy(skyClear);},
-      async disembark(st){
-        const p=findStudent(st);if(!p||p.mesh.userData.sleeping)return;
-        const m=p.mesh;m.userData.walking=true;const from=m.position.clone(),to=new T.Vector3(7.1,1.02,2.8),t=performance.now(),dur=1550;
-        while(performance.now()-t<dur){const q=Math.min(1,(performance.now()-t)/dur),e=q*q*(3-2*q);m.position.lerpVectors(from,to,e);const phase=q*Math.PI*9;m.userData.legs.forEach((l,i)=>l.rotation.x=Math.sin(phase+i*Math.PI)*.65*(1-q*.4));m.userData.arms.forEach((a,i)=>a.rotation.z=(i?1:-1)*Math.sin(phase+i*Math.PI)*.3);await wait(28);}
-        m.visible=false;m.userData.walking=false;
-      },
+       async sailToShore(){
+         sailing=true;boatTarget=10;const t=performance.now();
+         while(performance.now()-t<3900)await wait(30);
+         boat.position.x=10;sailing=false;storm=false;calm=true;rain.visible=false;
+         lightningGroup.visible=false;rainbow.visible=true;scene.background.copy(skyClear);scene.fog.color.copy(skyClear);
+         const st=performance.now(),from=teacher.userData.legs.map(l=>l.rotation.x);
+         while(performance.now()-st<320){const q=Math.min(1,(performance.now()-st)/320);teacher.userData.legs.forEach((l,i)=>l.rotation.x=from[i]*(1-q));await wait(15);}
+         teacher.userData.seated=false;
+       },
+       async disembark(st){
+         const p=findStudent(st);if(!p||p.mesh.userData.sleeping)return;
+         const m=p.mesh;m.userData.walking=true;
+         const standFrom=m.userData.legs.map(l=>l.rotation.x),standAt=performance.now();
+         while(performance.now()-standAt<180){const q=Math.min(1,(performance.now()-standAt)/180);m.userData.legs.forEach((l,i)=>l.rotation.x=standFrom[i]*(1-q));await wait(12);}
+         const from=m.position.clone(),to=new T.Vector3(7.65,1.02,2.8),t=performance.now(),dur=460;
+         while(performance.now()-t<dur){const q=Math.min(1,(performance.now()-t)/dur),e=q*q*(3-2*q);m.position.lerpVectors(from,to,e);const phase=q*Math.PI*7;m.userData.legs.forEach((l,i)=>l.rotation.x=Math.sin(phase+i*Math.PI)*.58*(1-q*.35));m.userData.arms.forEach((a,i)=>a.rotation.z=(i?1:-1)*Math.sin(phase+i*Math.PI)*.26);await wait(15);}
+         m.visible=false;m.userData.walking=false;m.userData.seated=false;
+       },
+       
       finishTrip(){storm=false;calm=true;rain.visible=false;lightningGroup.visible=false;rainbow.visible=true;dolphins.forEach(d=>d.group.visible=false);scene.background.copy(skyClear);scene.fog.color.copy(skyClear);},
       showSleeper(st){const p=findStudent(st);if(p){p.mesh.visible=true;p.mesh.userData.sleeping=true;p.mesh.position.copy(p.home);p.mesh.rotation.z=-.25;}},
       reset(){storm=false;calm=false;rain.visible=false;lightningGroup.visible=false;rainbow.visible=false;dolphins.forEach(d=>d.group.visible=false);boat.position.x=-10;boatTarget=-10;populate();}
@@ -6099,11 +6125,11 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       teacher.userData.nextBlink-=dt;if(teacher.userData.nextBlink<=0){teacher.userData.blink=.16;teacher.userData.nextBlink=2.5+Math.random()*3;}
       if(teacher.userData.blink>0){teacher.userData.blink=Math.max(0,teacher.userData.blink-dt);const k=Math.max(.08,Math.min(1,teacher.userData.blink/.08));teacher.userData.eyes.forEach(e=>e.scale.y=k);}
       rain.visible=storm;
-      if(storm){const a=rain.geometry.attributes.position.array;for(let i=0;i<rainCount;i++){a[i*3]-=dt*3.8;a[i*3+1]-=dt*24;if(a[i*3+1]<0){a[i*3+1]=20+Math.random()*5;a[i*3]=(Math.random()-.5)*50;}}rain.geometry.attributes.position.needsUpdate=true;if(Math.random()<.018){flash.intensity=9+Math.random()*8;lightningGroup.visible=true;setTimeout(()=>{flash.intensity=0;lightningGroup.visible=false;},130);}}
-      else flash.intensity=0;
+       if(storm){sunBall.visible=false;sunGlow.intensity=0;const a=rain.geometry.attributes.position.array;
+       else {flash.intensity=0;sunBall.visible=true;sunGlow.intensity=calm?1.35:1.2;}
       clouds.forEach((c,i)=>{c.position.x+=dt*(storm?.12:.22)*(i%2?1:-1);c.children.forEach(ch=>{if(ch.material&&ch.material.color)ch.material.color.lerp(new T.Color(storm?0x647487:0xffffff),Math.min(1,dt*.55));});});
       fish.forEach(f=>{f.g.position.x=f.x+Math.sin(elapsed*.6+f.p)*2;f.g.position.y=-1.1+Math.sin(elapsed*2+f.p)*.13;f.g.rotation.y=Math.sin(elapsed+f.p)*.12;});
-      dolphins.forEach(d=>{const p=elapsed*1.15+d.phase;const side=d.index%2?1:-1;d.group.position.set(boat.position.x-2.8+Math.sin(p)*2.4,-.15+Math.pow(Math.max(0,Math.sin(p*1.65)),1.5)*2.15,-4.5+side*(2.8+(d.index%2)*1.2));d.group.rotation.z=Math.sin(p*1.65)*.34;d.group.rotation.y=side*.16;d.group.rotation.x=Math.cos(p*1.65)*.16;d.tail.rotation.z=Math.sin(p*2.2)*.42;});
+       dolphins.forEach(d=>{const p=elapsed*1.25+d.phase;const side=d.index%2?1:-1;const leap=Math.pow(Math.max(0,Math.sin(p*1.55)),1.7);d.group.position.set(boat.position.x-3.1+Math.sin(p)*2.1,-.34+leap*2.35,-4.2+side*(2.5+(d.index%2)*1.35));d.group.rotation.z=Math.sin(p*1.55)*.22;d.group.rotation.y=side*.12;d.group.rotation.x=Math.cos(p*1.55)*.12;d.tail.rotation.z=Math.sin(p*2.4)*.48;});
       studentMeshes.forEach(p=>{
         const m=p.mesh,u=m.userData;if(!m.visible||u.sleeping||u.walking)return;
         const phase=elapsed*2.1+u.phase;m.position.y=p.home.y+Math.sin(phase)*.035;m.rotation.y=Math.sin(phase*.45)*.035;
