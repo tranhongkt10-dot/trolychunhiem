@@ -1332,13 +1332,7 @@
                   <select id="ferryDuration" class="mt-1 w-full border border-cyan-200 rounded-xl p-2.5 text-sm font-bold"><option value="3">3 giây</option><option value="5" selected>5 giây</option><option value="8">8 giây</option><option value="10">10 giây</option></select>
                 </label>
               </div>
-              <label class="flex items-center gap-2 mt-4 text-sm font-bold text-gray-700"><input id="ferryAskEnabled" type="checkbox" class="w-4 h-4 accent-teal-600" checked> Hỏi bài khi hành khách lên bờ</label>
-              <label class="block mt-2 text-xs font-bold text-gray-600">Câu hỏi dành cho hành khách
-                <textarea id="ferryQuestion" rows="2" class="mt-1 w-full border border-cyan-200 rounded-xl p-3 text-sm font-medium" placeholder="Ví dụ: Em hãy nêu kết quả phép tính 7 × 8?"></textarea>
-              </label>
-              <label class="block mt-2 text-xs font-bold text-gray-600">Thời gian trả lời
-                <div class="flex items-center gap-2 mt-1"><input id="ferryAnswerSeconds" type="number" min="5" max="120" value="15" class="w-24 border border-cyan-200 rounded-xl p-2.5 text-sm font-bold"><span class="text-xs text-gray-500">giây</span></div>
-              </label>
+              <div class="mt-4 rounded-xl border border-cyan-200 bg-cyan-50 p-3 text-sm font-bold text-teal-900">🧠 Trò chơi có sẵn 5 câu hỏi trắc nghiệm phù hợp học sinh tiểu học. Cô không cần nhập câu hỏi hay chuẩn bị đáp án.</div>
             </div>
             <div class="rounded-2xl bg-white/90 border border-cyan-100 p-4 shadow-sm">
               <div class="flex items-center justify-between gap-2 mb-2"><h4 class="font-black text-teal-900">👥 DANH SÁCH HÀNH KHÁCH</h4><button onclick="resetFerryPassengers()" class="text-xs font-black text-teal-700 bg-teal-50 rounded-lg px-3 py-2">↻ Cho đi lại</button></div>
@@ -1480,6 +1474,12 @@
 <path d="M65 -4 L45 8 M355 -4 L375 8" stroke="#92400e" stroke-width="5" stroke-linecap="round"/>
 </svg></div></div>
 <div id="ferryShoreStudent"></div><div class="absolute z-[9] left-3 bottom-3 text-white text-[10px] font-black drop-shadow">🌊 SÓNG LỚN • GIÓ MẠNH • SẤM CHỚP</div><div id="ferryCurrentName" class="absolute z-[10] left-1/2 -translate-x-1/2 bottom-3 bg-white/95 text-slate-900 rounded-full px-4 py-2 font-black text-xs shadow-lg whitespace-nowrap">Sẵn sàng khởi hành!</div>
+<div id="ferryQuizPanel" class="hidden absolute z-40 inset-3 sm:inset-8 rounded-2xl bg-slate-950/90 backdrop-blur-sm border-2 border-amber-300 p-3 sm:p-5 flex-col justify-center items-center text-center text-white shadow-2xl">
+  <div id="ferryQuizStage" class="text-xs sm:text-sm font-black tracking-widest text-amber-300">CÂU HỎI 1/5</div>
+  <div id="ferryQuizQuestion" class="text-lg sm:text-2xl font-black leading-snug my-3 max-w-2xl">Câu hỏi</div>
+  <div id="ferryQuizAnswers" class="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-2xl"></div>
+  <div id="ferryQuizFeedback" class="mt-3 min-h-6 text-sm font-bold text-amber-200">Chọn đáp án đúng để con đò tiếp tục.</div>
+</div>
 </div>
 <div id="ferryResult" class="hidden bg-gradient-to-r from-amber-100 via-yellow-50 to-orange-100 text-amber-950 border-2 border-amber-300 rounded-2xl p-4 text-center shadow-xl"><div class="text-3xl">🎉🏆🎊</div><div id="ferryWinnerTitle" class="text-xs font-black mt-1">CHÚC MỪNG HÀNH KHÁCH CẬP BẾN!</div><div id="ferryWinnerName" class="text-2xl font-black mt-1"></div><div id="ferryWinnerMeta" class="text-xs font-bold mt-1"></div><div id="ferryQuestionCard" class="hidden mt-3 bg-white rounded-xl p-3 text-sm font-bold"></div></div>
             <button id="ferryLaunchBtn" onclick="startFerryTrip()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white text-lg font-black shadow-lg border-2 border-white hover:brightness-105 active:scale-95">⛵ KHỞI HÀNH CHUYẾN ĐÒ</button>
@@ -4710,6 +4710,42 @@ function shootDuck(idx) {
       const status=document.getElementById('ferryStatus');if(status)status.textContent='Đã làm mới danh sách. Cả lớp sẵn sàng cho chuyến đò mới!';
       const result=document.getElementById('ferryResult');if(result)result.classList.add('hidden');
     }
+    const ferryQuizBank = [
+      {q:'Phép tính 5 + 3 bằng bao nhiêu?',a:['7','8','9','10'],c:1},
+      {q:'Chúng ta đang sống trên hành tinh nào?',a:['Sao Hỏa','Sao Kim','Trái Đất','Sao Mộc'],c:2},
+      {q:'Một mét bằng bao nhiêu xăng-ti-mét?',a:['10 cm','50 cm','100 cm','1.000 cm'],c:2},
+      {q:'Từ nào sau đây chỉ một con vật?',a:['Bông hoa','Con mèo','Cây bút','Cái bàn'],c:1},
+      {q:'Một tuần lễ có bao nhiêu ngày?',a:['5 ngày','6 ngày','7 ngày','8 ngày'],c:2}
+    ];
+    function askFerryQuestion(index) {
+      return new Promise(resolve => {
+        const panel=document.getElementById('ferryQuizPanel');
+        const stage=document.getElementById('ferryQuizStage');
+        const question=document.getElementById('ferryQuizQuestion');
+        const answers=document.getElementById('ferryQuizAnswers');
+        const feedback=document.getElementById('ferryQuizFeedback');
+        const item=ferryQuizBank[index];
+        if(!panel||!item){resolve();return;}
+        stage.textContent='CÂU HỎI '+(index+1)+'/5';
+        question.textContent=item.q;
+        feedback.textContent='Chọn đáp án đúng để con đò tiếp tục.';
+        answers.innerHTML=item.a.map((answer,i)=>'<button type="button" onclick="window.answerFerryQuestion('+i+')" class="rounded-xl border-2 border-white/30 bg-white/10 hover:bg-amber-300 hover:text-slate-900 px-3 py-3 text-sm sm:text-base font-black text-left transition">'+String.fromCharCode(65+i)+'. '+answer+'</button>').join('');
+        panel.classList.remove('hidden');panel.classList.add('flex');
+        const status=document.getElementById('ferryStatus');
+        if(status)status.textContent='🧠 Câu hỏi '+(index+1)+'/5: Cả lớp cùng suy nghĩ và chọn đáp án đúng nhé!';
+        window.answerFerryQuestion=function(choice){
+          if(choice!==item.c){
+            feedback.textContent='Chưa đúng rồi! Con thử suy nghĩ và chọn lại nhé.';
+            feedback.classList.remove('text-emerald-300');feedback.classList.add('text-amber-200');
+            return;
+          }
+          feedback.textContent='🎉 Chính xác! Con đò tiếp tục hành trình.';
+          feedback.classList.remove('text-amber-200');feedback.classList.add('text-emerald-300');
+          answers.querySelectorAll('button').forEach(b=>b.disabled=true);
+          setTimeout(()=>{panel.classList.add('hidden');panel.classList.remove('flex');resolve();},650);
+        };
+      });
+    }
     async function startFerryTrip() {
       if (ferryTripRunning) return;
       if (!Array.isArray(students) || students.length < 2) {
@@ -4743,12 +4779,17 @@ function shootDuck(idx) {
         if (window.ferry3DGame) window.ferry3DGame.beginTrip();
         if (status) status.textContent = '☁️ Trời hơi âm u, con đò nhẹ nhàng rời bến. Cô và các bạn bắt đầu hành trình!';
         if (current) current.textContent = '⛵ CON ĐÒ RỜI BẾN — KHỞI ĐẦU HÀNH TRÌNH';
-           await wait(1800);
+           await wait(700);
+        await askFerryQuestion(0);
+        await askFerryQuestion(1);
         if (window.ferry3DGame && window.ferry3DGame.startStorm) window.ferry3DGame.startStorm();
         if (status) status.textContent = '⛈️ Giông bão bất ngờ kéo đến! Sóng lớn làm con thuyền chòng chành. Cá heo đang bơi theo cổ vũ cả lớp!';
         if (current) current.textContent = '🌊 VƯỢT QUA GIÔNG BÃO — CÁ HEO ĐỒNG HÀNH';
-         await wait(2800);
+         await wait(650);
+        await askFerryQuestion(2);
+        await askFerryQuestion(3);
         if (window.ferry3DGame) await window.ferry3DGame.sailToShore();
+        await askFerryQuestion(4);
         if (scene) scene.classList.add('ferry-calm');
         if (window.ferry3DGame) window.ferry3DGame.finishTrip();
         if (status) status.textContent = '🌈 Bão đã tan, cầu vồng xuất hiện. Con đò đã cập bến an toàn!';
@@ -4767,8 +4808,8 @@ function shootDuck(idx) {
           if (status) status.textContent = '👏 ' + (student.name || 'Bạn nhỏ') + ' đã lên bờ an toàn. Cả lớp cùng chúc mừng!';
           renderFerryDeck();
           renderFerryPassengers();
-          playApplauseSound();
-           await wait(Math.max(100, stopDelay * .10));
+          if (ferryCurrentIndex % 5 === 0 || ferryCurrentIndex === ferryTripQueue.length) playApplauseSound();
+          await wait(55);
         }
         if (shoreStudent) shoreStudent.style.display = 'none';
         if (current) current.textContent = '😴 Ơ kìa! Còn một bạn đang ngủ quên trên thuyền!';
@@ -4781,12 +4822,7 @@ function shootDuck(idx) {
         if (title) title.textContent = '😴 CÔ ĐÃ ĐƯA BẠN ĐẾN BỜ AN TOÀN!';
         if (name) name.textContent = ferrySleepingPassenger?.name || 'Bạn nhỏ';
         if (meta) meta.textContent = 'Con ngủ quên rồi! Cô đã đưa con đến bờ an toàn. Bây giờ con thức dậy và trả lời câu hỏi của cô nhé!';
-        const ask = document.getElementById('ferryAskEnabled')?.checked;
-        const question = document.getElementById('ferryQuestion')?.value.trim();
-        if (card) {
-          card.classList.toggle('hidden', !ask);
-          card.textContent = ask ? (question || 'Em hãy thức dậy và trả lời câu hỏi của cô nhé!') + ' • Thời gian: ' + (document.getElementById('ferryAnswerSeconds')?.value || 15) + ' giây' : '';
-        }
+        if (card) { card.classList.add('hidden'); card.textContent = ''; }
         if (result) result.classList.remove('hidden');
         if (launch) { launch.disabled = false; launch.textContent = '🔁 TỔ CHỨC CHUYẾN ĐÒ TIẾP THEO'; launch.classList.remove('opacity-60'); }
         ferryTripRunning = false;
@@ -6185,21 +6221,21 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
          const m=p.mesh;m.userData.walking=true;
          const standFrom=m.userData.legs.map(l=>l.rotation.x),standAt=performance.now();
          const startY=m.position.y;
-         while(performance.now()-standAt<300){
-           const q=Math.min(1,(performance.now()-standAt)/300);
+         while(performance.now()-standAt<120){
+           const q=Math.min(1,(performance.now()-standAt)/120);
            m.userData.legs.forEach((l,i)=>l.rotation.x=standFrom[i]*(1-q));
            m.position.y=startY+.24*q;
            await wait(12);
          }
          m.userData.seated=false;
-         const from=m.position.clone(),to=new T.Vector3(7.65,.18,2.8),t=performance.now(),dur=460;
+         const from=m.position.clone(),to=new T.Vector3(7.65,.18,2.8),t=performance.now(),dur=190;
          while(performance.now()-t<dur){
            const q=Math.min(1,(performance.now()-t)/dur),e=q*q*(3-2*q);
            m.position.lerpVectors(from,to,e);
            const phase=q*Math.PI*7;
            m.userData.legs.forEach((l,i)=>l.rotation.x=Math.sin(phase+i*Math.PI)*.5*(1-q*.35));
            m.userData.arms.forEach((a,i)=>a.rotation.z=(i?1:-1)*Math.sin(phase+i*Math.PI)*.22);
-           await wait(15);
+           await wait(10);
          }
          m.visible=false;m.userData.walking=false;
        },
