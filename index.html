@@ -1325,12 +1325,7 @@
                 <label class="text-xs font-bold text-gray-600">Người lái đò
                   <select id="ferryDriver" class="mt-1 w-full border border-cyan-200 rounded-xl p-2.5 text-sm font-bold"><option value="Cô">Cô</option><option value="Thầy">Thầy</option></select>
                 </label>
-                <label class="text-xs font-bold text-gray-600">Tốc độ chuyến đò
-                  <select id="ferrySpeed" class="mt-1 w-full border border-cyan-200 rounded-xl p-2.5 text-sm font-bold"><option value="slow">Chậm rãi</option><option value="normal" selected>Vừa phải</option><option value="fast">Hồi hộp</option></select>
-                </label>
-                <label class="text-xs font-bold text-gray-600 col-span-2">Thời gian chọn hành khách
-                  <select id="ferryDuration" class="mt-1 w-full border border-cyan-200 rounded-xl p-2.5 text-sm font-bold"><option value="3">3 giây</option><option value="5" selected>5 giây</option><option value="8">8 giây</option><option value="10">10 giây</option></select>
-                </label>
+                <div class="col-span-2 rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs font-bold text-emerald-800">🚀 Tốc độ lên bờ: nhanh. Học sinh lần lượt xuống thuyền liên tục để tiết kiệm thời gian cho lớp đông.</div>
               </div>
               <div class="mt-4 rounded-xl border border-cyan-200 bg-cyan-50 p-3 text-sm font-bold text-teal-900">🧠 Trò chơi có sẵn 5 câu hỏi trắc nghiệm phù hợp học sinh tiểu học. Cô không cần nhập câu hỏi hay chuẩn bị đáp án.</div>
             </div>
@@ -4762,9 +4757,6 @@ function shootDuck(idx) {
       const current = document.getElementById('ferryCurrentName');
       const status = document.getElementById('ferryStatus');
       const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
-      const speed = document.getElementById('ferrySpeed')?.value || 'normal';
-      const base = Number(document.getElementById('ferryDuration')?.value || 5) * 1000;
-      const stopDelay = speed === 'fast' ? Math.max(1100, base * .45) : speed === 'slow' ? base * 1.15 : base;
       if (result) result.classList.add('hidden');
       if (shoreStudent) shoreStudent.style.display = 'none';
       if (scene) scene.classList.remove('ferry-calm');
@@ -4821,7 +4813,7 @@ function shootDuck(idx) {
         const card = document.getElementById('ferryQuestionCard');
         if (title) title.textContent = '😴 CÔ ĐÃ ĐƯA BẠN ĐẾN BỜ AN TOÀN!';
         if (name) name.textContent = ferrySleepingPassenger?.name || 'Bạn nhỏ';
-        if (meta) meta.textContent = 'Con ngủ quên rồi! Cô đã đưa con đến bờ an toàn. Bây giờ con thức dậy và trả lời câu hỏi của cô nhé!';
+        if (meta) meta.textContent = 'Con ngủ quên trên thuyền rồi! Cả lớp cùng gọi bạn thức dậy nào!';
         if (card) { card.classList.add('hidden'); card.textContent = ''; }
         if (result) result.classList.remove('hidden');
         if (launch) { launch.disabled = false; launch.textContent = '🔁 TỔ CHỨC CHUYẾN ĐÒ TIẾP THEO'; launch.classList.remove('opacity-60'); }
