@@ -6163,7 +6163,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     function findStudent(st){return studentMeshes.find(p=>p.student===st);}
     game={
       populate,
-      beginTrip(){populate();teacher.position.set(-6.05,.78,0);setCharacterSeated(teacher,true);boat.position.x=-10;boatTarget=-8.5;storm=false;calm=false;sailing=false;rain.visible=false;rainbow.visible=false;dolphins.forEach(d=>d.group.visible=false);scene.background.copy(skyCalm);scene.fog.color.copy(skyCalm);},
+      beginTrip(){sleeperFocus=null;populate();teacher.position.set(-6.05,.78,0);setCharacterSeated(teacher,true);boat.position.x=-10;boatTarget=-8.5;storm=false;calm=false;sailing=false;rain.visible=false;rainbow.visible=false;dolphins.forEach(d=>d.group.visible=false);scene.background.copy(skyCalm);scene.fog.color.copy(skyCalm);},
       startStorm(){storm=true;calm=false;boatTarget=0;rain.visible=true;rainbow.visible=false;lightningGroup.visible=true;dolphins.forEach(d=>d.group.visible=true);},
        async sailToShore(){
          sailing=true;boatTarget=10;const t=performance.now();
