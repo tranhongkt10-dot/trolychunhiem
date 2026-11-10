@@ -1267,6 +1267,47 @@
 #ferryScene.ferry-calm .ferry-rain,#ferryScene.ferry-calm .ferry-lightning{display:none}#ferryScene.ferry-calm{background:linear-gradient(#7dd3fc 0%,#bae6fd 36%,#0e7490 37%,#0891b2 100%)}
 #ferryScene.ferry-calm .ferry-wave{opacity:.35;animation-duration:5s}
 @media(max-width:640px){#ferryScene{min-height:390px}#ferryTeacher{left:calc(50% - 128px);top:36%;width:88px;height:112px}#ferryTeacher svg{width:88px;height:112px}#ferryShore{width:32%;font-size:9px}}
+
+/* BỐ CỤC VỪA MÀN HÌNH: giao diện lái đò gọn, rõ và không tràn khung */
+#callingView-ferry{width:100%;max-width:100%;min-width:0}
+#callingView-ferry>div:first-child{padding:clamp(9px,1.2vh,16px)!important}
+#callingView-ferry>div:first-child .text-4xl{font-size:clamp(22px,3vh,32px);line-height:1.05}
+#callingView-ferry>div:first-child h3{font-size:clamp(19px,2.5vh,27px);line-height:1.15}
+#callingView-ferry>div:nth-child(2){padding:clamp(8px,1.1vh,14px)!important;gap:clamp(8px,1vh,12px)!important;min-width:0}
+#callingView-ferry>div:nth-child(2)>div{min-width:0;min-height:0}
+#callingView-ferry h4{font-size:clamp(12px,1.4vh,15px)}
+#callingView-ferry label{line-height:1.25}
+#callingView-ferry input,#callingView-ferry select,#callingView-ferry textarea{font-size:clamp(12px,1.35vh,14px)}
+#ferryScene{width:100%;height:clamp(320px,52vh,620px);min-height:320px}
+#ferryCurrentName{max-width:82%;overflow:hidden;text-overflow:ellipsis}
+#ferryResult{max-height:30vh;overflow:auto}
+@media(min-width:1024px){
+  #callingView-ferry>div:nth-child(2){height:calc(100dvh - 170px);min-height:540px;grid-template-columns:minmax(285px,.78fr) minmax(0,1.22fr);overflow:hidden}
+  #callingView-ferry>div:nth-child(2)>div:first-child{overflow-y:auto;overscroll-behavior:contain;padding-right:4px}
+  #callingView-ferry>div:nth-child(2)>div:last-child{display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain}
+  #callingView-ferry>div:nth-child(2)>div:last-child #ferryScene{height:clamp(360px,54vh,620px);flex:0 0 auto}
+  #callingView-ferry>div:nth-child(2)>div:last-child #ferryLaunchBtn{padding-top:clamp(9px,1.3vh,15px);padding-bottom:clamp(9px,1.3vh,15px);font-size:clamp(14px,1.8vh,18px)}
+  #callingView-ferry>div:nth-child(2)>div:last-child .space-y-4{gap:clamp(7px,1vh,12px)}
+  #ferryPassengerList{max-height:clamp(100px,18vh,190px)}
+}
+@media(max-width:1023px){
+  #callingView-ferry>div:nth-child(2){grid-template-columns:minmax(0,1fr)!important}
+  #callingView-ferry>div:nth-child(2)>div:first-child{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:start}
+  #callingView-ferry>div:nth-child(2)>div:first-child>div:first-child{grid-column:1/-1}
+  #callingView-ferry>div:nth-child(2)>div:first-child>div:last-child{grid-column:1/-1}
+  #callingView-ferry>div:nth-child(2)>div:last-child #ferryScene{height:clamp(300px,48vh,480px);min-height:300px}
+}
+@media(max-width:600px){
+  #callingView-ferry>div:first-child{padding:9px!important}
+  #callingView-ferry>div:first-child p{font-size:11px}
+  #callingView-ferry>div:nth-child(2)>div:first-child{grid-template-columns:minmax(0,1fr)}
+  #callingView-ferry>div:nth-child(2)>div:first-child>div:first-child,
+  #callingView-ferry>div:nth-child(2)>div:first-child>div:last-child{grid-column:1}
+  #callingView-ferry>div:nth-child(2)>div:first-child>div{padding:10px!important}
+  #ferryScene{border-radius:14px}
+  #ferryScene>div:first-of-type{font-size:9px}
+  #ferryProgress{padding:5px 8px!important}
+}
 </style>
 <div id="ferryScene" class="relative rounded-2xl border-4 border-white shadow-2xl">
 <div class="absolute top-3 left-3 right-3 z-10 flex justify-between gap-2 text-white text-[10px] sm:text-xs font-black"><span class="bg-slate-950/50 rounded-full px-3 py-2">⛈️ VƯỢT SÔNG TRI THỨC</span><span id="ferryProgress" class="bg-slate-950/50 rounded-full px-3 py-2">0/0 đã cập bến</span></div>
@@ -5535,7 +5576,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     const host=document.getElementById('ferryScene');
     if(!host){rejectReady(new Error('Không tìm thấy ferryScene'));return;}
     ['ferry-rain','ferry-lightning','ferryTeacher','ferryBoat','ferryShore','ferryStartBank','ferryBridge','ferryBridgeLabel','ferrySwimmers'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
-    host.style.position='relative';host.style.overflow='hidden';host.style.minHeight='520px';
+    host.style.position='relative';host.style.overflow='hidden';host.style.height='clamp(320px, 52vh, 620px)';host.style.minHeight='320px';
     host.style.background='linear-gradient(#77c9f4 0%,#d9f3ff 55%,#a7d9e8 100%)';
     const old=document.getElementById('ferry3DCanvas');if(old)old.remove();
     const canvas=document.createElement('canvas');canvas.id='ferry3DCanvas';
