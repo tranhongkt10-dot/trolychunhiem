@@ -5835,8 +5835,27 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       add(dock,new T.PlaneGeometry(1.9,.48),new T.MeshBasicMaterial({map:new T.CanvasTexture(signCanvas)}),0,1.05,-1.18);
       return dock;
     }
-    const startDock=woodenBridge(-10.1,2,'BẾN XUẤT PHÁT');
-    const endDock=woodenBridge(10.1,2,'BẾN VỀ ĐÍCH');
+    const startDock=woodenBridge(-19,2,'BẾN XUẤT PHÁT');
+    const endDock=woodenBridge(19,2,'BẾN VỀ ĐÍCH');
+    // Trường học nằm trên bờ đối diện; chỉ có sân lát nhỏ nối từ bến, tuyệt đối không tạo bãi đất/cỏ rộng.
+    const schoolYard=box(scene,10,.22,6,mat(0xd6c7a5),25,.02,-8);
+    const school=new T.Group();school.position.set(25,.18,-12);scene.add(school);
+    box(school,8,4.1,3.6,mat(0xffe6b5),0,2.05,0);
+    box(school,8.5,.28,4.05,mat(0xc75b42),0,4.2,0);
+    const schoolRoof=add(school,new T.ConeGeometry(5.1,2.25,4),mat(0xb94735),0,5.35,0);schoolRoof.rotation.y=Math.PI/4;schoolRoof.scale.set(1,.72,.62);
+    box(school,1.15,2.1,.16,mat(0x75401f),0,1.05,1.86);
+    for(const x of [-2.65,2.65]){
+      box(school,1.25,1.25,.14,mat(0x78c9e8,.25),x,2.55,1.88);
+      box(school,1.42,.12,.2,mat(0xffffff),x,2.55,1.98);
+      box(school,.12,1.42,.2,mat(0xffffff),x,2.55,1.98);
+    }
+    const schoolSign=document.createElement('canvas');schoolSign.width=512;schoolSign.height=128;
+    const schoolCtx=schoolSign.getContext('2d');schoolCtx.fillStyle='#fff4cf';schoolCtx.fillRect(0,0,512,128);schoolCtx.strokeStyle='#b45309';schoolCtx.lineWidth=10;schoolCtx.strokeRect(5,5,502,118);schoolCtx.fillStyle='#78350f';schoolCtx.font='bold 46px Arial';schoolCtx.textAlign='center';schoolCtx.textBaseline='middle';schoolCtx.fillText('TRƯỜNG HỌC',256,66);
+    add(school,new T.PlaneGeometry(4.8,1.05),new T.MeshBasicMaterial({map:new T.CanvasTexture(schoolSign)}),0,3.55,1.91);
+    rod(school,[3.65,4.35,-.2],[3.65,7.1,-.2],.055,.055,M.wood);
+    const schoolFlag=add(school,new T.PlaneGeometry(1.25,.72),mat(0xd94343),4.25,6.75,-.2);schoolFlag.rotation.y=0;
+    // Lối ván ngắn từ cầu gỗ vào sân trường.
+    for(let i=0;i<5;i++)box(scene,.72,.12,1.65,M.wood2,19.6,.16,-.1-i*1.45);
     // Cầu vồng nhiều dải, ẩn cho đến khi bão tan.
     const rainbow=new T.Group();scene.add(rainbow);
     // Tia sét hình ziczac, chỉ xuất hiện trong chặng giông bão.
@@ -5876,7 +5895,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       ball(g,.045,M.white,.25,.09,.19);fish.push({g,x:g.position.x,p:i});
     }
     // THUYỀN MỚI: thân gỗ thuôn cong, mũi nhô cao, lòng thuyền sâu, lan can và mái che.
-    const boat=new T.Group();scene.add(boat);boat.position.set(-8,0,1);
+    const boat=new T.Group();scene.add(boat);boat.position.set(-17,0,1);
     const hullShape=new T.Shape();
     hullShape.moveTo(-7.8,-1.9);hullShape.quadraticCurveTo(-7.2,-2.65,-5.5,-2.72);
     hullShape.lineTo(5.3,-2.72);hullShape.quadraticCurveTo(7.3,-2.6,8,-1.65);
@@ -6042,18 +6061,18 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     function findStudent(st){return studentMeshes.find(p=>p.student===st);}
     game={
       populate,
-      beginTrip(){populate();boat.position.x=-8;boatTarget=-5.2;storm=false;calm=false;sailing=false;rain.visible=false;rainbow.visible=false;dolphins.forEach(d=>d.group.visible=false);scene.background.copy(skyCalm);scene.fog.color.copy(skyCalm);},
-      startStorm(){storm=true;calm=false;rain.visible=true;rainbow.visible=false;lightningGroup.visible=true;dolphins.forEach(d=>d.group.visible=true);},
-      async sailToShore(){sailing=true;boatTarget=8;const t=performance.now();while(performance.now()-t<6500)await wait(35);boat.position.x=8;sailing=false;storm=false;calm=true;rain.visible=false;dolphins.forEach(d=>d.group.visible=false);lightningGroup.visible=false;rainbow.visible=true;scene.background.copy(skyClear);scene.fog.color.copy(skyClear);},
+      beginTrip(){populate();boat.position.x=-17;boatTarget=-15.5;storm=false;calm=false;sailing=false;rain.visible=false;rainbow.visible=false;dolphins.forEach(d=>d.group.visible=false);scene.background.copy(skyCalm);scene.fog.color.copy(skyCalm);},
+      startStorm(){storm=true;calm=false;boatTarget=0;rain.visible=true;rainbow.visible=false;lightningGroup.visible=true;dolphins.forEach(d=>d.group.visible=true);},
+      async sailToShore(){sailing=true;boatTarget=17;const t=performance.now();while(performance.now()-t<6500)await wait(35);boat.position.x=8;sailing=false;storm=false;calm=true;rain.visible=false;dolphins.forEach(d=>d.group.visible=false);lightningGroup.visible=false;rainbow.visible=true;scene.background.copy(skyClear);scene.fog.color.copy(skyClear);},
       async disembark(st){
         const p=findStudent(st);if(!p||p.mesh.userData.sleeping)return;
-        const m=p.mesh;m.userData.walking=true;const from=m.position.clone(),to=new T.Vector3(6.5,1.02,2.8),t=performance.now(),dur=1550;
+        const m=p.mesh;m.userData.walking=true;const from=m.position.clone(),to=new T.Vector3(1.3,1.02,2.8),t=performance.now(),dur=1550;
         while(performance.now()-t<dur){const q=Math.min(1,(performance.now()-t)/dur),e=q*q*(3-2*q);m.position.lerpVectors(from,to,e);const phase=q*Math.PI*9;m.userData.legs.forEach((l,i)=>l.rotation.x=Math.sin(phase+i*Math.PI)*.65*(1-q*.4));m.userData.arms.forEach((a,i)=>a.rotation.z=(i?1:-1)*Math.sin(phase+i*Math.PI)*.3);await wait(28);}
         m.visible=false;m.userData.walking=false;
       },
       finishTrip(){storm=false;calm=true;rain.visible=false;lightningGroup.visible=false;rainbow.visible=true;dolphins.forEach(d=>d.group.visible=false);scene.background.copy(skyClear);scene.fog.color.copy(skyClear);},
       showSleeper(st){const p=findStudent(st);if(p){p.mesh.visible=true;p.mesh.userData.sleeping=true;p.mesh.position.copy(p.home);p.mesh.rotation.z=-.25;}},
-      reset(){storm=false;calm=false;rain.visible=false;lightningGroup.visible=false;rainbow.visible=false;dolphins.forEach(d=>d.group.visible=false);boat.position.x=-8;boatTarget=-8;populate();}
+      reset(){storm=false;calm=false;rain.visible=false;lightningGroup.visible=false;rainbow.visible=false;dolphins.forEach(d=>d.group.visible=false);boat.position.x=-17;boatTarget=-17;populate();}
     };
     window.ferry3DGame=game;resolveReady(game);
     function animate(){
