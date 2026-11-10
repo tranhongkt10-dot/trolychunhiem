@@ -1367,9 +1367,9 @@
 @keyframes ferryTeacherRock{0%,100%{transform:rotate(-5deg) translateY(0)}50%{transform:rotate(7deg) translateY(-5px)}}
 #ferryTeacher::after{content:"";position:absolute;width:5px;height:48px;background:#92400e;right:-6px;bottom:4px;border-radius:5px;transform:rotate(-27deg);transform-origin:top;animation:ferryPaddle .55s ease-in-out infinite alternate}
 @keyframes ferryPaddle{from{transform:rotate(-45deg)}to{transform:rotate(20deg)}}
-#ferryShore{position:absolute;z-index:3;right:0;bottom:70px;width:27%;height:120px;border-radius:80% 0 0 0;background:linear-gradient(135deg,#a3e635,#166534);border-top:7px solid #d9f99d;display:flex;align-items:center;justify-content:center;text-align:center;color:#052e16;font-size:11px;font-weight:1000;padding:10px}
-#ferryStartBank{position:absolute;z-index:2;left:0;bottom:64px;width:19%;height:92px;background:linear-gradient(145deg,#84cc16,#365314);border-radius:0 75% 0 0;border-top:7px solid #d9f99d;display:flex;align-items:center;justify-content:center;text-align:center;color:#1f2937;font-size:10px;font-weight:1000;padding:8px;box-shadow:inset -8px 8px 0 #ffffff22}
-#ferryStartBank:before{content:"🌴";position:absolute;left:8px;top:-58px;font-size:42px;filter:drop-shadow(0 3px 2px #0005)}
+#ferryShore{position:absolute;z-index:3;right:2%;bottom:66px;width:15%;height:48px;border-radius:4px;background:repeating-linear-gradient(90deg,#8b542d 0 12px,#c58a4a 12px 15px);border:3px solid #5b351e;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff7df;font-size:9px;font-weight:1000;padding:4px;box-shadow:0 5px 0 #4b2b18}
+#ferryStartBank{position:absolute;z-index:2;left:2%;bottom:64px;width:15%;height:48px;background:repeating-linear-gradient(90deg,#8b542d 0 12px,#c58a4a 12px 15px);border:3px solid #5b351e;border-radius:4px;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff7df;font-size:9px;font-weight:1000;padding:4px;box-shadow:0 5px 0 #4b2b18}
+#ferryStartBank:before{content:"";}
 #ferryBridge{position:absolute;z-index:4;right:0;bottom:83px;width:43%;height:27px;background:repeating-linear-gradient(90deg,#92400e 0 34px,#b45309 35px 39px);border:4px solid #78350f;border-radius:5px;transform:skewY(-3deg);box-shadow:0 8px 0 #422006,0 12px 15px #082f4966}
 #ferryBridge:before,#ferryBridge:after{content:"";position:absolute;left:0;right:0;height:9px;background:#d6a15d;border:2px solid #78350f}
 #ferryBridge:before{top:-15px}#ferryBridge:after{bottom:-15px}
@@ -5833,18 +5833,29 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     cloud(-18,11,-13,1.1);cloud(2,13,-18,.9);cloud(22,10,-12,1.15);
     const sunBall=ball(scene,2.0,mat(0xffe7a0,.35),-23,15,-18);
     const sunGlow=new T.PointLight(0xffd88b,1.2,45);sunGlow.position.set(-23,14,-16);scene.add(sunGlow);
-    // Bến gỗ và cổng "BẾN BỜ TRI THỨC" ở bờ phải.
-    const pier=new T.Group();pier.position.set(15,.1,2);scene.add(pier);
-    for(let i=0;i<9;i++)box(pier,1.25,.22,5.6,M.wood2,(i-4)*.85,0,0);
-    for(const z of [-2.8,2.8]){
-      box(pier,8,.28,.25,M.wood,0,.18,z);
-      for(let i=0;i<6;i++){rod(pier,[(i-2.5)*1.45,-.5,z],[(i-2.5)*1.45,1.1,z],.12,.12,M.wood);ball(pier,.17,M.gold,(i-2.5)*1.45,1.18,z);}
+    // Hai bến là cầu gỗ ngắn, gọn ở mép sông; chừa phần lớn khung hình cho hành trình.
+    function woodenBridge(x,z,label){
+      const dock=new T.Group();dock.position.set(x,.02,z);scene.add(dock);
+      // Ván cầu ngắn, hẹp, có khe gỗ nhìn rõ.
+      for(let i=0;i<6;i++)box(dock,.62,.16,2.65,M.wood2,(i-2.5)*.68,0,0);
+      for(const side of [-1,1]){
+        box(dock,4.15,.18,.13,M.wood,-.05,.17,side*1.28);
+        for(let i=0;i<4;i++){
+          const px=-1.65+i*1.08;
+          rod(dock,[px,-.28,side*1.28],[px,.72,side*1.28],.075,.075,M.wood);
+        }
+        box(dock,4.05,.12,.12,M.wood2,-.05,.72,side*1.28);
+      }
+      // Biển tên nhỏ đặt sát đầu cầu, không dựng cổng lớn che cảnh.
+      const signCanvas=document.createElement('canvas');signCanvas.width=512;signCanvas.height=128;
+      const sc=signCanvas.getContext('2d');sc.fillStyle='#f7dfad';sc.fillRect(0,0,512,128);
+      sc.strokeStyle='#75401f';sc.lineWidth=12;sc.strokeRect(6,6,500,116);
+      sc.fillStyle='#4b2b18';sc.font='bold 48px Arial';sc.textAlign='center';sc.textBaseline='middle';sc.fillText(label,256,66);
+      add(dock,new T.PlaneGeometry(2.5,.62),new T.MeshBasicMaterial({map:new T.CanvasTexture(signCanvas)}),0,1.35,-1.48);
+      return dock;
     }
-    const gate=new T.Group();gate.position.set(23,0,-8);scene.add(gate);
-    box(gate,8,.38,.5,M.gold,0,4,0);box(gate,.45,4,.55,M.gold,-3.65,2,0);box(gate,.45,4,.55,M.gold,3.65,2,0);
-    const signCanvas=document.createElement('canvas');signCanvas.width=1024;signCanvas.height=220;
-    const sc=signCanvas.getContext('2d');sc.fillStyle='#fff4d1';sc.fillRect(0,0,1024,220);sc.strokeStyle='#a75c2b';sc.lineWidth=16;sc.strokeRect(8,8,1008,204);sc.fillStyle='#783c24';sc.font='bold 92px Arial';sc.textAlign='center';sc.textBaseline='middle';sc.fillText('BẾN BỜ TRI THỨC',512,112);
-    const sign=add(scene,new T.PlaneGeometry(7.2,1.55),new T.MeshBasicMaterial({map:new T.CanvasTexture(signCanvas)}),23,4,-7.7);
+    const startDock=woodenBridge(-10.1,2,'BẾN XUẤT PHÁT');
+    const endDock=woodenBridge(10.1,2,'BẾN VỀ ĐÍCH');
     // Cầu vồng nhiều dải, ẩn cho đến khi bão tan.
     const rainbow=new T.Group();scene.add(rainbow);
     // Tia sét hình ziczac, chỉ xuất hiện trong chặng giông bão.
