@@ -5902,8 +5902,8 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     });rainbow.visible=false;
     // ĐÀN CÁ HEO 3D phong cách phim hoạt hình: thân mượt, bụng sáng, mõm tròn và vây cong.
     const dolphins=[];
-    const dolphinMat=mat(0x4b9fc2,.3,.06),dolphinBelly=mat(0xd8f1e9,.38),dolphinFin=mat(0x347b9e,.34);
-    function dolphinFin(parent,points,material,x,y,z,rotX=0,rotY=0,rotZ=0){
+    const dolphinMat=mat(0x4b9fc2,.3,.06),dolphinBelly=mat(0xd8f1e9,.38),dolphinFinMat=mat(0x347b9e,.34);
+    function makeDolphinFin(parent,points,material,x,y,z,rotX=0,rotY=0,rotZ=0){
       const sh=new T.Shape();sh.moveTo(points[0][0],points[0][1]);
       for(let k=1;k<points.length;k++)sh.quadraticCurveTo(points[k][0],points[k][1],points[k][2],points[k][3]);
       sh.closePath();
@@ -5916,12 +5916,12 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       ball(d,.43,dolphinBelly,.18,-.28,.015,1.42,.52,.73);
       ball(d,.29,dolphinMat,1.02,-.02,.015,1.18,.58,.62);
       ball(d,.18,dolphinMat,1.34,-.04,.015,.9,.48,.55);
-      dolphinFin(d,[[-.36,0,-.02,.42],[-.15,.5,.18,.72],[.2,.78,.25,.35]],dolphinFin,-.12,.42,0);
+      makeDolphinFin(d,[[-.36,0,-.02,.42],[-.15,.5,.18,.72],[.2,.78,.25,.35]],dolphinFinMat,-.12,.42,0);
       const tail=new T.Group();tail.position.set(-1.18,0,0);d.add(tail);
-      dolphinFin(tail,[[0,0,-.12,.28],[-.48,.48,-.83,.4],[-.62,.1,-.38,-.04]],dolphinMat,-.1,0,0,Math.PI/2,0,0);
-      dolphinFin(tail,[[0,0,-.12,-.28],[-.48,-.48,-.83,-.4],[-.62,-.1,-.38,.04]],dolphinMat,-.1,0,0,Math.PI/2,0,0);
-      dolphinFin(d,[[-.05,0,-.42,-.18],[-.48,-.42,-.72,-.32],[-.52,-.08,-.2,.02]],dolphinFin,.05,-.28,.48,.25,0,-.15);
-      dolphinFin(d,[[-.05,0,-.42,-.18],[-.48,-.42,-.72,-.32],[-.52,-.08,-.2,.02]],dolphinFin,.05,-.28,-.48,-.25,0,.15);
+      makeDolphinFin(tail,[[0,0,-.12,.28],[-.48,.48,-.83,.4],[-.62,.1,-.38,-.04]],dolphinMat,-.1,0,0,Math.PI/2,0,0);
+      makeDolphinFin(tail,[[0,0,-.12,-.28],[-.48,-.48,-.83,-.4],[-.62,-.1,-.38,.04]],dolphinMat,-.1,0,0,Math.PI/2,0,0);
+      makeDolphinFin(d,[[-.05,0,-.42,-.18],[-.48,-.42,-.72,-.32],[-.52,-.08,-.2,.02]],dolphinFinMat,.05,-.28,.48,.25,0,-.15);
+      makeDolphinFin(d,[[-.05,0,-.42,-.18],[-.48,-.42,-.72,-.32],[-.52,-.08,-.2,.02]],dolphinFinMat,.05,-.28,-.48,-.25,0,.15);
       for(const side of [-1,1]){
         ball(d,.095,M.white,.91,.19,side*.47);
         ball(d,.047,mat(0x173b50),.95,.19,side*.52);
@@ -5929,7 +5929,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       }
       // Nụ cười cong nhẹ ở hai bên mõm.
       const smile=new T.CatmullRomCurve3([new T.Vector3(1.08,-.19,.47),new T.Vector3(1.25,-.23,.49),new T.Vector3(1.39,-.18,.43)]);
-      add(d,new T.TubeGeometry(smile,16,.018,8,false),dolphinFin);
+      add(d,new T.TubeGeometry(smile,16,.018,8,false),dolphinFinMat);
       dolphins.push({group:d,tail,index:i,phase:i*1.9});
     }
     // Cá hoạt hình bơi sát mặt nước.
@@ -6115,10 +6115,9 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       return g;
     }
     const teacher=character({},0,true);teacher.position.set(-5.65,.78,0);boat.add(teacher);
-    let studentMeshes=[];
     function setCharacterSeated(mesh,seated=true){
       mesh.userData.seated=seated;
-      mesh.position.y=seated?.78:1.02;
+      mesh.position.y=seated ? .78 : 1.02;
       mesh.userData.legs.forEach((leg,i)=>{leg.rotation.x=seated?-.98:0;leg.rotation.z=0;});
       mesh.userData.arms.forEach((arm,i)=>{arm.rotation.x=seated?-.12:0;arm.rotation.z=seated?(i===0?.16:-.16):0;});
     }
@@ -6167,7 +6166,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
            await wait(15);
          }
          teacher.userData.seated=false;
-         teacher.userData.arms.forEach((a,i)=>a.rotation.z=i===0?.12:-.12);
+         teacher.userData.arms.forEach((a,i)=>a.rotation.z=i===0 ? .12 : -.12);
        },
        async disembark(st){
          const p=findStudent(st);if(!p||p.mesh.userData.sleeping)return;
