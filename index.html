@@ -5901,7 +5901,6 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       }
       ball(d,.075,M.white,.98,.16,.48);ball(d,.038,dolphinDark,1.01,.16,.535);
       dolphins.push({group:d,tail,index:i,phase:i*1.7});
-      dolphins.push({group:d,tail,index:i,phase:i*1.7});
     }
     // Cá hoạt hình bơi sát mặt nước.
     const fish=[];
@@ -6048,6 +6047,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       const nm=isTeacher?'CÔ GIÁO':String(student?.name||student?.fullName||'Bạn nhỏ');
       g.add(makeLabel(nm,isTeacher));
        legs.forEach(l=>{l.rotation.x=isTeacher?-.62:-1.02;});
+       g.userData={...g.userData,student,arms,legs,eyes,phase:index*.71,sleeping:false,walking:false,seated:true,nextBlink:2+Math.random()*2,blink:0};
       g.scale.setScalar(isTeacher?1.22:1.02);
       return g;
     }
