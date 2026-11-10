@@ -2784,6 +2784,9 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       if (label) label.innerText = `${val} dB`;
     }
 
+    // Tiếng sấm trầm, kéo dài, phát ngay sau mỗi tia chớp.
+    function playThunderSound(delay=.22){try{const ctx=ensureClassroomAudioContext();if(!ctx)return false;if(ctx.state!=='running'){ctx.resume().catch(e=>console.warn(e));return false;}const start=ctx.currentTime+delay,duration=2.8,count=Math.floor(ctx.sampleRate*duration),buffer=ctx.createBuffer(1,count,ctx.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<count;i++)data[i]=(Math.random()*2-1)*(.7+Math.random()*.3);const src=ctx.createBufferSource();src.buffer=buffer;const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.setValueAtTime(180,start);lp.frequency.exponentialRampToValueAtTime(48,start+duration);const g=ctx.createGain();g.gain.setValueAtTime(.0001,start);g.gain.linearRampToValueAtTime(.42,start+.09);g.gain.exponentialRampToValueAtTime(.0001,start+duration);src.connect(lp);lp.connect(g);g.connect(getClassroomAudioOutput(ctx));src.start(start);src.stop(start+duration);const osc=ctx.createOscillator(),og=ctx.createGain();osc.type='sine';osc.frequency.setValueAtTime(72,start+.08);osc.frequency.exponentialRampToValueAtTime(34,start+2.4);og.gain.setValueAtTime(.0001,start);og.gain.linearRampToValueAtTime(.22,start+.12);og.gain.exponentialRampToValueAtTime(.0001,start+2.5);osc.connect(og);og.connect(getClassroomAudioOutput(ctx));osc.start(start);osc.stop(start+2.55);return true;}catch(e){console.warn('Lỗi phát tiếng sấm:',e);return false;}}
+
     // Âm thanh trò chơi: giai điệu chiến thắng vui tươi, tách riêng tiếng vỗ tay.
     function playApplauseSound() {
       try {
@@ -4732,13 +4735,13 @@ function shootDuck(idx) {
         if (window.ferry3DGame && window.ferry3DGame.startStorm) window.ferry3DGame.startStorm();
         if (status) status.textContent = '⛈️ Giông bão bất ngờ kéo đến! Sóng lớn làm con thuyền chòng chành. Cá heo đang bơi theo cổ vũ cả lớp!';
         if (current) current.textContent = '🌊 VƯỢT QUA GIÔNG BÃO — CÁ HEO ĐỒNG HÀNH';
-         await wait(650);
+         await wait(2600);
         if (window.ferry3DGame) await window.ferry3DGame.sailToShore();
         if (scene) scene.classList.add('ferry-calm');
         if (window.ferry3DGame) window.ferry3DGame.finishTrip();
         if (status) status.textContent = '🌈 Bão đã tan, cầu vồng xuất hiện. Con đò đã cập bến an toàn!';
         if (current) current.textContent = '🌈 ĐÃ ĐẾN BẾN TRI THỨC — CÁC BẠN LẦN LƯỢT LÊN BỜ';
-        await wait(900);
+        await wait(3000);
         for (const student of ferryTripQueue) {
           if (current) current.textContent = '🚶 ' + (student.name || 'Bạn nhỏ') + ' đang bước xuống bến...';
           if (window.ferry3DGame) await window.ferry3DGame.disembark(student);
@@ -4753,7 +4756,7 @@ function shootDuck(idx) {
           renderFerryDeck();
           renderFerryPassengers();
           if (ferryCurrentIndex % 5 === 0 || ferryCurrentIndex === ferryTripQueue.length) playApplauseSound();
-          await wait(55);
+          await wait(220);
         }
         if (shoreStudent) shoreStudent.style.display = 'none';
         if (current) current.textContent = '😴 Ơ kìa! Còn một bạn đang ngủ quên trên thuyền!';
@@ -6148,7 +6151,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     rainGeo.setAttribute('position',new T.BufferAttribute(rainPos,3));
     const rain=new T.Points(rainGeo,new T.PointsMaterial({color:0xe4f6ff,size:.085,transparent:true,opacity:.85}));scene.add(rain);rain.visible=false;
     const flash=new T.PointLight(0xccecff,0,90);flash.position.set(-4,14,3);scene.add(flash);
-    const clock=new T.Clock();let elapsed=0,storm=false,calm=false,sailing=false,boatTarget=-10,sleeperFocus=null;
+    const clock=new T.Clock();let elapsed=0,storm=false,calm=false,sailing=false,boatTarget=-10,sleeperFocus=null,nextLightningAt=2.8,lightningUntil=0,cinematicSkyUntil=0,rainbowRevealStart=-1;
     const skyCalm=new T.Color(0x79c9ee),skyStorm=new T.Color(0x34465f),skyClear=new T.Color(0x82d5fa);
     const wait=ms=>new Promise(r=>setTimeout(r,ms));
     function resize(){const w=host.clientWidth||900,h=host.clientHeight||520;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w/h>2?31:35;camera.updateProjectionMatrix();}
@@ -6156,16 +6159,17 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     function findStudent(st){return studentMeshes.find(p=>p.student===st);}
     game={
       populate,
-      beginTrip(){sleeperFocus=null;populate();teacher.position.set(-6.05,.78,0);setCharacterSeated(teacher,true);boat.position.x=-10;boatTarget=-8.5;storm=false;calm=false;sailing=false;rain.visible=false;rainbow.visible=false;dolphins.forEach(d=>d.group.visible=false);scene.background.copy(skyCalm);scene.fog.color.copy(skyCalm);},
-      startStorm(){storm=true;calm=false;boatTarget=0;rain.visible=true;rainbow.visible=false;lightningGroup.visible=true;dolphins.forEach(d=>d.group.visible=true);},
+      beginTrip(){sleeperFocus=null;populate();teacher.position.set(-6.05,.78,0);setCharacterSeated(teacher,true);boat.position.x=-10;boatTarget=-8.5;storm=false;calm=false;sailing=false;rain.visible=false;rainbow.visible=false;rainbow.scale.setScalar(1);rainbowRevealStart=-1;cinematicSkyUntil=0;nextLightningAt=elapsed+2.8;lightningUntil=0;dolphins.forEach(d=>d.group.visible=false);scene.background.copy(skyCalm);scene.fog.color.copy(skyCalm);},
+      startStorm(){storm=true;calm=false;boatTarget=0;rain.visible=true;rainbow.visible=false;lightningGroup.visible=true;nextLightningAt=elapsed+1.8;lightningUntil=0;dolphins.forEach(d=>d.group.visible=true);},
        async sailToShore(){
          sailing=true;boatTarget=10;const t=performance.now();
-         while(performance.now()-t<3900)await wait(30);
+         while(performance.now()-t<6500)await wait(30);
          boat.position.x=10;sailing=false;storm=false;calm=true;rain.visible=false;
          lightningGroup.visible=false;rainbow.visible=true;scene.background.copy(skyClear);scene.fog.color.copy(skyClear);
-         const st=performance.now(),from=teacher.userData.legs.map(l=>l.rotation.x);
-         while(performance.now()-st<420){
-           const q=Math.min(1,(performance.now()-st)/420);
+         rainbow.scale.setScalar(.015);rainbowRevealStart=elapsed;
+          const st=performance.now(),from=teacher.userData.legs.map(l=>l.rotation.x);
+         while(performance.now()-st<780){
+           const q=Math.min(1,(performance.now()-st)/780);
            teacher.userData.legs.forEach((l,i)=>l.rotation.x=from[i]*(1-q));
            teacher.position.y=.78+.24*q;
            await wait(15);
@@ -6206,14 +6210,14 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
          const m=p.mesh;m.userData.walking=true;
          const standFrom=m.userData.legs.map(l=>l.rotation.x),standAt=performance.now();
          const startY=m.position.y;
-         while(performance.now()-standAt<120){
-           const q=Math.min(1,(performance.now()-standAt)/120);
+         while(performance.now()-standAt<260){
+           const q=Math.min(1,(performance.now()-standAt)/260);
            m.userData.legs.forEach((l,i)=>l.rotation.x=standFrom[i]*(1-q));
            m.position.y=startY+.24*q;
            await wait(12);
          }
          m.userData.seated=false;
-         const from=m.position.clone(),to=new T.Vector3(7.65,.18,2.8),t=performance.now(),dur=190;
+         const from=m.position.clone(),to=new T.Vector3(7.65,.18,2.8),t=performance.now(),dur=420;
          while(performance.now()-t<dur){
            const q=Math.min(1,(performance.now()-t)/dur),e=q*q*(3-2*q);
            m.position.lerpVectors(from,to,e);
@@ -6225,9 +6229,9 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
          m.visible=false;m.userData.walking=false;
        },
        
-      finishTrip(){storm=false;calm=true;rain.visible=false;lightningGroup.visible=false;rainbow.visible=true;dolphins.forEach(d=>d.group.visible=false);scene.background.copy(skyClear);scene.fog.color.copy(skyClear);},
+      finishTrip(){storm=false;calm=true;rain.visible=false;lightningGroup.visible=false;rainbow.visible=true;rainbow.scale.setScalar(.015);rainbowRevealStart=elapsed;cinematicSkyUntil=elapsed+3.8;dolphins.forEach(d=>d.group.visible=false);},
       showSleeper(st){const p=findStudent(st);if(p){p.mesh.visible=true;p.mesh.userData.sleeping=true;p.mesh.position.copy(p.home);p.mesh.rotation.z=-.25;p.mesh.rotation.x=-.08;if(!p.mesh.userData.sleepGlow){const glow=new T.PointLight(0xffdf8a,2.2,8);glow.position.set(0,3.8,1.3);p.mesh.add(glow);p.mesh.userData.sleepGlow=glow;}sleeperFocus=p.mesh;}},
-      reset(){storm=false;calm=false;sleeperFocus=null;rain.visible=false;lightningGroup.visible=false;rainbow.visible=false;dolphins.forEach(d=>d.group.visible=false);boat.position.x=-10;boatTarget=-10;teacher.position.set(-6.05,.78,0);setCharacterSeated(teacher,true);populate();}
+      reset(){storm=false;calm=false;sleeperFocus=null;rain.visible=false;lightningGroup.visible=false;rainbow.visible=false;rainbow.scale.setScalar(1);rainbowRevealStart=-1;cinematicSkyUntil=0;dolphins.forEach(d=>d.group.visible=false);boat.position.x=-10;boatTarget=-10;teacher.position.set(-6.05,.78,0);setCharacterSeated(teacher,true);populate();}
     };
     window.ferry3DGame=game;resolveReady(game);
     function animate(){
@@ -6236,13 +6240,14 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       for(let i=0;i<pos.count;i++){const x=waterBase[i*3],z=waterBase[i*3+2];const amp=storm?1.08:(calm?.10:.075);pos.array[i*3+1]=waterBase[i*3+1]+Math.sin(x*.48+elapsed*2.2)*amp+Math.cos(z*.62-elapsed*1.7)*amp*.55;}
       pos.needsUpdate=true;water.geometry.computeVertexNormals();
       ripples.forEach((r,i)=>{r.position.x+=dt*(storm?1.8:.55);if(r.position.x>23)r.position.x=-23;r.position.y=-.18+Math.sin(elapsed*2+i)*.07;r.rotation.z=Math.sin(elapsed+i)*.18;});
-      boat.position.x+=(boatTarget-boat.position.x)*Math.min(1,dt*(sailing?1.05:3));
-      boat.rotation.z=Math.sin(elapsed*(storm?8.5:1.6))*(storm?.23:.014);
-      boat.rotation.x=Math.sin(elapsed*(storm?6.8:1.1))*(storm?.15:.009);
-      boat.position.y=storm?Math.sin(elapsed*5.2)*.23:Math.sin(elapsed*1.5)*.035;
-      const targetSky=storm?skyStorm:(calm?skyClear:skyCalm);scene.background.lerp(targetSky,Math.min(1,dt*.32));scene.fog.color.lerp(targetSky,Math.min(1,dt*.32));
+      boat.position.x+=(boatTarget-boat.position.x)*Math.min(1,dt*(sailing?.68:1.9));
+      boat.rotation.z=Math.sin(elapsed*(storm?5.2:1.2))*(storm?.16:.014);
+      boat.rotation.x=Math.sin(elapsed*(storm?4.4:1.0))*(storm?.11:.009);
+      boat.position.y=storm?Math.sin(elapsed*3.8)*.17:Math.sin(elapsed*1.2)*.035;
+      const targetSky=storm?skyStorm:(calm?skyClear:skyCalm);scene.background.lerp(targetSky,Math.min(1,dt*(calm?.18:.32)));scene.fog.color.lerp(targetSky,Math.min(1,dt*(calm?.18:.32)));
+       if(rainbow.visible&&rainbowRevealStart>=0){const reveal=Math.min(1,(elapsed-rainbowRevealStart)/2.6);rainbow.scale.setScalar(.015+reveal*.985);}
       // Camera bám theo thuyền, giữ cô giáo và học sinh ở trung tâm khung hình.
-      const followX=boat.position.x*.72;if(sleeperFocus&&sleeperFocus.visible){const world=sleeperFocus.getWorldPosition(new T.Vector3());const desired=new T.Vector3(world.x+2.8,world.y+4.2,world.z+8.5);camera.position.lerp(desired,Math.min(1,dt*1.35));camera.lookAt(world.x,world.y+1.15,world.z);}else{camera.position.x+=(followX-camera.position.x)*Math.min(1,dt*1.8);camera.position.y+=(15.5-camera.position.y)*Math.min(1,dt*1.2);camera.position.z+=(24.5-camera.position.z)*Math.min(1,dt*1.2);camera.lookAt(followX,1.35,0);}
+      const followX=boat.position.x*.72;if(sleeperFocus&&sleeperFocus.visible){const world=sleeperFocus.getWorldPosition(new T.Vector3());const desired=new T.Vector3(world.x+2.8,world.y+4.2,world.z+8.5);camera.position.lerp(desired,Math.min(1,dt*1.35));camera.lookAt(world.x,world.y+1.15,world.z);}else if(elapsed<cinematicSkyUntil){const low=new T.Vector3(boat.position.x+2.5,2.0,17.5);const look=new T.Vector3(boat.position.x*.25,10.5,-10);camera.position.lerp(low,Math.min(1,dt*1.25));camera.lookAt(look);}else{camera.position.x+=(followX-camera.position.x)*Math.min(1,dt*1.8);camera.position.y+=(15.5-camera.position.y)*Math.min(1,dt*1.2);camera.position.z+=(24.5-camera.position.z)*Math.min(1,dt*1.2);camera.lookAt(followX,1.35,0);}
       teacher.userData.paddle.rotation.z=Math.sin(elapsed*(storm?7:4))*.22;
       teacher.userData.arms[0].rotation.z=Math.sin(elapsed*3.5)*.12;
       teacher.userData.arms[1].rotation.z=-.18+Math.sin(elapsed*3.5+.8)*.12;
@@ -6251,7 +6256,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       rain.visible=storm;
        if(storm){
          sunBall.visible=false;sunGlow.intensity=0;
-         flash.intensity=(Math.sin(elapsed*17)>0.94)?2.8:0;
+         if(elapsed>=nextLightningAt){lightningUntil=elapsed+.20;nextLightningAt=elapsed+4.2+Math.random()*3.2;playThunderSound(.24);}flash.intensity=elapsed<lightningUntil?3.8:0;
          const a=rain.geometry.attributes.position.array;
          for(let i=0;i<rainCount;i++){
            a[i*3+1]-=dt*25;
