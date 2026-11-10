@@ -5812,17 +5812,48 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
         sphere(g,.12,hairMat,-.42,2.28,.01,.85,1.25,.8);
         sphere(g,.12,hairMat,.42,2.28,.01,.85,1.25,.8);
       }
-      // Mắt nhỏ hơn, có mí, tròng, phản quang và lông mày.
+      // Mắt hoạt hình có hốc mí, tròng nhiều lớp và điểm sáng.
+      const blinkParts=[];
       for(const x of [-.18,.18]){
         const eyeSocket=sphere(g,.105,hairMat,x,2.18,.365,1.12,1.05,.42);
-        sphere(g,.088,eyeWhite,x,2.17,.397,.92,1.08,.48);
-        sphere(g,.049,iris,x+.008,2.165,.433,.92,1.12,.5);
+        const eye=sphere(g,.088,eyeWhite,x,2.17,.397,.92,1.08,.48);
+        const pupil=sphere(g,.049,iris,x+.008,2.165,.433,.92,1.12,.5);
         sphere(g,.021,glint,x-.012,2.19,.453,1,1,1);
-        const brow=limbBetween(g,[x-.075,2.31,.37],[x+.07,2.33,.36],.018,.016,hairMat);
+        limbBetween(g,[x-.075,2.31,.37],[x+.07,2.33,.36],.018,.016,hairMat);
+        blinkParts.push({eye,pupil,baseEyeY:eye.scale.y,basePupilY:pupil.scale.y});
+      }
+      // Tai, sống mũi, lỗ mũi và tóc mái tạo đường nét gương mặt rõ hơn.
+      for(const side of [-1,1]){
+        sphere(g,.105,skinMat,side*.445,2.12,.015,.72,1.05,.62);
+        sphere(g,.052,blush,side*.455,2.12,.065,.65,.9,.35);
+      }
+      sphere(g,.045,skinMat,0,2.075,.43,.72,.8,.72);
+      sphere(g,.012,mat(0x9b6658),-.025,2.045,.462,.8,.65,.4);
+      sphere(g,.012,mat(0x9b6658),.025,2.045,.462,.8,.65,.4);
+      // Lọn tóc cong và đường ngôi tóc, không dùng một mảng tóc phẳng.
+      for(let k=0;k<5;k++){
+        const x=(k-2)*.105;
+        const curl=new T.CatmullRomCurve3([
+          new T.Vector3(x-.07,2.48,.27),new T.Vector3(x,2.57,.30),
+          new T.Vector3(x+.055,2.47,.31),new T.Vector3(x+.025,2.39,.34)
+        ]);
+        g.add(new T.Mesh(new T.TubeGeometry(curl,14,.035,8,false),hairMat));
       }
       // Miệng cười cong nhẹ.
       const smilePts=[new T.Vector3(-.075,1.96,.405),new T.Vector3(0,1.935,.425),new T.Vector3(.075,1.96,.405)];
       g.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(smilePts),16,.014,8,false),mat(0x9d4b55)));
+      // Chi tiết đồng phục: nẹp áo, khuy, túi ngực, phù hiệu và đường may.
+      const seamMat=mat(0xd8d3c7,.85), buttonMat=mat(0xd7b56d,.38,.12);
+      limbBetween(g,[0,1.56,.286],[0,1.02,.255],.012,.012,seamMat,8);
+      for(let k=0;k<3;k++) sphere(g,.022,buttonMat,.025,1.48-k*.13,.292,.8,.8,.45);
+      const pocket=box(g,.16,.14,.025,mat(0xe9e5dc,.8),-.205,1.29,.267);
+      pocket.rotation.z=-.04;
+      // Cổ tay áo, tất và đế giày tạo các lớp vật liệu riêng.
+      const sockMat=mat(0xf5f1e8,.88),soleMat=mat(0x202630,.72);
+      for(const side of [-1,1]){
+        const sock=limbBetween(g,[side*.16,.18,.015],[side*.17,.02,.025],.072,.07,sockMat,12);
+        const sole=box(g,.23,.035,.31,soleMat,side*.16,-.675,.13);sole.rotation.z=side*.025;
+      }
       // Hai tay có vai, khuỷu và bàn tay; các nhóm tay/chân vẫn có thể hoạt ảnh.
       const arms=[];
       for(const side of [-1,1]){
@@ -5842,7 +5873,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       }
       sphere(g,.045,M.gold,-.19,1.43,.27,.8,1,.35);
       g.add(labelSprite(name,false));
-      g.userData={student,arms,legs,phase:index*.71,gender:girl?'Nữ':'Nam',sleeping:false,walking:false};
+      g.userData={student,arms,legs,blinkParts,phase:index*.71,gender:girl?'Nữ':'Nam',sleeping:false,walking:false,nextBlink:1.5+(index%5)*.43,blinkTime:0};
       g.scale.setScalar(.67);
       return g;
     }
@@ -5878,6 +5909,26 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       sphere(g,.045,skin,0,2.08,.42,.8,1,.85);
       const smile=new T.CatmullRomCurve3([new T.Vector3(-.085,1.99,.4),new T.Vector3(0,1.965,.425),new T.Vector3(.085,1.99,.4)]);
       g.add(new T.Mesh(new T.TubeGeometry(smile,16,.016,8,false),mat(0x984956)));
+      // Gương mặt cô giáo có mí mắt, sống mũi và tóc mái uốn lọn.
+      const teacherEyes=[];
+      for(const x of [-.18,.18]){
+        const eye=sphere(g,.095,M.white,x,2.22,.39,.92,1.12,.5);
+        const irisPart=sphere(g,.052,mat(0x33232a),x,2.21,.435,.92,1.1,.5);
+        teacherEyes.push({eye,irisPart,eyeY:eye.scale.y,irisY:irisPart.scale.y});
+      }
+      for(let k=0;k<5;k++){
+        const x=(k-2)*.105;
+        const curl=new T.CatmullRomCurve3([new T.Vector3(x-.07,2.49,.28),new T.Vector3(x,2.58,.31),new T.Vector3(x+.06,2.48,.33)]);
+        g.add(new T.Mesh(new T.TubeGeometry(curl,14,.036,8,false),hair));
+      }
+      // Hoa văn thêu nhỏ trên tà áo dài, viền cổ và đường tà mềm.
+      const embroidery=mat(0xffd77d,.42,.12);
+      for(let k=0;k<5;k++){
+        const y=.48+k*.2;
+        const petal=new T.Mesh(new T.SphereGeometry(.045,12,8),embroidery);
+        petal.position.set(.12+Math.sin(k*.8)*.035,y,.265);petal.scale.set(.55,1.5,.25);g.add(petal);
+      }
+      const piping=limbBetween(g,[.22,.2,.17],[.31,1.62,.12],.012,.009,gold,8);
       const arms=[];
       for(const side of [-1,1]){
         const arm=new T.Group();arm.position.set(side*.31,1.48,0);g.add(arm);
@@ -5897,7 +5948,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       const paddle=new T.Group();paddle.position.set(1.05,.85,.1);g.add(paddle);
       const shaft=new T.Mesh(new T.CylinderGeometry(.04,.055,3.15,12),M.wood);shaft.rotation.z=-.7;paddle.add(shaft);
       const blade=new T.Mesh(new T.BoxGeometry(.24,1.02,.12),M.wood2);blade.position.set(1.02,-1.12,0);blade.rotation.z=-.7;paddle.add(blade);
-      g.userData={arms,paddle};g.add(labelSprite('CÔ GIÁO',true));g.scale.setScalar(.82);return g;
+      g.userData={arms,paddle,teacherEyes,nextBlink:2.2,blinkTime:0};g.add(labelSprite('CÔ GIÁO',true));g.scale.setScalar(.82);return g;
     }
     const teacher=makeTeacher();teacher.position.set(-5.45,.95,0);boat.add(teacher);
     // Cô giáo dùng nhân vật dự phòng tích hợp, vẫn giữ mái chèo và bảng tên.
@@ -5977,6 +6028,14 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       boat.rotation.z=Math.sin(elapsed*(storm?4.6:1.6))*(storm?.075:.018)*rocking*5;
       boat.rotation.x=Math.sin(elapsed*(storm?3.5:1.1))*(storm?.045:.012);
       teacher.userData.paddle.rotation.z=Math.sin(elapsed*(storm?7:4))*.24;
+      teacher.rotation.y=Math.sin(elapsed*.7)*.045;
+      teacher.userData.nextBlink-=dt;
+      if(teacher.userData.nextBlink<=0){teacher.userData.blinkTime=.16;teacher.userData.nextBlink=2.8+Math.random()*3.5;}
+      if(teacher.userData.blinkTime>0){
+        teacher.userData.blinkTime=Math.max(0,teacher.userData.blinkTime-dt);
+        const blink=teacher.userData.blinkTime<.08?teacher.userData.blinkTime/.08:(.16-teacher.userData.blinkTime)/.08;
+        teacher.userData.teacherEyes.forEach(e=>{e.eye.scale.y=e.eyeY*Math.max(.08,blink);e.irisPart.scale.y=e.irisY*Math.max(.08,blink);});
+      } else teacher.userData.teacherEyes.forEach(e=>{e.eye.scale.y=e.eyeY;e.irisPart.scale.y=e.irisY;});
       teacher.userData.arms[0].rotation.z=Math.sin(elapsed*4)*.15;
       teacher.userData.arms[1].rotation.z=-.25+Math.sin(elapsed*4+.7)*.13;
       rain.visible=storm;
@@ -5990,7 +6049,18 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
         if(!p.mesh.visible||p.mesh.userData.sleeping)return;
         const phase=elapsed*2.3+p.mesh.userData.phase;
         p.mesh.position.y=p.home.y+Math.sin(phase)*.035;
-        p.mesh.userData.arms.forEach((arm,i)=>{if(!p.mesh.userData.walking)arm.rotation.z=Math.sin(phase+i*Math.PI)*.035;});
+        p.mesh.rotation.y=Math.sin(phase*.45)*.035;
+        p.mesh.userData.arms.forEach((arm,i)=>{if(!p.mesh.userData.walking)arm.rotation.z=Math.sin(phase+i*Math.PI)*.055;});
+        const ud=p.mesh.userData;
+        if(ud.blinkParts){
+          ud.nextBlink-=dt;
+          if(ud.nextBlink<=0){ud.blinkTime=.16;ud.nextBlink=2.4+Math.random()*3.8;}
+          if(ud.blinkTime>0){
+            ud.blinkTime=Math.max(0,ud.blinkTime-dt);
+            const blink=ud.blinkTime<.08?ud.blinkTime/.08:(.16-ud.blinkTime)/.08;
+            ud.blinkParts.forEach(e=>{e.eye.scale.y=e.baseEyeY*Math.max(.08,blink);e.pupil.scale.y=e.basePupilY*Math.max(.08,blink);});
+          } else ud.blinkParts.forEach(e=>{e.eye.scale.y=e.baseEyeY;e.pupil.scale.y=e.basePupilY;});
+        }
       });
       renderer.render(scene,camera);
     }
