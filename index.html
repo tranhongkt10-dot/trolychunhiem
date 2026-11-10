@@ -5847,6 +5847,15 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     const sign=add(scene,new T.PlaneGeometry(7.2,1.55),new T.MeshBasicMaterial({map:new T.CanvasTexture(signCanvas)}),23,4,-7.7);
     // Cầu vồng nhiều dải, ẩn cho đến khi bão tan.
     const rainbow=new T.Group();scene.add(rainbow);
+    // Tia sét hình ziczac, chỉ xuất hiện trong chặng giông bão.
+    const lightningGroup=new T.Group();scene.add(lightningGroup);
+    const boltMat=new T.MeshBasicMaterial({color:0xe8f7ff,transparent:true,opacity:.98});
+    for(let k=0;k<3;k++){
+      const x=-17+k*17;
+      const pts=[new T.Vector3(x,13,-12),new T.Vector3(x-.8,11,-12),new T.Vector3(x+.45,9.6,-12),new T.Vector3(x-1.1,7.2,-12)];
+      lightningGroup.add(add(lightningGroup,new T.TubeGeometry(new T.CatmullRomCurve3(pts),18,.075,6,false),boltMat));
+    }
+    lightningGroup.visible=false;
     [0xef4444,0xf59e0b,0xfde047,0x22c55e,0x3b82f6,0x8b5cf6].forEach((c,i)=>{
       const pts=[];for(let j=0;j<=80;j++){const t=Math.PI*j/80;pts.push(new T.Vector3(12*Math.cos(t),7+7*Math.sin(t)-i*.38,0));}
       rainbow.add(add(rainbow,new T.TubeGeometry(new T.CatmullRomCurve3(pts),100,.17,8,false),mat(c,.42),0,0,-10));
@@ -6042,28 +6051,28 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     game={
       populate,
       beginTrip(){populate();boat.position.x=-8;boatTarget=-5.2;storm=false;calm=false;sailing=false;rain.visible=false;rainbow.visible=false;dolphins.forEach(d=>d.group.visible=false);scene.background.copy(skyCalm);scene.fog.color.copy(skyCalm);},
-      startStorm(){storm=true;calm=false;rain.visible=true;rainbow.visible=false;dolphins.forEach(d=>d.group.visible=true);},
-      async sailToShore(){sailing=true;boatTarget=8;const t=performance.now();while(performance.now()-t<6500)await wait(35);boat.position.x=8;sailing=false;storm=false;calm=true;rain.visible=false;dolphins.forEach(d=>d.group.visible=false);rainbow.visible=true;scene.background.copy(skyClear);scene.fog.color.copy(skyClear);},
+      startStorm(){storm=true;calm=false;rain.visible=true;rainbow.visible=false;lightningGroup.visible=true;dolphins.forEach(d=>d.group.visible=true);},
+      async sailToShore(){sailing=true;boatTarget=8;const t=performance.now();while(performance.now()-t<6500)await wait(35);boat.position.x=8;sailing=false;storm=false;calm=true;rain.visible=false;dolphins.forEach(d=>d.group.visible=false);lightningGroup.visible=false;rainbow.visible=true;scene.background.copy(skyClear);scene.fog.color.copy(skyClear);},
       async disembark(st){
         const p=findStudent(st);if(!p||p.mesh.userData.sleeping)return;
         const m=p.mesh;m.userData.walking=true;const from=m.position.clone(),to=new T.Vector3(6.5,1.02,2.8),t=performance.now(),dur=1550;
         while(performance.now()-t<dur){const q=Math.min(1,(performance.now()-t)/dur),e=q*q*(3-2*q);m.position.lerpVectors(from,to,e);const phase=q*Math.PI*9;m.userData.legs.forEach((l,i)=>l.rotation.x=Math.sin(phase+i*Math.PI)*.65*(1-q*.4));m.userData.arms.forEach((a,i)=>a.rotation.z=(i?1:-1)*Math.sin(phase+i*Math.PI)*.3);await wait(28);}
         m.visible=false;m.userData.walking=false;
       },
-      finishTrip(){storm=false;calm=true;rain.visible=false;rainbow.visible=true;dolphins.forEach(d=>d.group.visible=false);scene.background.copy(skyClear);scene.fog.color.copy(skyClear);},
+      finishTrip(){storm=false;calm=true;rain.visible=false;lightningGroup.visible=false;rainbow.visible=true;dolphins.forEach(d=>d.group.visible=false);scene.background.copy(skyClear);scene.fog.color.copy(skyClear);},
       showSleeper(st){const p=findStudent(st);if(p){p.mesh.visible=true;p.mesh.userData.sleeping=true;p.mesh.position.copy(p.home);p.mesh.rotation.z=-.25;}},
-      reset(){storm=false;calm=false;rain.visible=false;rainbow.visible=false;boat.position.x=-8;populate();}
+      reset(){storm=false;calm=false;rain.visible=false;lightningGroup.visible=false;rainbow.visible=false;dolphins.forEach(d=>d.group.visible=false);boat.position.x=-8;boatTarget=-8;populate();}
     };
     window.ferry3DGame=game;resolveReady(game);
     function animate(){
       requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);elapsed+=dt;
       const pos=water.geometry.attributes.position;
-      for(let i=0;i<pos.count;i++){const x=waterBase[i*3],z=waterBase[i*3+2];const amp=storm?.72:(calm?.10:.075);pos.array[i*3+1]=waterBase[i*3+1]+Math.sin(x*.48+elapsed*2.2)*amp+Math.cos(z*.62-elapsed*1.7)*amp*.55;}
+      for(let i=0;i<pos.count;i++){const x=waterBase[i*3],z=waterBase[i*3+2];const amp=storm?1.08:(calm?.10:.075);pos.array[i*3+1]=waterBase[i*3+1]+Math.sin(x*.48+elapsed*2.2)*amp+Math.cos(z*.62-elapsed*1.7)*amp*.55;}
       pos.needsUpdate=true;water.geometry.computeVertexNormals();
       ripples.forEach((r,i)=>{r.position.x+=dt*(storm?1.8:.55);if(r.position.x>23)r.position.x=-23;r.position.y=-.18+Math.sin(elapsed*2+i)*.07;r.rotation.z=Math.sin(elapsed+i)*.18;});
       boat.position.x+=(boatTarget-boat.position.x)*Math.min(1,dt*(sailing?1.05:3));
-      boat.rotation.z=Math.sin(elapsed*(storm?7.2:1.6))*(storm?.16:.014);
-      boat.rotation.x=Math.sin(elapsed*(storm?5.6:1.1))*(storm?.105:.009);
+      boat.rotation.z=Math.sin(elapsed*(storm?8.5:1.6))*(storm?.23:.014);
+      boat.rotation.x=Math.sin(elapsed*(storm?6.8:1.1))*(storm?.15:.009);
       boat.position.y=storm?Math.sin(elapsed*5.2)*.23:Math.sin(elapsed*1.5)*.035;
       const targetSky=storm?skyStorm:(calm?skyClear:skyCalm);scene.background.lerp(targetSky,Math.min(1,dt*.32));scene.fog.color.lerp(targetSky,Math.min(1,dt*.32));
       // Camera bám theo thuyền, giữ cô giáo và học sinh ở trung tâm khung hình.
@@ -6074,11 +6083,11 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       teacher.userData.nextBlink-=dt;if(teacher.userData.nextBlink<=0){teacher.userData.blink=.16;teacher.userData.nextBlink=2.5+Math.random()*3;}
       if(teacher.userData.blink>0){teacher.userData.blink=Math.max(0,teacher.userData.blink-dt);const k=Math.max(.08,Math.min(1,teacher.userData.blink/.08));teacher.userData.eyes.forEach(e=>e.scale.y=k);}
       rain.visible=storm;
-      if(storm){const a=rain.geometry.attributes.position.array;for(let i=0;i<rainCount;i++){a[i*3]-=dt*2.4;a[i*3+1]-=dt*19;if(a[i*3+1]<0){a[i*3+1]=20+Math.random()*5;a[i*3]=(Math.random()-.5)*50;}}rain.geometry.attributes.position.needsUpdate=true;if(Math.random()<.012){flash.intensity=6+Math.random()*5;setTimeout(()=>flash.intensity=0,90);}}
+      if(storm){const a=rain.geometry.attributes.position.array;for(let i=0;i<rainCount;i++){a[i*3]-=dt*3.8;a[i*3+1]-=dt*24;if(a[i*3+1]<0){a[i*3+1]=20+Math.random()*5;a[i*3]=(Math.random()-.5)*50;}}rain.geometry.attributes.position.needsUpdate=true;if(Math.random()<.018){flash.intensity=9+Math.random()*8;lightningGroup.visible=true;setTimeout(()=>{flash.intensity=0;lightningGroup.visible=false;},130);}}
       else flash.intensity=0;
       clouds.forEach((c,i)=>{c.position.x+=dt*(storm?.12:.22)*(i%2?1:-1);c.children.forEach(ch=>{if(ch.material&&ch.material.color)ch.material.color.lerp(new T.Color(storm?0x647487:0xffffff),Math.min(1,dt*.55));});});
       fish.forEach(f=>{f.g.position.x=f.x+Math.sin(elapsed*.6+f.p)*2;f.g.position.y=-1.1+Math.sin(elapsed*2+f.p)*.13;f.g.rotation.y=Math.sin(elapsed+f.p)*.12;});
-      dolphins.forEach(d=>{const p=elapsed*1.15+d.phase;const side=d.index%2?1:-1;d.group.position.set(boat.position.x-2.8+Math.sin(p)*2.4,-.15+Math.max(0,Math.sin(p*1.65))*.95,-4.5+side*(2.8+(d.index%2)*1.2));d.group.rotation.z=Math.sin(p*1.65)*.24;d.group.rotation.y=side*.16;d.tail.rotation.z=Math.sin(p*2.2)*.42;});
+      dolphins.forEach(d=>{const p=elapsed*1.15+d.phase;const side=d.index%2?1:-1;d.group.position.set(boat.position.x-2.8+Math.sin(p)*2.4,-.15+Math.pow(Math.max(0,Math.sin(p*1.65)),1.5)*2.15,-4.5+side*(2.8+(d.index%2)*1.2));d.group.rotation.z=Math.sin(p*1.65)*.34;d.group.rotation.y=side*.16;d.group.rotation.x=Math.cos(p*1.65)*.16;d.tail.rotation.z=Math.sin(p*2.2)*.42;});
       studentMeshes.forEach(p=>{
         const m=p.mesh,u=m.userData;if(!m.visible||u.sleeping||u.walking)return;
         const phase=elapsed*2.1+u.phase;m.position.y=p.home.y+Math.sin(phase)*.035;m.rotation.y=Math.sin(phase*.45)*.035;
