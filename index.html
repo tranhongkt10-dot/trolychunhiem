@@ -5541,9 +5541,9 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     const canvas=document.createElement('canvas');canvas.id='ferry3DCanvas';
     canvas.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:5;display:block;';
     host.insertBefore(canvas,host.firstChild);
-    const scene=new T.Scene();scene.background=new T.Color(0x9bd9f5);scene.fog=new T.Fog(0x9bd9f5,48,100);
+    const scene=new T.Scene();scene.background=new T.Color(0x79c9ee);scene.fog=new T.Fog(0x79c9ee,58,125);
     const camera=new T.PerspectiveCamera(34,1,.1,180);
-    camera.position.set(0,17.5,27);camera.lookAt(0,1.2,0);
+    camera.position.set(0,21,31);camera.lookAt(0,1.25,0);
     const renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:false});
     renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.7));renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
     if(renderer.outputColorSpace!==undefined)renderer.outputColorSpace=T.SRGBColorSpace;
@@ -5554,7 +5554,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     const fill=new T.DirectionalLight(0x8bd9ff,1.05);fill.position.set(14,12,-16);scene.add(fill);
     const mat=(c,r=.72,m=0)=>new T.MeshStandardMaterial({color:c,roughness:r,metalness:m});
     const M={
-      river:mat(0x078ebc,.2,.08),foam:mat(0xd8fbff,.28),sand:mat(0xf2d39a),
+      river:mat(0x087eaa,.16,.12),foam:mat(0xd8fbff,.28),sand:mat(0xf2d39a),
       grass:mat(0x69b85c),deepGrass:mat(0x34834b),wood:mat(0x75401f),wood2:mat(0xb87539),
       gold:mat(0xf5ca69,.38,.12),skin:mat(0xf4c6a5),white:mat(0xfffdf5,.32),
       navy:mat(0x24477d),red:mat(0xd94c55),pink:mat(0xe96e9f),dark:mat(0x251b1b),
@@ -5659,8 +5659,8 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     // Mái che vải vàng sọc, cột đỡ phía sau thuyền.
     const canopy=new T.Group();canopy.position.set(-1.1,0,0);boat.add(canopy);
     for(const x of [-2.9,2.9])for(const z of [-1.75,1.75])rod(canopy,[x,1.1,z],[x,4.25,z],.09,.09,M.wood);
-    const canopyMat=mat(0xffe1a1,.86);
-    const roof=add(canopy,new T.ConeGeometry(3.15,.7,4),canopyMat,0,4.28,0);roof.scale.set(1,.65,.72);roof.rotation.y=Math.PI/4;
+    const canopyMat=mat(0xffcf78,.78);
+    const roof=add(canopy,new T.ConeGeometry(3.45,.95,4),canopyMat,0,4.28,0);roof.scale.set(1,.65,.78);roof.rotation.y=Math.PI/4;
     for(let i=0;i<7;i++){const strip=box(canopy,.07,.04,4.1,mat(i%2?0xe5a05a:0xfff0c6),-2.6+i*.86,4.1,0);strip.rotation.z=-.08;}
     // Đèn lồng mũi thuyền.
     const lamp=new T.Group();lamp.position.set(6.45,1.55,0);boat.add(lamp);
@@ -5676,64 +5676,101 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       sp.scale.set(1.8,.36,1);sp.position.y=3.15;return sp;
     }
     function character(student,index,isTeacher=false){
-      const g=new T.Group(),skin=mat(isTeacher?0xf0bd9d:[0xf3c6a4,0xe8b18e,0xffd5b9,0xd7a17c][index%4]),hair=isTeacher?mat(0x211713):mat([0x251913,0x38251d,0x171717,0x563a2b][index%4]);
-      const top=isTeacher?mat(0xe65f9a):mat(0xfffbef),bottom=isTeacher?mat(0xe65f9a):M.navy;
-      // thân và cổ
-      const body=add(g,new T.CapsuleGeometry(isTeacher?.34:.27,isTeacher?.9:.55,5,12),top,0,1.05,0);body.scale.set(1,.95,.72);
+      // Tạo hình chibi 3D mới: đầu lớn, tóc tạo khối, đồng phục có cổ áo,
+      // tay chân tách khớp và phụ kiện rõ nét để nhìn thấy ở toàn cảnh.
+      const g=new T.Group();
+      const skin=mat(isTeacher?0xf2c3a4:[0xffd2b5,0xeab493,0xf6c8a8,0xd9a17f][index%4],.82);
+      const hair=mat(isTeacher?0x241713:[0x251914,0x493025,0x171717,0x68432d,0x2b2020][index%5],.94);
+      const shirt=isTeacher?mat(0xd93679,.55):mat([0xfff8e9,0xfff3d9,0xfafafa][index%3],.72);
+      const lower=isTeacher?mat(0xd93679,.62):mat(0x244a83,.65);
+      const shoe=mat(0x28252b,.5), blush=mat(0xef9a91,.9), eyeWhite=mat(0xffffff,.25), iris=mat(0x30212a,.18);
+      // Thân áo và phần dưới
+      const torso=add(g,new T.CapsuleGeometry(isTeacher?.38:.32,isTeacher?.72:.56,6,16),shirt,0,1.16,0);
+      torso.scale.set(1,.92,.78);
       if(isTeacher){
-        const skirt=add(g,new T.ConeGeometry(.75,1.65,32),bottom,0,.35,0);skirt.scale.z=.75;
-        for(let k=0;k<5;k++)ball(g,.035,M.gold,.16+Math.sin(k*.8)*.1,.05+k*.25,.52);
+        const aoDai=add(g,new T.ConeGeometry(.88,1.72,40),lower,0,.36,0);aoDai.scale.set(1,.95,.78);
+        const slit=box(g,.035,.9,.025,mat(0xf5a6c5),.03,.42,.68);
+        for(let j=0;j<5;j++)ball(g,.045,M.gold,.18+Math.sin(j*.8)*.07,.12+j*.22,.57);
       }else{
-        add(g,new T.CylinderGeometry(.25,.24,.2,16),bottom,0,.48,0);
-        for(const side of [-1,1])add(g,new T.CapsuleGeometry(.075,.43,4,8),bottom,side*.15,.12,0);
+        add(g,new T.CylinderGeometry(.32,.31,.19,24),lower,0,.72,0);
+        // cổ áo sơ mi và cà vạt/nơ
+        const collarL=add(g,new T.ConeGeometry(.16,.28,4),mat(0xffffff),-.16,1.52,.26);collarL.rotation.z=-.28;
+        const collarR=add(g,new T.ConeGeometry(.16,.28,4),mat(0xffffff),.16,1.52,.26);collarR.rotation.z=.28;
+        const tie=add(g,new T.ConeGeometry(.09,.34,4),M.red,0,1.34,.31);tie.rotation.x=Math.PI;
+        box(g,.15,.18,.025,M.gold,.2,1.15,.285);
+        // quần short
+        box(g,.58,.32,.48,lower,0,.58,0);
       }
-      rod(g,[0,1.52,0],[0,1.72,0],.09,.09,skin);
-      // Đầu, tóc, mái và tai
-      ball(g,isTeacher?.48:.43,skin,0,2.13,0,1,1.08,.9);
-      ball(g,isTeacher?.49:.45,hair,0,2.4,-.06,1.02,.66,.96);
-      ball(g,.2,hair,-.36,2.12,-.01,.75,1.15,.9);ball(g,.2,hair,.36,2.12,-.01,.75,1.15,.9);
-      if(!isTeacher&&index%2===0){ball(g,.17,hair,.38,2.53,-.28);rod(g,[.4,2.48,-.22],[.55,1.95,-.3],.11,.07,hair);}
-      if(isTeacher){ball(g,.18,hair,.38,2.58,-.3);add(g,new T.CylinderGeometry(.69,.69,.045,40),M.gold,0,2.72,0);add(g,new T.ConeGeometry(.53,.4,40),mat(0xe9d5a7),0,2.94,0);}
-      else {ball(g,.24,hair,0,2.27,.32,1.45,.48,.5);}
-      for(const side of [-1,1])ball(g,.09,skin,side*.42,2.1,.02,.8,1,.7);
+      // Cổ và đầu lớn kiểu nhân vật phim hoạt hình
+      rod(g,[0,1.48,0],[0,1.72,0],.105,.105,skin);
+      ball(g,isTeacher?.59:.56,skin,0,2.2,.015,1,1.04,.91);
+      // Tai và má hồng
+      for(const side of [-1,1]){
+        ball(g,.13,skin,side*.53,2.16,.015,.72,1,.7);
+        ball(g,.105,blush,side*.31,2.02,.455,1.2,.68,.22);
+      }
+      // Mái tóc phủ đầu, tóc mai và các lọn tóc
+      ball(g,.58,hair,0,2.55,-.055,1.04,.64,.98);
+      ball(g,.42,hair,-.39,2.28,-.015,.55,1.05,.82);
+      ball(g,.42,hair,.39,2.28,-.015,.55,1.05,.82);
+      if(isTeacher){
+        // búi tóc và băng đô hoa
+        ball(g,.24,hair,.43,2.72,-.12,1,1.08,1);
+        const band=add(g,new T.TorusGeometry(.48,.045,8,40),M.gold,0,2.66,0);band.rotation.x=Math.PI/2;
+        for(let j=0;j<5;j++){const a=j*Math.PI*2/5;ball(g,.075,mat(0xffc6df),.48*Math.cos(a),2.78,.48*Math.sin(a));}
+      }else{
+        ball(g,.28,hair,0,2.38,.43,1.5,.52,.48);
+        if(index%3===0){ball(g,.16,hair,.44,2.52,-.1);ball(g,.13,hair,.52,2.36,.03);}
+        if(index%3===1){ball(g,.13,hair,-.45,2.48,.02);ball(g,.13,hair,.45,2.48,.02);}
+      }
+      // Mắt to có tròng, điểm sáng và lông mày
       const eyes=[];
-      for(const x of [-.17,.17]){
-        ball(g,.105,M.white,x,2.17,.365,1,.95,.48);
-        const pupil=ball(g,.052,M.eye,x,2.17,.414,1,1,.45);
-        ball(g,.021,M.white,x-.014,2.2,.437);
-        rod(g,[x-.07,2.29,.36],[x+.07,2.3,.36],.016,.016,hair);
+      for(const x of [-.205,.205]){
+        ball(g,.13,eyeWhite,x,2.22,.49,1,.98,.42);
+        const pupil=ball(g,.074,iris,x+.012,2.21,.535,1,1,.5);
+        ball(g,.029,M.white,x-.018,2.25,.568);
+        rod(g,[x-.085,2.39,.47],[x+.075,2.4,.47],.025,.025,hair);
         eyes.push(pupil);
       }
-      ball(g,.045,skin,0,2.06,.42,.8,.8,.7);
-      const smilePts=[new T.Vector3(-.07,1.98,.39),new T.Vector3(0,1.95,.42),new T.Vector3(.07,1.98,.39)];
-      add(g,new T.TubeGeometry(new T.CatmullRomCurve3(smilePts),14,.014,8,false),mat(0x994d55));
-      // Hai tay có bàn tay, chân có giày — nhóm riêng để hoạt ảnh.
+      ball(g,.045,skin,0,2.08,.53,.8,.7,.6);
+      const smilePts=[new T.Vector3(-.105,1.99,.49),new T.Vector3(-.05,1.955,.53),new T.Vector3(.05,1.955,.53),new T.Vector3(.105,1.99,.49)];
+      add(g,new T.TubeGeometry(new T.CatmullRomCurve3(smilePts),18,.019,8,false),mat(0x9e4651));
+      // Tay áo phồng, cánh tay và bàn tay
       const arms=[],legs=[];
       for(const side of [-1,1]){
-        const arm=new T.Group();arm.position.set(side*.32,1.42,0);g.add(arm);
-        rod(arm,[0,0,0],[side*.1,-.32,.02],.11,.085,top);
-        rod(arm,[side*.1,-.32,.02],[side*.16,-.55,.12],.075,.055,skin);
-        ball(arm,.075,skin,side*.16,-.58,.12);arms.push(arm);
-        const leg=new T.Group();leg.position.set(side*.14,.43,0);g.add(leg);
-        rod(leg,[0,0,0],[side*.015,-.38,.02],.09,.075,bottom);
-        ball(leg,.105,mat(0x30313b),side*.015,-.42,.1,1.25,.55,1.7);legs.push(leg);
+        const arm=new T.Group();arm.position.set(side*.36,1.43,0);g.add(arm);
+        const sleeve=add(arm,new T.CapsuleGeometry(.14,.32,4,10),shirt,side*.04,-.18,.015);sleeve.rotation.z=side*.22;
+        rod(arm,[side*.06,-.31,.02],[side*.15,-.55,.15],.075,.06,skin);
+        ball(arm,.09,skin,side*.16,-.59,.16);arms.push(arm);
+        const leg=new T.Group();leg.position.set(side*.16,.57,0);g.add(leg);
+        if(!isTeacher){
+          rod(leg,[0,0,0],[side*.02,-.34,.015],.105,.09,skin);
+          rod(leg,[side*.02,-.32,.015],[side*.02,-.47,.03],.095,.085,lower);
+          ball(leg,.14,shoe,side*.02,-.49,.13,1.35,.65,1.7);
+          ball(leg,.035,M.white,side*.02,-.39,.115,1,.7,.5);
+        }else{
+          rod(leg,[0,0,0],[0,-.42,.02],.12,.1,lower);
+          ball(leg,.13,shoe,0,-.44,.12,1.3,.6,1.6);
+        }
+        legs.push(leg);
       }
       if(!isTeacher){
-        // Nơ đỏ, phù hiệu và quai ba lô
-        const bow=add(g,new T.ConeGeometry(.09,.18,4),M.red,0,1.55,.28);bow.rotation.z=Math.PI;
-        ball(g,.06,M.gold,-.2,1.4,.27,.8,1,.4);
-        const pack=box(g,.42,.46,.2,mat([0x4b86bd,0xd17c50,0x66a47c,0x9275ba][index%4]),0,1.0,-.28);
+        // Ba lô có quai và huy hiệu lớp
+        box(g,.42,.48,.22,mat([0x3d82c2,0xd17c50,0x55a77a,0x9275ba][index%4]),0,1.08,-.31);
+        for(const side of [-1,1])rod(g,[side*.28,1.36,.17],[side*.31,.91,-.18],.035,.035,M.gold);
+        ball(g,.09,M.gold,-.22,1.34,.3);
       }else{
-        // Mái chèo cầm tay và chi tiết áo dài
-        const paddle=new T.Group();paddle.position.set(1.0,.9,.1);g.add(paddle);
-        rod(paddle,[0,1.25,0],[1.05,-1.1,0],.055,.045,M.wood);
-        box(paddle,.25,1.0,.12,M.wood2,1.05,-1.12,0);
+        const paddle=new T.Group();paddle.position.set(.95,.92,.08);g.add(paddle);
+        rod(paddle,[0,1.15,0],[1.08,-1.1,0],.065,.05,M.wood);
+        const blade=add(paddle,new T.CapsuleGeometry(.16,.56,4,10),M.wood2,1.08,-1.05,0);blade.rotation.z=-.18;blade.scale.set(.85,1.15,.42);
         g.userData.paddle=paddle;
+        // hoa văn viền áo dài
+        for(let j=0;j<7;j++)ball(g,.035,M.gold,.29, .05+j*.22,.48);
       }
       const nm=isTeacher?'CÔ GIÁO':String(student?.name||student?.fullName||'Bạn nhỏ');
       g.add(makeLabel(nm,isTeacher));
       g.userData={...g.userData,student,arms,legs,eyes,phase:index*.71,sleeping:false,walking:false,nextBlink:2+Math.random()*2,blink:0};
-      if(isTeacher)g.scale.setScalar(.88);else g.scale.setScalar(.72);
+      g.scale.setScalar(isTeacher?1.02:.86);
       return g;
     }
     const teacher=character({},0,true);teacher.position.set(-5.65,1.02,0);boat.add(teacher);
