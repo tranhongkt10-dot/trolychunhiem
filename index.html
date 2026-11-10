@@ -5881,25 +5881,14 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     const dolphinMat=mat(0x4f9fc4,.34,.12),dolphinLight=mat(0xb9e8ef,.42),dolphinDark=mat(0x285c82,.38);
     for(let i=0;i<4;i++){
       const d=new T.Group();scene.add(d);
-      // Cá heo có thân thuôn, bụng sáng, mõm dài, vây lưng cong và đuôi chẻ hai thùy.
-      ball(d,.68,dolphinMat,0,0,0,1.85,.72,.72);
-      ball(d,.43,dolphinLight,.12,-.29,.015,1.55,.42,.68);
-      const rostrum=add(d,new T.CapsuleGeometry(.22,.72,5,12),dolphinMat,1.12,-.08,0);
-      rostrum.rotation.z=Math.PI/2;rostrum.scale.set(1,.72,.78);
-      const dorsalShape=new T.Shape();dorsalShape.moveTo(-.42,0);dorsalShape.quadraticCurveTo(-.12,.12,.02,.72);dorsalShape.quadraticCurveTo(.22,.43,.38,0);dorsalShape.closePath();
-      add(d,new T.ExtrudeGeometry(dorsalShape,{depth:.12,bevelEnabled:true,bevelSize:.04,bevelThickness:.035,bevelSegments:2}),dolphinDark,-.2,.48,-.06);
-      const tail=new T.Group();tail.position.set(-1.62,0,0);d.add(tail);
-      for(const side of [-1,1]){
-        const lobe=ball(tail,.42,dolphinMat,-.2,side*.32,0,.72,.42,.3);lobe.rotation.z=side*.45;
-        const finShape=new T.Shape();finShape.moveTo(-.28,0);finShape.quadraticCurveTo(.02,-.12,.52,-.5);finShape.quadraticCurveTo(.42,-.04,.16,.18);finShape.closePath();
-        const fin=add(d,new T.ExtrudeGeometry(finShape,{depth:.1,bevelEnabled:true,bevelSize:.025,bevelThickness:.02,bevelSegments:2}),dolphinDark,-.1,-.35,side*.35);
-        fin.rotation.x=side*.35;
-      }
-      for(const side of [-1,1]){
-        const pectoral=add(d,new T.ConeGeometry(.2,.72,4),dolphinDark,.05,-.43,side*.48);
-        pectoral.rotation.z=1.15;pectoral.rotation.x=side*.38;
-      }
-      ball(d,.075,M.white,.98,.16,.48);ball(d,.038,dolphinDark,1.01,.16,.535);
+      const body=ball(d,.72,dolphinMat,0,0,0,1.65,.72,.78);
+      ball(d,.39,dolphinLight,.72,-.12,.02,1.05,.48,.72);
+      const snout=ball(d,.28,dolphinMat,1.08,-.04,.02,1.1,.55,.62);
+      const dorsal=add(d,new T.ConeGeometry(.28,.72,4),dolphinDark,-.12,.62,0);dorsal.rotation.z=.22;
+      const tail=new T.Group();tail.position.set(-1.05,0,0);d.add(tail);
+      const fluke=add(tail,new T.ConeGeometry(.42,.9,3),dolphinMat,-.22,0,0);fluke.rotation.z=Math.PI/2;fluke.scale.set(1,.62,1);
+      for(const side of [-1,1]){const fin=add(d,new T.ConeGeometry(.2,.62,3),dolphinDark,.05,-.42,side*.48);fin.rotation.z=.8;fin.rotation.x=side*.3;}
+      ball(d,.065,M.white,.9,.17,.48);ball(d,.032,dolphinDark,.93,.17,.53);
       dolphins.push({group:d,tail,index:i,phase:i*1.7});
     }
     // Cá hoạt hình bơi sát mặt nước.
@@ -5921,19 +5910,8 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     hullGeo.rotateX(Math.PI/2);
     const hull=add(boat,hullGeo,mat(0x63351f,.56),0,.12,0);hull.castShadow=true;
     // Ván sàn, sống thuyền và nẹp đồng sáng.
-     // Sàn ghép ván ngang, để lộ dáng thân thuyền thuôn hai đầu.
-     for(let i=0;i<9;i++)box(boat,12.9,.13,.43,i%2?M.wood:M.wood2,0,.77,-1.72+i*.43);
-     for(let i=0;i<17;i++)box(boat,.045,.035,4.0,M.gold,-6.8+i*.85,.86,0);
-     rod(boat,[-6.9,.1,0],[6.9,.1,0],.16,.12,M.wood);
-     // Bốn băng ghế dọc thân thuyền để học sinh thực sự ngồi trong lúc di chuyển.
-     for(const z of [-1.55,-.52,.52,1.55]){
-       box(boat,10.2,.18,.58,M.wood,-.1,1.12,z);
-       for(const x of [-4.4,4.4])box(boat,.16,.82,.16,M.wood,x,.72,z);
-     }
-     // Ghế riêng cho cô giáo ở đầu thuyền.
-     box(boat,1.55,.18,.9,M.wood,-5.65,1.48,0);
-     box(boat,.16,.82,.16,M.wood,-6.25,1.08,0);
-     box(boat,.16,.82,.16,M.wood,-5.05,1.08,0);
+    box(boat,14.1,.22,5.0,M.wood2,0,.82,0);
+    for(let i=0;i<17;i++)box(boat,.045,.035,4.85,M.gold,-6.8+i*.85,.95,0);
     for(const side of [-1,1]){
       const curve=new T.CatmullRomCurve3([new T.Vector3(-7.1,.9,side*2.28),new T.Vector3(-5.5,.62,side*2.55),new T.Vector3(0,.6,side*2.58),new T.Vector3(5.5,.68,side*2.42),new T.Vector3(7.25,1.0,side*2.12)]);
       add(boat,new T.TubeGeometry(curve,70,.105,12,false),M.gold);
@@ -6055,8 +6033,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       }
       const nm=isTeacher?'CÔ GIÁO':String(student?.name||student?.fullName||'Bạn nhỏ');
       g.add(makeLabel(nm,isTeacher));
-       legs.forEach(l=>{l.rotation.x=isTeacher?-.62:-1.02;});
-       g.userData={...g.userData,student,arms,legs,eyes,phase:index*.71,sleeping:false,walking:false,seated:true,nextBlink:2+Math.random()*2,blink:0};
+       g.userData={...g.userData,student,arms,legs,eyes,phase:index*.71,sleeping:false,walking:false,nextBlink:2+Math.random()*2,blink:0};
       g.scale.setScalar(isTeacher?1.22:1.02);
       return g;
     }
@@ -6069,7 +6046,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       const cols=10,rowZ=[-1.55,-.52,.52,1.55];
       roster.forEach((st,i)=>{
         const mesh=character(st,i,false),col=i%cols,row=Math.floor(i/cols)%4;
-        mesh.position.set(-4.55+col*.98,.76,rowZ[row]);
+        mesh.position.set(-4.55+col*.98,1.02,rowZ[row]);
         if(st===sleeper){mesh.userData.sleeping=true;mesh.rotation.z=-.2;}
         boat.add(mesh);studentMeshes.push({student:st,mesh,home:mesh.position.clone()});
       });
