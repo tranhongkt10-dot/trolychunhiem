@@ -171,6 +171,75 @@ body.lhp-app-authenticated>main{visibility:visible}
 .garden-reminder-face{font-size:clamp(100px,17vw,170px);line-height:1.15;margin:18px auto 12px;filter:drop-shadow(0 8px 8px #596b8a30);animation:gardenPop .65s both}
 .garden-reminder-note{margin:14px auto 0;max-width:330px;padding:12px 14px;border-radius:16px;background:#fff;color:#52627d;font-size:13px;font-weight:800;line-height:1.55}
 
+  
+/* ===== THANH ĐIỀU KHIỂN THU GỌN / HIỆN LẠI ===== */
+body.lhp-hide-header>header{display:none!important}
+body.lhp-hide-nav>nav{display:none!important}
+@media(min-width:1024px){
+ body.lhp-hide-nav>header{margin-left:0!important;width:100%!important}
+ body.lhp-hide-nav>main{margin-left:0!important;width:100%!important}
+ body.lhp-hide-nav>nav{display:none!important}
+}
+.lhp-view-controls{position:fixed;right:12px;z-index:14000;display:flex;gap:7px;align-items:center}
+.lhp-view-controls-top{top:8px}
+.lhp-view-controls-bottom{bottom:12px}
+.lhp-view-controls button{border:1px solid #f0bfd9;background:rgba(255,255,255,.96);color:#783b70;border-radius:999px;padding:8px 12px;font-size:11px;font-weight:900;box-shadow:0 4px 14px #60345a20;backdrop-filter:blur(8px)}
+.lhp-view-controls button:hover{background:#fce7f3}
+@media(max-width:700px){.lhp-view-controls{right:7px}.lhp-view-controls button{padding:7px 9px;font-size:10px}}
+/* ===== DANH SÁCH HỌC SINH: LƯỚI 2 DÃY NGANG ===== */
+#tab-students .overflow-x-auto{overflow:visible!important}
+#tab-students table{display:block!important;width:100%!important}
+#tab-students table thead{display:none!important}
+#studentsTableBody{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px 12px!important;width:100%!important;padding:8px!important}
+#studentsTableBody>tr{display:grid!important;grid-template-columns:42px minmax(0,1fr) auto!important;grid-template-rows:auto auto!important;align-items:center!important;gap:3px 8px!important;min-width:0!important;min-height:62px!important;padding:7px 9px!important;border:1px solid #f2d6e6!important;border-radius:13px!important;background:#fff!important;box-shadow:0 2px 6px #7d3d5b10!important}
+#studentsTableBody>tr>td{display:block!important;min-width:0!important;padding:0!important;text-align:left!important;overflow:hidden}
+#studentsTableBody>tr>td:nth-child(1){display:none!important}
+#studentsTableBody>tr>td:nth-child(2){grid-column:1!important;grid-row:1/3!important}
+#studentsTableBody>tr>td:nth-child(3){display:none!important}
+#studentsTableBody>tr>td:nth-child(4){grid-column:2!important;grid-row:1!important}
+#studentsTableBody>tr>td:nth-child(4)>div:first-child{font-size:12px!important;line-height:1.2!important;white-space:normal!important;overflow-wrap:anywhere!important}
+#studentsTableBody>tr>td:nth-child(4)>div:nth-child(2){display:flex!important;flex-wrap:wrap!important;gap:2px 5px!important;font-size:9px!important;line-height:1.2!important;margin-top:3px!important}
+#studentsTableBody>tr>td:nth-child(5){grid-column:3!important;grid-row:1!important;text-align:right!important}
+#studentsTableBody>tr>td:nth-child(5) span{font-size:9px!important;padding:3px 6px!important;white-space:nowrap}
+#studentsTableBody>tr>td:nth-child(6){grid-column:2/4!important;grid-row:2!important}
+#studentsTableBody>tr>td:nth-child(6)>div{display:flex!important;justify-content:flex-start!important;gap:4px!important;flex-wrap:nowrap!important}
+#studentsTableBody>tr>td:nth-child(6) button{font-size:9px!important;padding:3px 6px!important;white-space:nowrap!important}
+@media(max-width:720px){
+ #studentsTableBody{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5px!important;padding:4px!important}
+ #studentsTableBody>tr{grid-template-columns:32px minmax(0,1fr)!important;grid-template-rows:auto auto auto!important;padding:5px!important;gap:2px 5px!important}
+ #studentsTableBody>tr>td:nth-child(2){grid-column:1!important;grid-row:1/3!important}
+ #studentsTableBody>tr>td:nth-child(2) img{width:30px!important;height:30px!important}
+ #studentsTableBody>tr>td:nth-child(4){grid-column:2!important;grid-row:1!important}
+ #studentsTableBody>tr>td:nth-child(4)>div:first-child{font-size:10px!important}
+ #studentsTableBody>tr>td:nth-child(4)>div:nth-child(2){font-size:8px!important}
+ #studentsTableBody>tr>td:nth-child(5){grid-column:2!important;grid-row:2!important;text-align:left!important}
+ #studentsTableBody>tr>td:nth-child(6){grid-column:1/3!important;grid-row:3!important}
+ #studentsTableBody>tr>td:nth-child(6) button{font-size:8px!important;padding:2px 4px!important}
+}
+/* ===== GƯƠNG MẶT THẦN KỲ VÀ CÔNG CỤ LỚP: THU GỌN ===== */
+#tab-faceplay{max-width:1250px!important;margin:0 auto!important;gap:10px!important}
+#tab-faceplay>div:first-child{padding:12px 16px!important;border-radius:18px!important}
+#tab-faceplay>div:first-child h2{font-size:clamp(18px,2vw,24px)!important}
+#tab-faceplay .grid.lg\:grid-cols-5{gap:10px!important}
+#tab-faceplay .rounded-3xl,#tab-faceplay .rounded-2xl{border-radius:14px!important}
+#tab-faceplay .p-7,#tab-faceplay .p-5,#tab-faceplay .p-4{padding:10px!important}
+#tab-faceplay video,#tab-faceplay canvas{max-height:300px!important}
+#tab-faceplay [style*="max-height:560px"]{max-height:300px!important}
+#tab-faceplay [style*="min-height:190px"]{min-height:130px!important;max-height:210px!important}
+#tab-faceplay .text-5xl{font-size:30px!important}
+#tab-faceplay .text-4xl{font-size:26px!important}
+#tab-faceplay .text-3xl{font-size:22px!important}
+#tab-tools{gap:10px!important}
+#tab-tools .p-6,#tab-tools .p-5,#tab-tools .p-4{padding:10px!important}
+#tab-tools .rounded-3xl,#tab-tools .rounded-2xl{border-radius:14px!important}
+#tab-tools .gap-6,#tab-tools .gap-5,#tab-tools .gap-4{gap:9px!important}
+#tab-tools h2{font-size:clamp(16px,1.6vw,21px)!important}
+#tab-tools button{font-size:11px!important}
+@media(min-width:900px){
+ #tab-tools,#tab-faceplay,#tab-seating,#tab-attendance,#tab-parent,#tab-gallery,#tab-competition,#tab-lessonbook{max-width:1600px!important;margin-left:auto!important;margin-right:auto!important}
+ #tab-seating #seatingGridContainer{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:7px!important}
+}
+
   </style>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -2319,6 +2388,16 @@ body.lhp-app-authenticated>main{visibility:visible}
         <section><h4 class="font-black text-sm text-slate-800 mb-2">👩‍🏫 Tài khoản giáo viên</h4><p class="text-xs text-slate-600 mb-2">Mỗi lớp chỉ được gán một giáo viên chủ nhiệm tại một thời điểm.</p><div id="adminAccountsList" class="space-y-2"><p class="text-sm text-slate-500">Đang tải...</p></div></section>
       </div>
     </div>
+  </div>
+
+  <!-- NÚT THU GỌN / HIỆN THANH CÔNG CỤ TRÊN VÀ DƯỚI -->
+  <div class="lhp-view-controls lhp-view-controls-top" aria-label="Điều khiển thanh công cụ phía trên">
+    <button type="button" onclick="toggleLhpView('header')" id="lhpHeaderToggle">Ẩn thanh trên ▲</button>
+    <button type="button" onclick="toggleLhpView('nav')" id="lhpNavToggle">Ẩn thanh chức năng ☰</button>
+  </div>
+  <div class="lhp-view-controls lhp-view-controls-bottom" aria-label="Điều khiển nhanh phía dưới">
+    <button type="button" onclick="toggleLhpView('header')">Hiện/Ẩn thanh trên</button>
+    <button type="button" onclick="toggleLhpView('nav')">Hiện/Ẩn thanh chức năng</button>
   </div>
 
   <!-- TOAST THÔNG BÁO -->
@@ -6539,5 +6618,23 @@ document.addEventListener('DOMContentLoaded',function(){
   const honorNav=document.getElementById('nav-honors');if(honorNav)honorNav.remove();
 });
 </script>
+
+<script>
+(function(){
+ window.toggleLhpView=function(which){
+   const body=document.body;
+   if(which==='header'){
+     body.classList.toggle('lhp-hide-header');
+     const hidden=body.classList.contains('lhp-hide-header');
+     const b=document.getElementById('lhpHeaderToggle');if(b)b.textContent=hidden?'Hiện thanh trên ▼':'Ẩn thanh trên ▲';
+   }else if(which==='nav'){
+     body.classList.toggle('lhp-hide-nav');
+     const hidden=body.classList.contains('lhp-hide-nav');
+     const b=document.getElementById('lhpNavToggle');if(b)b.textContent=hidden?'Hiện thanh chức năng ☰':'Ẩn thanh chức năng ☰';
+   }
+ };
+})();
+</script>
+
 </body>
 </html>
