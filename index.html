@@ -6088,8 +6088,8 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     canvas.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:5;display:block;';
     host.insertBefore(canvas,host.firstChild);
     const scene=new T.Scene();scene.background=new T.Color(0x79c9ee);scene.fog=new T.Fog(0x79c9ee,58,125);
-    const camera=new T.PerspectiveCamera(34,1,.1,180);
-    camera.position.set(0,15.5,24.5);camera.lookAt(0,1.45,0);
+    const camera=new T.PerspectiveCamera(32,1,.1,180);
+    camera.position.set(1.5,14.8,25.8);camera.lookAt(0,1.35,0);
     const renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:false});
     renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.7));renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
     if(renderer.outputColorSpace!==undefined)renderer.outputColorSpace=T.SRGBColorSpace;
@@ -6135,7 +6135,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     // Cây ven sông tạo thành hai bờ xanh, có tán lá nhiều tầng.
     const trunkMat=mat(0x80502e,.95),leafMats=[mat(0x3d9858,.92),mat(0x58ad64,.92),mat(0x80c96c,.92)];
     function riverTree(x,z,scale=1){
-      const g=new T.Group();g.position.set(x,0,z);g.scale.setScalar(scale);scene.add(g);
+      const g=new T.Group();g.position.set(x,0,z);g.scale.setScalar(scale);scene.add(g);swayTrees.push({group:g,phase:x*.17+z*.11});
       rod(g,[0,0,0],[0,2.6,0],.22,.32,trunkMat);
       ball(g,.95,leafMats[0],0,2.9,0,1.25,1.05,1.1);
       ball(g,.72,leafMats[1],-.62,3.18,.12,1.1,1.05,1);
@@ -6156,7 +6156,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       ball(scene,.12,mat(0x5b9e56),x,.05,z+.18,1,.55,1);
     }
     // Mây bông lớn, mặt trời có tia sáng.
-    const clouds=[];
+    const clouds=[],swayTrees=[];
     function cloud(x,y,z,s=1){
       const g=new T.Group();g.position.set(x,y,z);g.scale.setScalar(s);scene.add(g);
       for(let i=0;i<7;i++)ball(g,1.15,mat(0xffffff,.98),(i-3)*.82,Math.sin(i*1.6)*.28,0,1.25,.78,.85);
@@ -6357,17 +6357,23 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       const g=new T.Group();
       const skin=mat(isTeacher?0xe9b99a:[0xf0c6a8,0xe8b99b,0xf3c9ae,0xdca98d][index%4],.82);
       // Tạo hình người Việt Nam/Đông Á: tóc đen, mắt nâu đậm, màu da tự nhiên.
-      const hair=mat(0x171311,.9);
-      const shirt=isTeacher?mat(0xd81b72,.56):mat(0xfffdf7,.68);
-      const lower=isTeacher?mat(0xc2185b,.62):mat(0x203b68,.7);
+      const hair=mat(0x101010,.88);
+      const shirt=isTeacher?mat(0xec4899,.48):mat(0xfffdf7,.62);
+      const lower=isTeacher?mat(0xd62978,.54):mat(0x203b68,.62);
       const shoe=mat(0x29252b,.48),blush=mat(0xef9a91,.88),eyeWhite=mat(0xffffff,.22),iris=mat(0x30212a,.18);
       // Thân người gọn, bo tròn; cổ áo và phần thân có lớp rõ ràng.
       const torso=add(g,new T.CapsuleGeometry(isTeacher?.36:.32,isTeacher?.68:.62,8,18),shirt,0,1.28,0);
       torso.scale.set(1.02,1,.84);
       if(isTeacher){
-        const robe=add(g,new T.CylinderGeometry(.38,.62,1.25,36,1),lower,0,.62,0);robe.scale.z=.82;
-        const front=box(g,.055,.92,.035,mat(0xf5a6c5),.03,.62,.49);
-        for(let j=0;j<5;j++)ball(g,.035,M.gold,.22,.25+j*.19,.48);
+        const robe=add(g,new T.CylinderGeometry(.38,.62,1.25,48,2),lower,0,.62,0);robe.scale.z=.82;
+        // Hai tà áo dài hồng cánh sen rủ mềm phía trước, tạo lớp vải và đường xẻ đặc trưng.
+        const panelMat=mat(0xf36aa8,.5),panelLight=mat(0xff9bc5,.56);
+        const panelShape=new T.Shape();panelShape.moveTo(-.19,1.18);panelShape.quadraticCurveTo(-.28,.7,-.34,.02);panelShape.quadraticCurveTo(-.13,-.04,0,.02);panelShape.lineTo(.015,1.18);panelShape.closePath();
+        const panel=add(g,new T.ShapeGeometry(panelShape),panelMat,0,0,.505);panel.material.side=T.DoubleSide;
+        const sidePanel=new T.Shape();sidePanel.moveTo(.025,1.18);sidePanel.lineTo(.19,1.18);sidePanel.quadraticCurveTo(.28,.7,.34,.02);sidePanel.quadraticCurveTo(.13,-.04,.025,.02);sidePanel.closePath();
+        const panel2=add(g,new T.ShapeGeometry(sidePanel),panelLight,0,0,.51);panel2.material.side=T.DoubleSide;
+        rod(g,[-.02,1.16,.52],[-.02,.08,.52],.012,.012,mat(0xffd2e4,.5));
+        for(let j=0;j<5;j++)ball(g,.028,M.gold,.22,.25+j*.19,.48);
         // Cổ áo dài viền sáng.
         rod(g,[-.15,1.57,.31],[0,1.43,.48],.035,.025,M.gold);
         rod(g,[.15,1.57,.31],[0,1.43,.48],.035,.025,M.gold);
@@ -6383,20 +6389,22 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       }
       rod(g,[0,1.55,0],[0,1.78,0],.095,.095,skin);
       // Đầu tròn, tai, má và mũi nhỏ.
-      ball(g,isTeacher?.50:.44,skin,0,2.24,.02,1,1.04,.9);
+      ball(g,isTeacher?.49:.405,skin,0,2.24,.02,1,1.04,.9);
       for(const side of [-1,1]){
         ball(g,.105,skin,side*.47,2.2,.01,.8,1,.75);
         ball(g,.085,blush,side*.285,2.06,.425,1.2,.65,.2);
       }
       // Tóc ôm đầu, mái tóc nhiều lọn mềm.
-      ball(g,.46,hair,0,2.56,-.055,1.05,.62,.98);
-      ball(g,.30,hair,-.32,2.35,.02,.65,.95,.82);
-      ball(g,.30,hair,.32,2.35,.02,.65,.95,.82);
-      ball(g,.25,hair,0,2.43,.39,1.45,.48,.48);
+      ball(g,isTeacher?.455:.39,hair,0,2.56,-.055,1.05,.62,.98);
+      ball(g,.28,hair,-.32,2.35,.02,.65,.95,.82);
+      ball(g,.28,hair,.32,2.35,.02,.65,.95,.82);
+      ball(g,.23,hair,0,2.43,.39,1.45,.48,.48);
       if(isTeacher){
         // Tóc đen búi cao gọn phía đỉnh đầu, không nón lá, không vương miện.
-        ball(g,.245,hair,0,3.02,-.12,1.05,1.08,1);
-        ball(g,.13,hair,0,2.84,-.10,1.1,.8,1);
+        ball(g,.255,hair,0,3.04,-.13,1.08,1.08,1);
+        ball(g,.14,hair,0,2.86,-.11,1.1,.8,1);
+        // Viền búi tóc và lọn tóc mai gọn gàng.
+        const bunBand=add(g,new T.TorusGeometry(.205,.025,8,28),mat(0x252020,.8),0,3.02,-.12);bunBand.rotation.x=.35;
       }else{
         if(index%3===0){ball(g,.13,hair,.4,2.52,-.12);ball(g,.12,hair,.48,2.36,.03);}
         if(index%3===1){ball(g,.12,hair,-.43,2.5,.02);ball(g,.12,hair,.43,2.5,.02);}
@@ -6607,6 +6615,8 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
          flash.intensity=0;sunBall.visible=true;sunGlow.intensity=calm?1.35:1.2;
        }
       clouds.forEach((c,i)=>{c.position.x+=dt*(storm?.12:.22)*(i%2?1:-1);c.children.forEach(ch=>{if(ch.material&&ch.material.color)ch.material.color.lerp(new T.Color(storm?0x647487:0xffffff),Math.min(1,dt*.55));});});
+      // Gió nhẹ làm tán cây ven sông lay động; tăng độ sống động của toàn cảnh.
+      swayTrees.forEach(t=>{t.group.rotation.z=Math.sin(elapsed*1.05+t.phase)*(storm?.055:.022);});
       fish.forEach(f=>{f.g.position.x=f.x+Math.sin(elapsed*.6+f.p)*2;f.g.position.y=-1.1+Math.sin(elapsed*2+f.p)*.13;f.g.rotation.y=Math.sin(elapsed+f.p)*.12;});
        dolphins.forEach(d=>{const p=elapsed*1.25+d.phase;const side=d.index%2?1:-1;const leap=Math.pow(Math.max(0,Math.sin(p*1.55)),1.7);d.group.position.set(boat.position.x-3.0+Math.sin(p)*1.65,-.28+leap*1.75,-3.9+side*(2.35+(d.index%2)*1.15));d.group.rotation.z=Math.sin(p*1.55)*.16;d.group.rotation.y=side*.08;d.group.rotation.x=Math.cos(p*1.55)*.08;d.tail.rotation.x=Math.sin(p*2.4)*.38;});
       studentMeshes.forEach(p=>{
