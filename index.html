@@ -6091,7 +6091,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
         for(const key of ['general','movement']){
           for(const clip of modelAssets.files[key].animations||[])if(!modelAssets.clips.has(clip.name))modelAssets.clips.set(clip.name,clip);
         }
-      }catch(assetError){console.warn('Không tải được bộ nhân vật GLB, dùng phương án dự phòng:',assetError);}
+      }catch(assetError){console.error('Không tải được bộ nhân vật GLB:',assetError);status('Không tải được mô hình nhân vật 3D. Vui lòng tải lại trang hoặc kiểm tra kết nối.');throw assetError;}
       init(THREE,modelAssets);
     }catch(e){console.error('3D ferry:',e);status('Không tải được cảnh 3D. Hãy kiểm tra kết nối Internet và tải lại trang.');rejectReady(e);}
   }
@@ -6389,124 +6389,6 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       const sp=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(c),transparent:true,depthTest:false}));
       sp.scale.set(2.25,.45,1);sp.position.y=3.35;return sp;
     }
-    function proceduralCharacter(student,index,isTeacher=false){
-      // Nhân vật chibi điện ảnh: tỷ lệ đầu-thân cân đối, gương mặt có chiều sâu, tóc và trang phục tách lớp.
-      const g=new T.Group();
-      const skin=mat(isTeacher?0xe9b99a:[0xf0c6a8,0xe8b99b,0xf3c9ae,0xdca98d][index%4],.82);
-      // Tạo hình người Việt Nam/Đông Á: tóc đen, mắt nâu đậm, màu da tự nhiên.
-      const hair=mat(0x101010,.88);
-      const shirt=isTeacher?mat(0xec4899,.48):mat(0xfffdf7,.62);
-      const lower=isTeacher?mat(0xd62978,.54):mat(0x203b68,.62);
-      const shoe=mat(0x29252b,.48),blush=mat(0xef9a91,.88),eyeWhite=mat(0xffffff,.22),iris=mat(0x30212a,.18);
-      // Thân người gọn, bo tròn; cổ áo và phần thân có lớp rõ ràng.
-      const torso=add(g,new T.CapsuleGeometry(isTeacher?.36:.32,isTeacher?.68:.62,8,18),shirt,0,1.28,0);
-      torso.scale.set(1.02,1,.84);
-      if(isTeacher){
-        const robe=add(g,new T.CylinderGeometry(.38,.62,1.25,48,2),lower,0,.62,0);robe.scale.z=.82;
-        // Hai tà áo dài hồng cánh sen rủ mềm phía trước, tạo lớp vải và đường xẻ đặc trưng.
-        const panelMat=mat(0xf36aa8,.5),panelLight=mat(0xff9bc5,.56);
-        const panelShape=new T.Shape();panelShape.moveTo(-.19,1.18);panelShape.quadraticCurveTo(-.28,.7,-.34,.02);panelShape.quadraticCurveTo(-.13,-.04,0,.02);panelShape.lineTo(.015,1.18);panelShape.closePath();
-        const panel=add(g,new T.ShapeGeometry(panelShape),panelMat,0,0,.505);panel.material.side=T.DoubleSide;
-        const sidePanel=new T.Shape();sidePanel.moveTo(.025,1.18);sidePanel.lineTo(.19,1.18);sidePanel.quadraticCurveTo(.28,.7,.34,.02);sidePanel.quadraticCurveTo(.13,-.04,.025,.02);sidePanel.closePath();
-        const panel2=add(g,new T.ShapeGeometry(sidePanel),panelLight,0,0,.51);panel2.material.side=T.DoubleSide;
-        rod(g,[-.02,1.16,.52],[-.02,.08,.52],.012,.012,mat(0xffd2e4,.5));
-        for(let j=0;j<5;j++)ball(g,.028,M.gold,.22,.25+j*.19,.48);
-        // Cổ áo dài viền sáng.
-        rod(g,[-.15,1.57,.31],[0,1.43,.48],.035,.025,M.gold);
-        rod(g,[.15,1.57,.31],[0,1.43,.48],.035,.025,M.gold);
-      }else{
-        add(g,new T.CylinderGeometry(.31,.33,.22,28),lower,0,.67,0);
-        const collarL=add(g,new T.ConeGeometry(.13,.24,4),mat(0xffffff),-.14,1.62,.25);collarL.rotation.z=-.3;
-        const collarR=add(g,new T.ConeGeometry(.13,.24,4),mat(0xffffff),.14,1.62,.25);collarR.rotation.z=.3;
-        const scarfShape=new T.Shape();scarfShape.moveTo(-.16,1.56);scarfShape.lineTo(.16,1.56);scarfShape.lineTo(.015,1.04);scarfShape.lineTo(-.015,1.04);scarfShape.closePath();
-        add(g,new T.ShapeGeometry(scarfShape),M.red,0,0,.345);
-        ball(g,.085,M.red,0,1.57,.36,1,.8,.65);
-        box(g,.13,.16,.025,M.gold,.2,1.3,.28);
-        box(g,.55,.3,.45,lower,0,.57,0);
-      }
-      rod(g,[0,1.55,0],[0,1.78,0],.095,.095,skin);
-      // Đầu tròn, tai, má và mũi nhỏ.
-      ball(g,isTeacher?.49:.405,skin,0,2.24,.02,1,1.04,.9);
-      for(const side of [-1,1]){
-        ball(g,.105,skin,side*.47,2.2,.01,.8,1,.75);
-        ball(g,.085,blush,side*.285,2.06,.425,1.2,.65,.2);
-      }
-      // Tóc ôm đầu, mái tóc nhiều lọn mềm.
-      ball(g,isTeacher?.455:.39,hair,0,2.56,-.055,1.05,.62,.98);
-      ball(g,.28,hair,-.32,2.35,.02,.65,.95,.82);
-      ball(g,.28,hair,.32,2.35,.02,.65,.95,.82);
-      ball(g,.23,hair,0,2.43,.39,1.45,.48,.48);
-      if(isTeacher){
-        // Tóc đen búi cao gọn phía đỉnh đầu, không nón lá, không vương miện.
-        ball(g,.255,hair,0,3.04,-.13,1.08,1.08,1);
-        ball(g,.14,hair,0,2.86,-.11,1.1,.8,1);
-        // Viền búi tóc và lọn tóc mai gọn gàng.
-        const bunBand=add(g,new T.TorusGeometry(.205,.025,8,28),mat(0x252020,.8),0,3.02,-.12);bunBand.rotation.x=.35;
-      }else{
-        if(index%3===0){ball(g,.13,hair,.4,2.52,-.12);ball(g,.12,hair,.48,2.36,.03);}
-        if(index%3===1){ball(g,.12,hair,-.43,2.5,.02);ball(g,.12,hair,.43,2.5,.02);}
-      }
-      // Mắt long lanh có tròng, điểm sáng, lông mày và nụ cười.
-      const eyes=[];
-      for(const x of [-.18,.18]){
-        ball(g,.078,eyeWhite,x,2.25,.445,1.15,.78,.42);
-        const pupil=ball(g,.048,iris,x+.012,2.24,.485,1,.95,.5);
-        ball(g,.018,M.white,x-.018,2.275,.515);
-        rod(g,[x-.07,2.39,.43],[x+.07,2.4,.43],.018,.018,hair);
-        eyes.push(pupil);
-      }
-      if(isTeacher){
-        // Kính cận gọng đen mảnh, có hai tròng và cầu kính rõ ràng.
-        const frame=mat(0x211b1b,.32,.12);
-        for(const x of [-.18,.18]){
-          const lens=add(g,new T.TorusGeometry(.125,.018,8,32),frame,x,2.25,.515);
-          lens.scale.set(1.12,.82,1);
-        }
-        rod(g,[-.055,2.25,.52],[.055,2.25,.52],.014,.014,frame,8);
-        rod(g,[-.305,2.27,.49],[-.43,2.34,.20],.014,.014,frame,8);
-        rod(g,[.305,2.27,.49],[.43,2.34,.20],.014,.014,frame,8);
-      }
-      ball(g,.035,skin,0,2.1,.49,.9,.7,.6);
-      const smilePts=[new T.Vector3(-.09,2.015,.46),new T.Vector3(-.045,1.985,.49),new T.Vector3(.045,1.985,.49),new T.Vector3(.09,2.015,.46)];
-      add(g,new T.TubeGeometry(new T.CatmullRomCurve3(smilePts),18,.016,8,false),mat(0x9e4651));
-      // Hai tay có khớp vai, cẳng tay và bàn tay.
-      const arms=[],legs=[];
-      for(const side of [-1,1]){
-        const arm=new T.Group();arm.position.set(side*.34,1.52,0);g.add(arm);
-        const sleeve=add(arm,new T.CapsuleGeometry(.12,.28,5,12),shirt,side*.035,-.16,.02);sleeve.rotation.z=side*.18;
-        rod(arm,[side*.05,-.27,.025],[side*.14,-.49,.12],.065,.055,skin);
-        ball(arm,.075,skin,side*.15,-.53,.14);arms.push(arm);
-        const leg=new T.Group();leg.position.set(side*.15,.56,0);g.add(leg);
-        if(!isTeacher){
-          rod(leg,[0,0,0],[side*.015,-.28,.015],.09,.085,skin);
-          ball(leg,.095,skin,side*.015,-.29,.02);
-          rod(leg,[side*.015,-.29,.02],[side*.015,-.48,.035],.09,.08,lower);
-          ball(leg,.125,shoe,side*.015,-.5,.13,1.35,.62,1.65);
-          ball(leg,.028,M.white,side*.015,-.4,.115);
-        }else{
-          rod(leg,[0,0,0],[0,-.4,.02],.11,.09,lower);
-          ball(leg,.12,shoe,0,-.43,.12,1.25,.6,1.5);
-        }
-        legs.push(leg);
-      }
-      if(!isTeacher){
-        const bag=mat([0x3d82c2,0xd17c50,0x55a77a,0x9275ba][index%4],.8);
-        box(g,.34,.42,.19,bag,0,1.12,-.3);
-        for(const side of [-1,1])rod(g,[side*.25,1.4,.15],[side*.28,.92,-.18],.027,.027,M.gold);
-        ball(g,.065,M.gold,-.18,1.35,.3);
-      }else{
-        const paddle=new T.Group();paddle.position.set(.9,1.02,.08);g.add(paddle);
-        rod(paddle,[0,1.05,0],[.95,-.9,0],.055,.045,M.wood);
-        const blade=add(paddle,new T.CapsuleGeometry(.14,.48,4,10),M.wood2,.95,-.9,0);blade.rotation.z=-.18;blade.scale.set(.85,1.12,.42);
-        g.userData.paddle=paddle;
-        for(let j=0;j<7;j++)ball(g,.027,M.gold,.28,.12+j*.17,.48);
-      }
-      const nm=isTeacher?'CÔ GIÁO':String(student?.name||student?.fullName||'Bạn nhỏ');
-      g.add(makeLabel(nm,isTeacher));
-      g.userData={...g.userData,student,arms,legs,eyes,phase:index*.71,sleeping:false,walking:false,nextBlink:2+Math.random()*2,blink:0,seated:false};
-      g.scale.setScalar(isTeacher?1.14:1.0);
-      return g;
-    }
     // Nhân vật GLB có khung xương và hoạt ảnh thật; màu tóc, da, đồng phục được Việt hóa.
     function riggedCharacter(student,index,isTeacher=false){
       const g=new T.Group(),S=modelAssets.SkeletonUtils;
@@ -6605,7 +6487,8 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       return g;
     }
     function character(student,index,isTeacher=false){
-      return modelAssets?riggedCharacter(student,index,isTeacher):proceduralCharacter(student,index,isTeacher);
+      if(!modelAssets)throw new Error('Bộ mô hình nhân vật 3D chưa được nạp.');
+      return riggedCharacter(student,index,isTeacher);
     }
     const teacher=character({},0,true);teacher.position.set(-6.05,.78,0);boat.add(teacher);
     function setCharacterSeated(mesh,seated=true){
