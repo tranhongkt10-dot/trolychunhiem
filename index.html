@@ -1564,9 +1564,12 @@ body.lhp-hide-nav>nav{display:none!important}
               <h4 class="font-black text-teal-900 mb-3">🧭 CÀI ĐẶT CHUYẾN ĐÒ</h4>
               <div class="grid grid-cols-2 gap-3">
                 <label class="text-xs font-bold text-gray-600">Người lái đò
-                  <select id="ferryDriver" class="mt-1 w-full border border-cyan-200 rounded-xl p-2.5 text-sm font-bold"><option value="Cô">Cô</option><option value="Thầy">Thầy</option></select>
+                  <select id="ferryDriver" class="mt-1 w-full border border-cyan-200 rounded-xl p-2.5 text-sm font-bold"><option value="Cô">Cô giáo</option><option value="Thầy">Thầy giáo</option></select>
                 </label>
-                <div class="col-span-2 rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs font-bold text-emerald-800">🚀 Tốc độ lên bờ: nhanh. Học sinh lần lượt xuống thuyền liên tục để tiết kiệm thời gian cho lớp đông.</div>
+                <label class="text-xs font-bold text-gray-600">Nhịp hành trình
+                  <select id="ferryPace" class="mt-1 w-full border border-cyan-200 rounded-xl p-2.5 text-sm font-bold"><option value="fast">Nhanh · Lớp đông</option><option value="normal" selected>Vừa · Cân bằng</option><option value="slow">Chậm · Hồi hộp</option></select>
+                </label>
+                <div class="col-span-2 rounded-xl bg-gradient-to-r from-cyan-50 to-emerald-50 border border-cyan-100 p-3 text-xs font-semibold text-teal-800">🎓 Hệ thống chọn ngẫu nhiên học sinh trong lớp, lần lượt cập bến và mời một bạn cuối cùng thức dậy lên bảng.</div>
               </div>
             </div>
             <div class="rounded-2xl bg-white/90 border border-cyan-100 p-4 shadow-sm">
@@ -1683,9 +1686,52 @@ body.lhp-hide-nav>nav{display:none!important}
 #ferryFullscreenBtn{touch-action:manipulation;white-space:nowrap;cursor:pointer}
 #ferryFullscreenBtn:focus-visible{outline:3px solid #fde68a;outline-offset:3px}
 @media(max-width:600px){#ferryScene:fullscreen{height:100dvh!important;min-height:100dvh!important}#ferryScene:fullscreen #ferry3DCanvas{position:absolute!important}}
+/* ===== FERRY PREMIUM PRESENTATION LAYER ===== */
+#callingView-ferry{background:linear-gradient(145deg,#effcff 0%,#f0fdfa 48%,#fffaf0 100%)!important;border:1px solid #c9edf2!important;box-shadow:0 24px 70px rgba(8,75,94,.12)!important}
+#callingView-ferry>div:first-child{background:linear-gradient(110deg,#063b55 0%,#087e83 54%,#0f766e 100%)!important;position:relative;overflow:hidden}
+#callingView-ferry>div:first-child:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 20%,#ffffff14 48%,transparent 70%);transform:translateX(-100%);animation:ferryHeaderShine 8s ease-in-out infinite}
+@keyframes ferryHeaderShine{0%,55%{transform:translateX(-100%)}85%,100%{transform:translateX(100%)}}
+#callingView-ferry>div:first-child h3{font-family:'Comfortaa','Nunito',sans-serif!important;letter-spacing:.09em;text-shadow:0 3px 16px #001c2d66}
+#callingView-ferry>div:nth-child(2)>div:first-child>div{border-radius:20px!important;border-color:#c9e8ec!important;box-shadow:0 10px 28px rgba(15,80,95,.07)!important}
+#callingView-ferry h4{letter-spacing:.045em!important}
+#ferryScene{border:1px solid #d6f4f6!important;box-shadow:0 18px 48px rgba(3,38,62,.28),inset 0 0 0 1px #ffffff55!important;background:linear-gradient(180deg,#7dd3fc 0%,#dbeafe 35%,#0e7490 36%,#075985 100%)!important}
+.ferry-hud-top{pointer-events:none}.ferry-hud-top>*{pointer-events:auto}
+.ferry-brand-pill,.ferry-progress-pill,.ferry-fullscreen-pill{display:inline-flex;align-items:center;gap:8px;padding:9px 13px;border:1px solid #ffffff55;border-radius:999px;background:linear-gradient(135deg,#082f49dd,#0f172add);box-shadow:0 5px 18px #001c2d55;backdrop-filter:blur(12px);font-size:10px;font-weight:1000;letter-spacing:.08em}
+.ferry-brand-mark{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#fde68a,#f59e0b);color:#713f12;font-size:13px}
+.ferry-progress-pill{font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.ferry-fullscreen-pill{cursor:pointer;transition:transform .2s,background .2s}.ferry-fullscreen-pill:hover{transform:translateY(-2px);background:#0f172a}
+.ferry-phase-pill{display:flex;align-items:center;gap:8px;padding:7px 14px;border:1px solid #ffffff80;border-radius:999px;background:#082f49c9;color:#fff;font-size:10px;font-weight:1000;letter-spacing:.12em;box-shadow:0 6px 18px #082f4955;backdrop-filter:blur(10px);white-space:nowrap}
+.ferry-phase-dot{width:7px;height:7px;border-radius:50%;background:#fde68a;box-shadow:0 0 0 4px #fde68a33}
+.ferry-progress-track{width:min(54%,520px);height:7px;border-radius:99px;background:#082f49a8;border:1px solid #ffffff70;overflow:hidden;box-shadow:0 3px 12px #001c2d55}
+.ferry-progress-fill{height:100%;width:0%;border-radius:inherit;background:linear-gradient(90deg,#fef3c7,#fbbf24,#fff7d6);box-shadow:0 0 14px #fde68a;transition:width .45s cubic-bezier(.2,.8,.2,1)}
+.ferry-current-name{max-width:90%;padding:9px 18px;border:1px solid #ffffffcc;border-radius:999px;background:linear-gradient(135deg,#fff,#f0fdfa);color:#083344;font-size:clamp(10px,1.25vw,13px);font-weight:1000;letter-spacing:.025em;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 8px 24px #082f4955}
+.ferry-scene-caption{font-size:9px;letter-spacing:.1em;text-shadow:0 2px 7px #082f49}
+#ferryScene:fullscreen .ferry-brand-pill,#ferryScene:fullscreen .ferry-progress-pill,#ferryScene:fullscreen .ferry-fullscreen-pill{font-size:clamp(11px,1.2vw,15px);padding:12px 18px}
+#ferryScene:fullscreen .ferry-phase-pill{top:76px;padding:10px 20px;font-size:13px}
+#ferryScene:fullscreen .ferry-progress-track{bottom:72px;height:10px}
+#ferryScene:fullscreen .ferry-current-name{bottom:20px;padding:13px 26px;font-size:clamp(14px,1.4vw,20px)}
+#ferryScene:fullscreen .ferry-scene-caption{bottom:22px;font-size:12px}
+.ferry-result-panel{padding:18px;border:1px solid #f5d58a;border-radius:22px;background:radial-gradient(circle at 50% 0%,#fff9df,#fff 55%,#fff7ed);box-shadow:0 14px 34px #854d0e18}
+.ferry-result-crown{font-size:28px;color:#d97706;letter-spacing:.3em}
+.ferry-result-title{margin-top:5px;font-size:11px;font-weight:1000;letter-spacing:.16em;color:#92400e}
+.ferry-result-name{margin-top:7px;font-family:'Comfortaa',sans-serif;font-size:clamp(23px,3vw,34px);font-weight:900;color:#9d174d}
+.ferry-result-meta{margin-top:7px;font-size:12px;font-weight:800;color:#475569}
+.ferry-launch-button{width:100%;display:flex;align-items:center;justify-content:center;gap:13px;padding:14px 18px;border:1px solid #ffffff;border-radius:18px;background:linear-gradient(110deg,#0e7490,#0f766e 48%,#b45309);color:white;text-align:left;box-shadow:0 10px 24px #0f766e35,inset 0 1px #ffffff55;transition:transform .2s,filter .2s,box-shadow .2s}
+.ferry-launch-button:hover{transform:translateY(-2px);filter:saturate(1.15) brightness(1.06);box-shadow:0 15px 30px #0f766e45}.ferry-launch-button:active{transform:scale(.99)}
+.ferry-launch-button:disabled{opacity:.62;cursor:wait;transform:none}
+.ferry-launch-icon{display:grid;place-items:center;width:42px;height:42px;flex:0 0 42px;border-radius:14px;background:#ffffff22;border:1px solid #ffffff55;font-size:25px}
+.ferry-launch-copy{display:flex;flex-direction:column;gap:3px;flex:1}.ferry-launch-copy b{font-size:13px;letter-spacing:.08em}.ferry-launch-copy small{font-size:10px;font-weight:700;color:#d1fae5}.ferry-launch-arrow{font-size:24px;font-weight:900}
+.ferry-feature-row{display:flex;flex-wrap:wrap;justify-content:center;gap:7px 14px;color:#0f766e;font-size:9px;font-weight:900;letter-spacing:.025em}
+#ferryPassengerList>div{border:1px solid #e0f2f1;border-radius:10px;transition:background .2s,transform .2s}#ferryPassengerList>div:hover{transform:translateX(2px)}#ferryPassengerList>div.bg-gray-100{opacity:.62}
+@media(max-width:600px){.ferry-brand-pill,.ferry-progress-pill,.ferry-fullscreen-pill{padding:7px 9px;font-size:8px;gap:5px}.ferry-brand-mark{width:16px;height:16px}.ferry-phase-pill{top:51px;font-size:8px;padding:6px 10px}.ferry-progress-track{width:58%;bottom:43px}.ferry-current-name{bottom:7px;padding:7px 12px;font-size:10px}.ferry-scene-caption{font-size:7px;max-width:30%;line-height:1.3}.ferry-launch-button{padding:11px 12px}.ferry-feature-row{font-size:8px;gap:5px 9px}}
+@media(prefers-reduced-motion:reduce){#callingView-ferry>div:first-child:after{animation:none!important}.ferry-launch-button{transition:none!important}}
 </style>
 <div id="ferryScene" class="relative rounded-2xl border-4 border-white shadow-2xl">
-<div class="absolute top-3 left-3 right-3 z-20 flex items-center justify-between gap-2 text-white text-[10px] sm:text-xs font-black"><span class="bg-slate-950/60 rounded-full px-3 py-2">⛈️ VƯỢT SÔNG TRI THỨC</span><div class="flex items-center gap-2"><span id="ferryProgress" class="bg-slate-950/60 rounded-full px-3 py-2">0/0 đã cập bến</span><button id="ferryFullscreenBtn" type="button" onclick="toggleFerryFullscreen()" class="bg-slate-950/70 hover:bg-slate-800 text-white rounded-full px-3 py-2 border border-white/40 shadow-lg" aria-label="Mở trò chơi toàn màn hình" title="Toàn màn hình">⛶ <span class="hidden sm:inline">TOÀN MÀN HÌNH</span></button></div></div>
+<div class="ferry-hud-top absolute top-3 left-3 right-3 z-20 flex items-center justify-between gap-2 text-white">
+  <span class="ferry-brand-pill"><span class="ferry-brand-mark">✦</span> HÀNH TRÌNH TRI THỨC</span>
+  <div class="flex items-center gap-2"><span id="ferryProgress" class="ferry-progress-pill">0/0 cập bến</span><button id="ferryFullscreenBtn" type="button" onclick="toggleFerryFullscreen()" class="ferry-fullscreen-pill" aria-label="Mở trò chơi toàn màn hình" title="Toàn màn hình">⛶ <span class="hidden sm:inline">TOÀN MÀN HÌNH</span></button></div>
+</div>
+<div class="ferry-phase-pill absolute z-20 left-1/2 -translate-x-1/2 top-[58px]" id="ferryPhaseBadge"><span class="ferry-phase-dot"></span> CHỜ KHỞI HÀNH</div>
 <div class="ferry-rain"></div><div class="ferry-lightning"></div><div class="absolute z-[2] top-16 left-5 text-5xl opacity-80">☁️🌩️</div><div class="absolute z-[2] top-20 right-8 text-4xl opacity-70">🌧️</div>
 <div id="ferryStartBank">🚩 ĐIỂM XUẤT PHÁT<br>KHỞI HÀNH</div><div id="ferryShore">🏝️<br>BẾN BỜ AN TOÀN</div><div id="ferryBridge"></div><div id="ferryBridgeLabel">🌟 CẦU LÊN BỜ TRI THỨC</div><div class="ferry-wave one"></div><div class="ferry-wave two"></div><div id="ferrySwimmers"><span>🏊</span><span>🏊‍♀️</span><span>🏊</span></div>
 <div id="ferryTeacherBoard" aria-live="polite"><div class="board-heading">📜 BẢNG THÔNG BÁO CỦA CÔ</div><div id="ferryTeacherBoardMessage" class="board-message"></div><div id="ferryTeacherBoardName" class="board-name"></div></div>
@@ -1725,11 +1771,13 @@ body.lhp-hide-nav>nav{display:none!important}
 <path d="M112 22 L65 -4 M308 22 L355 -4" stroke="#fef3c7" stroke-width="8" stroke-linecap="round"/>
 <path d="M65 -4 L45 8 M355 -4 L375 8" stroke="#92400e" stroke-width="5" stroke-linecap="round"/>
 </svg></div></div>
-<div id="ferryShoreStudent"></div><div class="absolute z-[9] left-3 bottom-3 text-white text-[10px] font-black drop-shadow">🌊 SÓNG LỚN • GIÓ MẠNH • SẤM CHỚP</div><div id="ferryCurrentName" class="absolute z-[10] left-1/2 -translate-x-1/2 bottom-3 bg-white/95 text-slate-900 rounded-full px-4 py-2 font-black text-xs shadow-lg whitespace-nowrap">Sẵn sàng khởi hành!</div>
+<div id="ferryShoreStudent"></div><div class="ferry-scene-caption absolute z-[9] left-3 bottom-3 text-white text-[10px] font-black drop-shadow">🌊 MỖI CHUYẾN ĐÒ LÀ MỘT CƠ HỘI TỎA SÁNG</div>
+<div class="ferry-progress-track absolute z-[9] left-1/2 -translate-x-1/2 bottom-[48px]" aria-label="Tiến độ chuyến đò"><div id="ferryProgressFill" class="ferry-progress-fill"></div></div>
+<div id="ferryCurrentName" class="ferry-current-name absolute z-[10] left-1/2 -translate-x-1/2 bottom-3">Sẵn sàng khởi hành!</div>
 </div>
-<div id="ferryResult" class="hidden bg-gradient-to-r from-amber-100 via-yellow-50 to-orange-100 text-amber-950 border-2 border-amber-300 rounded-2xl p-4 text-center shadow-xl"><div class="text-3xl">🎉🏆🎊</div><div id="ferryWinnerTitle" class="text-xs font-black mt-1">CHÚC MỪNG HÀNH KHÁCH CẬP BẾN!</div><div id="ferryWinnerName" class="text-2xl font-black mt-1"></div><div id="ferryWinnerMeta" class="text-xs font-bold mt-1"></div><div id="ferryQuestionCard" class="hidden mt-3 bg-white rounded-xl p-3 text-sm font-bold"></div></div>
-            <button id="ferryLaunchBtn" onclick="startFerryTrip()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white text-lg font-black shadow-lg border-2 border-white hover:brightness-105 active:scale-95">⛵ KHỞI HÀNH CHUYẾN ĐÒ</button>
-            <div class="flex justify-center gap-2 text-xs font-bold text-teal-800"><span>🛶 Công bằng</span><span>•</span><span>🎵 Vui nhộn</span><span>•</span><span>🌟 Không trùng lượt</span></div>
+<div id="ferryResult" class="hidden ferry-result-panel text-center"><div class="ferry-result-crown">✦ 🏆 ✦</div><div id="ferryWinnerTitle" class="ferry-result-title">CHÚC MỪNG HÀNH KHÁCH CẬP BẾN!</div><div id="ferryWinnerName" class="ferry-result-name"></div><div id="ferryWinnerMeta" class="ferry-result-meta"></div><div id="ferryQuestionCard" class="hidden mt-3 bg-white/80 rounded-xl p-3 text-sm font-bold"></div></div>
+            <button id="ferryLaunchBtn" onclick="startFerryTrip()" class="ferry-launch-button"><span class="ferry-launch-icon">⛵</span><span class="ferry-launch-copy"><b>KHỞI HÀNH CHUYẾN ĐÒ</b><small>Cùng cả lớp chinh phục bến bờ tri thức</small></span><span class="ferry-launch-arrow">→</span></button>
+            <div class="ferry-feature-row"><span>✦ Chọn ngẫu nhiên công bằng</span><span>✦ Không bỏ sót học sinh</span><span>✦ Tuyên dương tích cực</span></div>
             <p id="ferryStatus" class="text-center text-xs font-bold text-teal-800" role="status" aria-live="polite">Đã sẵn sàng. Cô hãy bấm Khởi hành!</p>
           </div>
         </div>
@@ -4955,7 +5003,7 @@ function shootDuck(idx) {
       const deck=document.getElementById('ferryPassengerDeck');if(!deck)return;
       const passengers=ferryTripQueue.slice(ferryCurrentIndex).concat(ferrySleepingPassenger?[ferrySleepingPassenger]:[]);
       deck.innerHTML=passengers.map(s=>{const avatar=typeof getStudentAvatarUrl==='function'?getStudentAvatarUrl(s):'';return '<div class="ferry-mini-passenger">'+(avatar?'<img src="'+ferryEscape(avatar)+'" alt="">':'<span class="emoji">🧒</span>')+'<span>'+ferryEscape((s.name||'Bạn').split(' ').slice(-1)[0])+'</span>'+(s===ferrySleepingPassenger?'<span>💤</span>':'')+'</div>';}).join('');
-      const p=document.getElementById('ferryProgress');if(p)p.textContent=ferryCurrentIndex+'/'+students.length+' đã cập bến';
+      const total=Array.isArray(students)?students.length:0,done=Math.min(ferryCurrentIndex,total),pct=total?Math.round(done/total*100):0;const p=document.getElementById('ferryProgress');if(p)p.textContent=done+'/'+total+' cập bến';const fill=document.getElementById('ferryProgressFill');if(fill)fill.style.width=pct+'%';
     }
     function resetFerryPassengers() {
       if(ferryTripRunning){showToast('Chuyến đò đang diễn ra, hãy chờ cập bến nhé!');return;}
@@ -4971,6 +5019,18 @@ function shootDuck(idx) {
       const words='ĐÃ ĐẾN BẾN!\nMỜI EM XUỐNG THUYỀN\nVÀ LÊN BẢNG!';
       for(let i=0;i<words.length;i++){message.textContent+=words[i];await new Promise(resolve=>setTimeout(resolve,75));}
       await new Promise(resolve=>setTimeout(resolve,1100));
+    }
+    function setFerryPhase(label,headline,detail){
+      const badge=document.getElementById('ferryPhaseBadge');
+      if(badge)badge.innerHTML='<span class="ferry-phase-dot"></span>'+ferryEscape(label);
+      const current=document.getElementById('ferryCurrentName');
+      if(current&&headline)current.textContent=headline;
+      const status=document.getElementById('ferryStatus');
+      if(status&&detail)status.textContent=detail;
+    }
+    function getFerryPaceDelay(){
+      const pace=document.getElementById('ferryPace')?.value||'normal';
+      return pace==='fast'?110:pace==='slow'?520:260;
     }
     async function startFerryTrip() {
       if (ferryTripRunning) return;
@@ -4992,8 +5052,9 @@ function shootDuck(idx) {
       if (shoreStudent) shoreStudent.style.display = 'none';
       const teacherBoard=document.getElementById('ferryTeacherBoard');if(teacherBoard){teacherBoard.classList.remove('show');teacherBoard.style.display='none';}
       if (scene) scene.classList.remove('ferry-calm');
-      if (launch) { launch.disabled = true; launch.textContent = '⛈️ ĐANG VƯỢT SÔNG...'; launch.classList.add('opacity-60'); }
-      const shuffled = students.slice().sort(() => Math.random() - .5);
+      if (launch) { launch.disabled = true; launch.querySelector('.ferry-launch-copy b').textContent = 'CHUYẾN ĐÒ ĐANG DIỄN RA'; launch.querySelector('.ferry-launch-copy small').textContent = 'Xin chờ các bạn lần lượt cập bến…'; launch.classList.add('opacity-60'); }
+      const shuffled = students.slice();
+      for(let i=shuffled.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];}
       ferrySleepingPassenger = shuffled.pop();
       ferryTripQueue = shuffled;
       renderFerryDeck();
@@ -5001,19 +5062,17 @@ function shootDuck(idx) {
       try {
         if (window.ferry3DGameReady) await window.ferry3DGameReady;
         if (window.ferry3DGame) window.ferry3DGame.beginTrip();
-        if (status) status.textContent = '☁️ Trời hơi âm u, con đò nhẹ nhàng rời bến. Cô và các bạn bắt đầu hành trình!';
-        if (current) current.textContent = '⛵ CON ĐÒ RỜI BẾN — KHỞI ĐẦU HÀNH TRÌNH';
+        setFerryPhase('GIAI ĐOẠN 01 · KHỞI HÀNH','⛵ CON ĐÒ RỜI BẾN — KHỞI ĐẦU HÀNH TRÌNH','☁️ Con đò nhẹ nhàng rời bến. Cả lớp bắt đầu hành trình khám phá tri thức!');
            await wait(700);
         if (window.ferry3DGame && window.ferry3DGame.startStorm) window.ferry3DGame.startStorm();
-        if (status) status.textContent = '⛈️ Giông bão bất ngờ kéo đến! Sóng lớn làm con thuyền chòng chành. Cá heo đang bơi theo cổ vũ cả lớp!';
-        if (current) current.textContent = '🌊 VƯỢT QUA GIÔNG BÃO — CÁ HEO ĐỒNG HÀNH';
+        setFerryPhase('GIAI ĐOẠN 02 · VƯỢT SÓNG','🌊 VƯỢT QUA GIÔNG BÃO — CÁ HEO ĐỒNG HÀNH','⛈️ Sóng lớn xuất hiện! Cô và các bạn cùng vững tay chèo vượt qua thử thách.');
          await wait(2600);
         if (window.ferry3DGame) await window.ferry3DGame.sailToShore();
         if (scene) scene.classList.add('ferry-calm');
         if (window.ferry3DGame) window.ferry3DGame.finishTrip();
-        if (status) status.textContent = '🌈 Bão đã tan, cầu vồng xuất hiện. Con đò đã cập bến an toàn!';
-        if (current) current.textContent = '🌈 ĐÃ ĐẾN BẾN TRI THỨC — CÁC BẠN LẦN LƯỢT LÊN BỜ';
+        setFerryPhase('GIAI ĐOẠN 03 · CẬP BẾN','🌈 ĐÃ ĐẾN BẾN TRI THỨC — CÁC BẠN LẦN LƯỢT LÊN BỜ','🌈 Bão đã tan, cầu vồng xuất hiện. Cả lớp chuẩn bị lên bờ an toàn!');
         await wait(3000);
+        setFerryPhase('GIAI ĐOẠN 04 · VINH DANH','🏅 TỪNG BẠN NHỎ LẦN LƯỢT CẬP BẾN','👏 Mỗi hành khách đều có cơ hội được gọi tên và tỏa sáng!');
         for (const student of ferryTripQueue) {
           if (current) current.textContent = '🚶 ' + (student.name || 'Bạn nhỏ') + ' đang bước xuống bến...';
           if (window.ferry3DGame) await window.ferry3DGame.disembark(student);
@@ -5028,10 +5087,10 @@ function shootDuck(idx) {
           renderFerryDeck();
           renderFerryPassengers();
           if (ferryCurrentIndex % 5 === 0 || ferryCurrentIndex === ferryTripQueue.length) playApplauseSound();
-          await wait(220);
+          await wait(getFerryPaceDelay());
         }
         if (shoreStudent) shoreStudent.style.display = 'none';
-        if (current) current.textContent = '😴 Ơ kìa! Còn một bạn đang ngủ quên trên thuyền!';
+        setFerryPhase('GIAI ĐOẠN 05 · BẠN NHỎ CUỐI CÙNG','😴 Ơ KÌA! VẪN CÒN MỘT BẠN TRÊN ĐÒ','💗 Cô giáo quay lại, nhẹ nhàng gọi bạn nhỏ cuối cùng thức dậy.');
         if (status) status.textContent = '💗 Cô giáo đã đưa các bạn lên bờ an toàn. Cô quay lại gọi bạn nhỏ vẫn ngủ quên trên thuyền.';
         if (window.ferry3DGame) window.ferry3DGame.showSleeper(ferrySleepingPassenger);
         await writeFerryTeacherBoard(ferrySleepingPassenger?.name || 'Bạn nhỏ');
@@ -5054,18 +5113,18 @@ function shootDuck(idx) {
         if (card) { card.classList.remove('hidden'); card.innerHTML = '🌟 Bạn nhỏ đã thức dậy, vui vẻ lên bờ và cùng các bạn hoàn thành chuyến đò!'; }
         if (title) title.textContent = '🎉 CẢ LỚP ĐÃ CẬP BẾN AN TOÀN!';
         if (meta) meta.textContent = 'Cô khen cả lớp đã hoàn thành chuyến đò tri thức!';
-        if (current) current.textContent = '🏆 CHUYẾN ĐÒ KẾT THÚC — TẤT CẢ HỌC SINH ĐÃ LÊN BỜ';
+        setFerryPhase('HOÀN THÀNH · VINH DANH CẢ LỚP','🏆 CHUYẾN ĐÒ HOÀN THÀNH — CẢ LỚP ĐÃ CẬP BẾN','🎉 Chúc mừng! Tất cả học sinh đều đã được đưa lên bờ an toàn.');
         if (status) status.textContent = '🌈 Chúc mừng cả lớp! Bạn nhỏ ngủ quên cũng đã thức dậy và lên bờ an toàn.';
-        if (launch) { launch.disabled = false; launch.textContent = '🔁 TỔ CHỨC CHUYẾN ĐÒ TIẾP THEO'; launch.classList.remove('opacity-60'); }
+        if (launch) { launch.disabled = false; launch.querySelector('.ferry-launch-copy b').textContent = 'TỔ CHỨC CHUYẾN ĐÒ TIẾP THEO'; launch.querySelector('.ferry-launch-copy small').textContent = 'Sẵn sàng cho một hành trình mới'; launch.querySelector('.ferry-launch-icon').textContent = '🔁'; launch.classList.remove('opacity-60'); }
         ferryTripRunning = false;
         renderFerryDeck();
         renderFerryPassengers();
         playApplauseSound();
       } catch (error) {
         console.error('Lỗi trò chơi Chuyến Đò Tri Thức:', error);
-        if (status) status.textContent = 'Không tải được cảnh 3D. Cô hãy tải lại trang và thử lại khi có kết nối Internet.';
+        setFerryPhase('TẠM DỪNG · CẦN KẾT NỐI','⚠️ CHƯA THỂ KHỞI TẠO CHUYẾN ĐÒ','Không tải được cảnh 3D. Cô hãy kiểm tra kết nối Internet rồi thử lại.');
         ferryTripRunning = false;
-        if (launch) { launch.disabled = false; launch.textContent = '🔁 THỬ LẠI CHUYẾN ĐÒ'; launch.classList.remove('opacity-60'); }
+        if (launch) { launch.disabled = false; launch.querySelector('.ferry-launch-copy b').textContent = 'THỬ LẠI CHUYẾN ĐÒ'; launch.querySelector('.ferry-launch-copy small').textContent = 'Kiểm tra kết nối rồi khởi động lại'; launch.querySelector('.ferry-launch-icon').textContent = '↻'; launch.classList.remove('opacity-60'); }
       }
     }
     // SƠ ĐỒ LỚP (19 BÀN ĐÔI)
