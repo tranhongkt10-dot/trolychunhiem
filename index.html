@@ -150,7 +150,28 @@ body.lhp-app-authenticated>nav,
 body.lhp-app-authenticated>main{visibility:visible}
 #parentDedicatedView{z-index:12000}
 #welcomeScreen{z-index:13000}
-</style>
+
+/* Bố cục danh sách học sinh thành hai dãy rõ ràng, thẻ gọn và dễ quan sát */
+@media(min-width:900px){
+  #studentsTableBody{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px 14px!important}
+  #studentsTableBody>tr{grid-template-columns:48px minmax(0,1fr) auto!important;grid-template-rows:auto!important;min-height:58px;padding:7px 10px!important;gap:4px 9px!important}
+  #studentsTableBody>tr>td:nth-child(2){grid-column:1;grid-row:1}
+  #studentsTableBody>tr>td:nth-child(4){grid-column:2;grid-row:1}
+  #studentsTableBody>tr>td:nth-child(5){grid-column:3;grid-row:1}
+  #studentsTableBody>tr>td:nth-child(6){grid-column:1/4;grid-row:2}
+  #studentsTableBody>tr>td:nth-child(2) img{width:42px!important;height:42px!important}
+  #studentsTableBody>tr>td:nth-child(4)>div:first-child{font-size:12px!important}
+}
+.garden-tv-laurel{inset:-13px!important;border:0!important;border-radius:50%;background:repeating-conic-gradient(from -8deg,#4d985b 0deg 5deg,transparent 5deg 11deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 10px),#000 calc(100% - 8px));mask:radial-gradient(farthest-side,transparent calc(100% - 10px),#000 calc(100% - 8px));transform:rotate(-8deg)}
+.garden-tv-laurel:before,.garden-tv-laurel:after{content:"";position:absolute;top:9%;width:15px;height:30px;background:linear-gradient(135deg,#a8d889,#39864d);border-radius:100% 0 100% 0;box-shadow:10px 15px 0 -1px #6db56e,18px 30px 0 -2px #39864d,4px 47px 0 -1px #91c978}
+.garden-tv-laurel:before{left:4%;transform:rotate(-30deg)}
+.garden-tv-laurel:after{right:4%;transform:scaleX(-1) rotate(-30deg)}
+.garden-reminder-mode{grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))}
+.garden-reminder-card{border-color:#b8c6dc!important;background:linear-gradient(155deg,#f8fbff,#e9eef8 58%,#f4eafa)!important}
+.garden-reminder-face{font-size:clamp(100px,17vw,170px);line-height:1.15;margin:18px auto 12px;filter:drop-shadow(0 8px 8px #596b8a30);animation:gardenPop .65s both}
+.garden-reminder-note{margin:14px auto 0;max-width:330px;padding:12px 14px;border-radius:16px;background:#fff;color:#52627d;font-size:13px;font-weight:800;line-height:1.55}
+
+  </style>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -1291,7 +1312,7 @@ body.lhp-app-authenticated>main{visibility:visible}
       </div>
 
       <div class="bg-white/90 p-4 rounded-3xl border border-pink-100 shadow-sm flex flex-wrap items-center justify-between gap-3">
-        <div><div class="text-sm font-black text-purple-800">🌷 CHỌN HỌC SINH VINH DANH</div><p class="text-xs text-gray-500 mt-1">Tích chọn một hoặc nhiều em sau khi hoàn tất ghi nhận hoa điểm tốt.</p><div class="text-xs font-black text-pink-600 mt-2" id="gardenHonorSelectionCount">Đã chọn: 0 học sinh</div></div><button type="button" onclick="showGardenHonorStage()" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-pink-500 to-purple-600 text-white text-xs sm:text-sm font-black shadow-lg">📺 MỞ MÀN HÌNH VINH DANH</button>
+        <div><div class="text-sm font-black text-purple-800">🌷 VƯỜN HOA ĐIỂM TỐT – VINH DANH & NHẮC NHỞ</div><p class="text-xs text-gray-500 mt-1">Tích chọn học sinh, sau đó chọn hình thức phù hợp.</p><div class="text-xs font-black text-pink-600 mt-2" id="gardenHonorSelectionCount">Đã chọn: 0 học sinh</div></div><div class="flex flex-wrap gap-2"><button type="button" onclick="showGardenHonorStage('honor')" class="px-4 py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-pink-500 to-purple-600 text-white text-xs sm:text-sm font-black shadow-lg">🏅 VINH DANH</button><button type="button" onclick="showGardenHonorStage('remind')" class="px-4 py-3 rounded-2xl bg-gradient-to-r from-slate-500 to-indigo-600 text-white text-xs sm:text-sm font-black shadow-lg">😔 NHẮC NHỞ</button></div>
         <div class="flex flex-wrap gap-2">
           <button onclick="filterFlowerGarden('ALL')" id="gardenFilter-ALL" class="px-4 py-2 rounded-xl text-xs font-black bg-pink-500 text-white">Cả lớp</button>
           <button onclick="filterFlowerGarden('Tổ 1')" id="gardenFilter-Tổ 1" class="px-4 py-2 rounded-xl text-xs font-black bg-gray-100 text-gray-600">Tổ 1</button>
@@ -1328,12 +1349,12 @@ body.lhp-app-authenticated>main{visibility:visible}
       <div id="gardenHonorStage" class="garden-tv-overlay" aria-hidden="true">
         <div class="garden-tv-frame">
           <button type="button" onclick="closeGardenHonorStage()" class="garden-tv-close" aria-label="Đóng màn hình vinh danh">×</button>
-          <div class="garden-tv-kicker">LỚP HỌC HẠNH PHÚC</div>
-          <h2 class="garden-tv-title">VINH DANH NHỮNG BÔNG HOA TỎA SÁNG</h2>
-          <p class="garden-tv-subtitle">Ghi nhận nỗ lực • Trân trọng cố gắng • Lan tỏa yêu thương</p>
+          <div class="garden-tv-kicker" id="gardenStageKicker">LỚP HỌC HẠNH PHÚC</div>
+          <h2 class="garden-tv-title" id="gardenStageTitle">VINH DANH NHỮNG BÔNG HOA TỎA SÁNG</h2>
+          <p class="garden-tv-subtitle" id="gardenStageSubtitle">Ghi nhận nỗ lực • Trân trọng cố gắng • Lan tỏa yêu thương</p>
           <div id="gardenHonorStageStudents" class="garden-tv-students"></div>
-          <div class="garden-tv-footer">🌟 CÔ CHÚC MỪNG CÁC EM! 🌟</div>
-          <button type="button" onclick="closeGardenHonorStage()" class="garden-tv-done">HOÀN TẤT VINH DANH</button>
+          <div class="garden-tv-footer" id="gardenStageFooter">🌟 CÔ CHÚC MỪNG CÁC EM! 🌟</div>
+          <button type="button" onclick="closeGardenHonorStage()" class="garden-tv-done" id="gardenStageDone">HOÀN TẤT</button>
         </div>
       </div>
     </section>
@@ -5032,14 +5053,24 @@ function shootDuck(idx) {
       if(checked) gardenHonorSelectedIds.add(String(studentId)); else gardenHonorSelectedIds.delete(String(studentId));
       const count=document.getElementById('gardenHonorSelectionCount'); if(count)count.textContent='Đã chọn: '+gardenHonorSelectedIds.size+' học sinh';
     }
-    function showGardenHonorStage() {
+    function showGardenHonorStage(mode='honor') {
       const selected=students.filter(st=>gardenHonorSelectedIds.has(String(st.id)));
-      if(!selected.length){showToast('Cô hãy tích chọn ít nhất một học sinh để vinh danh!');return;}
+      if(!selected.length){showToast('Cô hãy tích chọn ít nhất một học sinh trước nhé!');return;}
       const host=document.getElementById('gardenHonorStageStudents');
-      const esc=value=>String(value??'').replace(/[&<>]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch]));
-      host.innerHTML=selected.map((st,index)=>'<article class="garden-tv-student" style="animation-delay:'+(index*.12)+'s"><div class="garden-tv-portrait"><span class="garden-tv-crown">👑</span><img src="'+esc(getStudentAvatarUrl(st))+'" alt="Ảnh '+esc(st.name)+'"><span class="garden-tv-laurel" aria-hidden="true"></span><span class="garden-tv-bouquet" aria-label="Bó hoa chúc mừng">💐</span></div><div class="garden-tv-name">'+esc(st.name)+'</div><div class="garden-tv-class">'+esc(currentClassName||'Lớp học')+' • '+esc(st.team||'Học sinh')+'</div><div class="garden-tv-achievement">🌸 '+(Number(st.flowers)||0)+' BÔNG HOA ĐIỂM TỐT</div></article>').join('');
+      const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+      const reminding=mode==='remind';
+      document.getElementById('gardenStageTitle').textContent=reminding?'CÔ NHẮC NHỞ – CỐ GẮNG LẦN SAU NHÉ!':'VINH DANH NHỮNG BÔNG HOA TỎA SÁNG';
+      document.getElementById('gardenStageSubtitle').textContent=reminding?'Ai cũng có lúc mắc lỗi • Biết sửa sai là tiến bộ • Cô luôn tin em':'Ghi nhận nỗ lực • Trân trọng cố gắng • Lan tỏa yêu thương';
+      document.getElementById('gardenStageFooter').textContent=reminding?'💙 CÔ TIN CÁC EM SẼ CỐ GẮNG HƠN! 💙':'🌟 CÔ CHÚC MỪNG CÁC EM! 🌟';
+      document.getElementById('gardenStageDone').textContent=reminding?'ĐÃ NHẬN LỜI NHẮC':'HOÀN TẤT VINH DANH';
+      const safePhoto=st=>esc(getStudentAvatarUrl(st));
+      host.classList.toggle('garden-reminder-mode',reminding);
+      host.innerHTML=selected.map((st,index)=>reminding
+        ? '<article class="garden-tv-student garden-reminder-card" style="animation-delay:'+(index*.12)+'s"><div class="garden-reminder-face" aria-hidden="true">😔</div><div class="garden-tv-name">'+esc(st.name)+'</div><div class="garden-tv-class">'+esc(currentClassName||'Lớp học')+' • '+esc(st.team||'Học sinh')+'</div><div class="garden-reminder-note">Em hãy bình tĩnh nhìn lại việc mình vừa làm, sửa lỗi và cố gắng tốt hơn nhé. Cô luôn sẵn sàng giúp em!</div></article>'
+        : '<article class="garden-tv-student" style="animation-delay:'+(index*.12)+'s"><div class="garden-tv-portrait"><span class="garden-tv-crown">🌸</span><img src="'+safePhoto(st)+'" alt="Ảnh '+esc(st.name)+'"><span class="garden-tv-laurel" aria-hidden="true"></span><span class="garden-tv-bouquet" aria-label="Bó hoa chúc mừng">💐</span></div><div class="garden-tv-name">'+esc(st.name)+'</div><div class="garden-tv-class">'+esc(currentClassName||'Lớp học')+' • '+esc(st.team||'Học sinh')+'</div><div class="garden-tv-achievement">🌸 '+(Number(st.flowers)||0)+' BÔNG HOA ĐIỂM TỐT</div></article>'
+      ).join('');
       const stage=document.getElementById('gardenHonorStage');stage.classList.add('show');stage.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';
-      if(typeof playApplauseSound==='function')playApplauseSound();
+      if(!reminding&&typeof playApplauseSound==='function')playApplauseSound();
     }
     function closeGardenHonorStage(){const stage=document.getElementById('gardenHonorStage');if(stage){stage.classList.remove('show');stage.setAttribute('aria-hidden','true');}document.body.style.overflow='';}
     function openGardenHonor(studentId) {
