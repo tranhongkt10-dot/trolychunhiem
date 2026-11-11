@@ -112,6 +112,10 @@
 .garden-tv-footer{margin:24px auto 14px;color:#9b5a36;font-size:clamp(17px,2.2vw,25px);font-weight:1000}.garden-tv-done{padding:12px 26px;border-radius:16px;background:linear-gradient(100deg,#d79a32,#e65a9a,#8c55b8);color:#fff;font-weight:1000}
 .garden-honor-check{width:20px;height:20px;accent-color:#db2777;cursor:pointer;position:absolute;top:12px;left:14px;z-index:2}.garden-student-card{position:relative!important;padding-top:40px!important}
 @media(max-width:600px){.garden-tv-frame{height:96vh;border-width:4px;border-radius:18px;padding:18px 10px}.garden-tv-students{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.garden-tv-student{padding:13px 7px;border-radius:17px}.garden-tv-portrait{width:clamp(94px,28vw,130px);height:clamp(94px,28vw,130px)}.garden-tv-name{font-size:15px}.garden-tv-laurel{inset:-8px;border-width:4px}}
+.garden-student-card>input.garden-honor-check{position:absolute!important;top:10px!important;left:12px!important;flex:0 0 20px!important;width:20px!important;height:20px!important;margin:0!important;padding:0!important;z-index:3}
+.garden-student-card>div:nth-child(2){flex:0 0 76px!important;width:76px!important;height:76px!important;margin:0!important}
+.garden-student-card>div:nth-child(2) img{width:76px!important;height:76px!important}
+.garden-student-card>div:nth-child(3){min-width:0!important;flex:1 1 auto!important}
 </style>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -1105,9 +1109,7 @@
       <button onclick="switchMainTab('attendance')" id="nav-attendance" class="px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 hover:bg-pink-50">
         <span>📅 Chuyên cần</span>
       </button>
-      <button onclick="switchMainTab('honors')" id="nav-honors" class="px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 hover:bg-pink-50">
-        <span>🐝 Vinh danh</span>
-      </button>
+
       <button onclick="switchMainTab('parent')" id="nav-parent" class="px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 hover:bg-pink-50">
         <span>👨‍👩‍👧 Cổng phụ huynh</span>
       </button>
@@ -1168,7 +1170,7 @@
           <button onclick="switchMainTab('calling')" class="px-5 py-2.5 bg-white text-pink-600 rounded-2xl font-bold text-sm shadow hover:scale-105 active:scale-95 transition-all">
             🎲 Gọi Tên Vui
           </button>
-          <button onclick="switchMainTab('honors')" class="px-5 py-2.5 bg-pink-900/40 text-white border border-white/30 rounded-2xl font-bold text-sm hover:bg-pink-900/60 transition-all">
+          <button onclick="switchMainTab('garden')" class="px-5 py-2.5 bg-pink-900/40 text-white border border-white/30 rounded-2xl font-bold text-sm hover:bg-pink-900/60 transition-all">
             🐝 Vinh Danh Ong Vàng
           </button>
         </div>
@@ -3888,7 +3890,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     }
 
     function switchMainTab(tabId) {
-      const tabs = ['overview', 'students', 'seating', 'garden', 'teams', 'rewards', 'calling', 'faceplay', 'tools', 'attendance', 'honors', 'parent', 'gallery', 'help', 'competition', 'traffic', 'lessonbook'];
+      const tabs = ['overview', 'students', 'seating', 'garden', 'teams', 'rewards', 'calling', 'faceplay', 'tools', 'attendance', 'parent', 'gallery', 'help', 'competition', 'traffic', 'lessonbook'];
       tabs.forEach(t => {
         const el = document.getElementById(`tab-${t}`);
         const nav = document.getElementById(`nav-${t}`);
@@ -6461,6 +6463,14 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
+</script>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  const garden=document.getElementById('tab-garden');
+  const honor=document.getElementById('tab-honors');
+  if(garden&&honor){honor.classList.remove('hidden');honor.classList.add('mt-8','pt-8','border-t-4','border-dashed','border-pink-200');garden.appendChild(honor);}
+  const honorNav=document.getElementById('nav-honors');if(honorNav)honorNav.remove();
+});
 </script>
 </body>
 </html>
