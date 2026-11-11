@@ -46,7 +46,22 @@
       color: white !important;
       box-shadow: 0 4px 14px rgba(236, 72, 153, 0.35);
     }
-  </style>
+  
+/* Vinh danh học sinh từ Vườn điểm tốt */
+.garden-student-card{position:relative;overflow:hidden;border:1px solid #fbcfe8;border-radius:24px;background:linear-gradient(145deg,#fff 0%,#fff7fb 100%);box-shadow:0 5px 16px rgba(190,24,93,.08);transition:transform .22s,box-shadow .22s,border-color .22s}
+.garden-student-card:hover{transform:translateY(-4px);box-shadow:0 12px 26px rgba(190,24,93,.16);border-color:#f9a8d4}
+.garden-student-card:focus{outline:3px solid #f9a8d4;outline-offset:3px}
+.garden-honor-overlay{position:fixed;inset:0;z-index:10050;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(39,18,54,.78);backdrop-filter:blur(9px)}
+.garden-honor-overlay.show{display:flex;animation:gardenFadeIn .35s ease both}
+.garden-honor-panel{position:relative;width:min(720px,100%);max-height:92vh;overflow:auto;border:5px solid #f8d77b;border-radius:32px;background:radial-gradient(circle at 50% 0%,#fff8d9 0%,#fff 42%,#fff1f8 100%);box-shadow:0 25px 90px rgba(0,0,0,.35);text-align:center;padding:28px 22px 30px;animation:gardenPop .55s cubic-bezier(.2,.85,.25,1.2) both}
+.garden-honor-avatar{width:clamp(150px,27vw,220px);height:clamp(150px,27vw,220px);object-fit:cover;border-radius:50%;border:9px solid #fff;outline:5px solid #f5c84c;box-shadow:0 12px 35px rgba(190,24,93,.22);margin:18px auto}
+.garden-confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.garden-confetti i{position:absolute;top:-18px;width:9px;height:15px;border-radius:3px;animation:gardenFall 3.8s linear infinite}
+@keyframes gardenFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes gardenPop{0%{opacity:0;transform:translateY(30px) scale(.86)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes gardenFall{to{transform:translateY(110vh) rotate(760deg);opacity:.2}}
+@media(max-width:520px){.garden-honor-panel{padding:24px 14px;border-width:4px;border-radius:24px}.garden-honor-panel h2{font-size:25px}}
+</style>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -1186,7 +1201,41 @@
         <span class="text-4xl animate-bounce">🐝</span>
       </div>
 
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4" id="flowerGardenContainer"></div>
+      <div class="bg-white/90 p-4 rounded-3xl border border-pink-100 shadow-sm flex flex-wrap items-center justify-between gap-3">
+        <div><div class="text-sm font-black text-purple-800">🌷 Chọn một em để vinh danh</div><p class="text-xs text-gray-500 mt-1">Chạm vào thẻ học sinh để mở sân khấu tuyên dương trang trọng.</p></div>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="filterFlowerGarden('ALL')" id="gardenFilter-ALL" class="px-4 py-2 rounded-xl text-xs font-black bg-pink-500 text-white">Cả lớp</button>
+          <button onclick="filterFlowerGarden('Tổ 1')" id="gardenFilter-Tổ 1" class="px-4 py-2 rounded-xl text-xs font-black bg-gray-100 text-gray-600">Tổ 1</button>
+          <button onclick="filterFlowerGarden('Tổ 2')" id="gardenFilter-Tổ 2" class="px-4 py-2 rounded-xl text-xs font-black bg-gray-100 text-gray-600">Tổ 2</button>
+          <button onclick="filterFlowerGarden('Tổ 3')" id="gardenFilter-Tổ 3" class="px-4 py-2 rounded-xl text-xs font-black bg-gray-100 text-gray-600">Tổ 3</button>
+          <button onclick="filterFlowerGarden('Tổ 4')" id="gardenFilter-Tổ 4" class="px-4 py-2 rounded-xl text-xs font-black bg-gray-100 text-gray-600">Tổ 4</button>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4" id="flowerGardenContainer"></div>
+      <div id="gardenHonorOverlay" class="garden-honor-overlay" onclick="if(event.target===this)closeGardenHonor()">
+        <div class="garden-honor-panel">
+          <div class="garden-confetti" id="gardenHonorConfetti"></div>
+          <button onclick="closeGardenHonor()" aria-label="Đóng màn hình vinh danh" class="absolute top-3 right-3 z-10 w-10 h-10 rounded-full bg-white/90 border border-pink-200 text-pink-600 text-xl font-black shadow">×</button>
+          <div class="relative z-[1]">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-100 text-amber-800 text-xs font-black tracking-wider">🏅 VINH DANH HỌC SINH TIÊU BIỂU 🏅</div>
+            <div class="text-5xl mt-4">🌟 🏆 🌟</div>
+            <img id="gardenHonorAvatar" class="garden-honor-avatar" src="" alt="Ảnh học sinh được vinh danh">
+            <div class="text-xs font-black uppercase tracking-[.2em] text-pink-500">Bông hoa tỏa sáng</div>
+            <h2 id="gardenHonorName" class="text-3xl sm:text-4xl font-black text-purple-900 mt-2">Tên học sinh</h2>
+            <div id="gardenHonorClass" class="text-sm font-bold text-gray-600 mt-2">Lớp học</div>
+            <div class="mx-auto my-5 w-32 h-1.5 rounded-full bg-gradient-to-r from-pink-400 via-amber-300 to-purple-400"></div>
+            <div class="inline-flex flex-col items-center px-8 py-4 rounded-3xl bg-gradient-to-br from-amber-100 to-pink-100 border-2 border-amber-300 shadow-sm">
+              <span class="text-xs font-black text-amber-800 uppercase tracking-wider">Thành tích hoa điểm tốt</span>
+              <strong id="gardenHonorFlowers" class="text-4xl text-rose-600 font-black mt-1">🌸 0</strong>
+              <span class="text-xs text-purple-800 font-bold mt-1">Bông hoa chăm ngoan</span>
+            </div>
+            <p id="gardenHonorPraise" class="text-base sm:text-lg leading-relaxed text-purple-900 font-bold mt-5">Chúc mừng em! Cô tự hào về những cố gắng của em.</p>
+            <div id="gardenHonorReasons" class="text-xs text-gray-600 mt-3"></div>
+            <div class="text-3xl mt-5">🎉 🌸 👏 🌸 🎉</div>
+            <button onclick="closeGardenHonor()" class="mt-5 px-8 py-3 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-black shadow-lg hover:scale-105 transition">ĐÓNG MÀN HÌNH VINH DANH</button>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- 5. THI ĐUA TỔ -->
@@ -4860,16 +4909,53 @@ function shootDuck(idx) {
     }
 
     // VƯỜN HOA & THI ĐUA TỔ
+    let currentFlowerGardenFilter = 'ALL';
     function renderFlowerGarden() {
       const container = document.getElementById('flowerGardenContainer');
       if (!container) return;
-      container.innerHTML = students.map(s => `
-        <div class="bg-white p-3 rounded-2xl border border-pink-100 text-center shadow-sm hover:shadow-md transition-all">
-          <img src="${getStudentAvatarUrl(s)}" class="w-14 h-14 rounded-full mx-auto object-cover border-2 border-amber-300 shadow-sm" />
-          <div class="text-xs font-bold text-gray-800 truncate mt-1.5">${s.name}</div>
-          <div class="text-xs font-black text-rose-500 mt-0.5">🌸 ${s.flowers} Bông</div>
-        </div>
+      const visible = currentFlowerGardenFilter === 'ALL' ? students : students.filter(s => s.team === currentFlowerGardenFilter);
+      container.innerHTML = visible.map(s => `
+        <button type="button" onclick="openGardenHonor('${String(s.id).replace(/'/g, "\\'")}')" class="garden-student-card p-3 text-center cursor-pointer">
+          <div class="relative w-20 h-20 mx-auto">
+            <img src="${getStudentAvatarUrl(s)}" alt="" class="w-20 h-20 rounded-full object-cover border-4 border-amber-200 shadow-md" />
+            <span class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-gradient-to-br from-amber-300 to-pink-400 border-2 border-white flex items-center justify-center">🌸</span>
+          </div>
+          <div class="text-sm font-black text-purple-900 truncate mt-3">${s.name}</div>
+          <div class="text-[11px] font-bold text-gray-500 mt-1">${s.team || 'Học sinh'} • ${currentClassName || 'Lớp học'}</div>
+          <div class="inline-flex mt-2 px-3 py-1 rounded-full bg-rose-50 text-rose-600 text-xs font-black">🌸 ${Number(s.flowers)||0} bông hoa</div>
+          <div class="text-[10px] font-black text-pink-500 mt-2 tracking-wide">CHẠM ĐỂ VINH DANH ✨</div>
+        </button>
       `).join('');
+      ['ALL','Tổ 1','Tổ 2','Tổ 3','Tổ 4'].forEach(team => {
+        const b=document.getElementById('gardenFilter-'+team);
+        if(b)b.className='px-4 py-2 rounded-xl text-xs font-black '+(currentFlowerGardenFilter===team?'bg-pink-500 text-white shadow':'bg-gray-100 text-gray-600 hover:bg-pink-50');
+      });
+    }
+    function filterFlowerGarden(team) { currentFlowerGardenFilter=team; renderFlowerGarden(); }
+    function openGardenHonor(studentId) {
+      const student=students.find(x=>String(x.id)===String(studentId));
+      if(!student)return;
+      const overlay=document.getElementById('gardenHonorOverlay');
+      document.getElementById('gardenHonorAvatar').src=getStudentAvatarUrl(student);
+      document.getElementById('gardenHonorName').textContent=student.name;
+      document.getElementById('gardenHonorClass').textContent=(currentClassName||'Lớp học')+' • '+(student.team||'');
+      document.getElementById('gardenHonorFlowers').textContent='🌸 '+(Number(student.flowers)||0)+' bông hoa';
+      const count=Number(student.flowers)||0;
+      const praise=count>=30?'Thành tích thật đáng tự hào! Em đã kiên trì làm nhiều việc tốt và lan tỏa niềm vui đến mọi người.':count>=15?'Cô ghi nhận sự chăm chỉ và những tiến bộ đáng quý của em. Hãy tiếp tục phát huy nhé!':'Mỗi cố gắng nhỏ đều đáng trân trọng. Cô tin em sẽ tiếp tục tỏa sáng mỗi ngày!';
+      document.getElementById('gardenHonorPraise').textContent=praise;
+      let reasons=[];
+      try { reasons=readJsonStore(COMPETITION_LEDGER_KEY,[]).filter(x=>String(x.studentId)===String(student.id)&&x.delta>0).slice(-3).reverse().map(x=>x.reason); } catch(e) {}
+      document.getElementById('gardenHonorReasons').textContent=reasons.length?'Cô ghi nhận: '+reasons.join(' • '):'Thành tích được ghi nhận qua số hoa điểm tốt hiện có của em.';
+      const confetti=document.getElementById('gardenHonorConfetti');
+      confetti.innerHTML=Array.from({length:34},(_,i)=>'<i style="left:'+((i*37)%100)+'%;background:'+['#f472b6','#fbbf24','#a78bfa','#34d399','#60a5fa'][i%5]+';animation-delay:-'+((i%9)*.35)+'s"></i>').join('');
+      overlay.classList.add('show');
+      document.body.style.overflow='hidden';
+      if(typeof playApplauseSound==='function')playApplauseSound();
+    }
+    function closeGardenHonor() {
+      const overlay=document.getElementById('gardenHonorOverlay');
+      if(overlay)overlay.classList.remove('show');
+      document.body.style.overflow='';
     }
 
     function renderTeamRanking() {
