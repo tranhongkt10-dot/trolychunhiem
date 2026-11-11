@@ -1673,7 +1673,15 @@ body.lhp-hide-nav>nav{display:none!important}
   #ferryScene>div:first-of-type{font-size:9px}
   #ferryProgress{padding:5px 8px!important}
 }
-\n#ferryScene:fullscreen{width:100vw!important;height:100dvh!important;min-height:100dvh!important;max-height:100dvh!important;border:0!important;border-radius:0!important;margin:0!important;background:#071d32!important}\n#ferryScene:fullscreen #ferry3DCanvas{width:100%!important;height:100%!important}\n#ferryScene:fullscreen #ferryCurrentName{bottom:max(14px,env(safe-area-inset-bottom))}\n#ferryScene:fullscreen #ferryTeacherBoard{transform:scale(1.12);transform-origin:center}\n#ferryFullscreenBtn{touch-action:manipulation;white-space:nowrap;cursor:pointer}\n#ferryFullscreenBtn:focus-visible{outline:3px solid #fde68a;outline-offset:3px}\n@media(max-width:600px){#ferryScene:fullscreen{height:100dvh!important;min-height:100dvh!important}#ferryScene:fullscreen #ferry3DCanvas{position:absolute!important}}\n</style>
+
+#ferryScene:fullscreen{width:100vw!important;height:100dvh!important;min-height:100dvh!important;max-height:100dvh!important;border:0!important;border-radius:0!important;margin:0!important;background:#071d32!important}
+#ferryScene:fullscreen #ferry3DCanvas{width:100%!important;height:100%!important}
+#ferryScene:fullscreen #ferryCurrentName{bottom:max(14px,env(safe-area-inset-bottom))}
+#ferryScene:fullscreen #ferryTeacherBoard{transform:scale(1.12);transform-origin:center}
+#ferryFullscreenBtn{touch-action:manipulation;white-space:nowrap;cursor:pointer}
+#ferryFullscreenBtn:focus-visible{outline:3px solid #fde68a;outline-offset:3px}
+@media(max-width:600px){#ferryScene:fullscreen{height:100dvh!important;min-height:100dvh!important}#ferryScene:fullscreen #ferry3DCanvas{position:absolute!important}}
+</style>
 <div id="ferryScene" class="relative rounded-2xl border-4 border-white shadow-2xl">
 <div class="absolute top-3 left-3 right-3 z-20 flex items-center justify-between gap-2 text-white text-[10px] sm:text-xs font-black"><span class="bg-slate-950/60 rounded-full px-3 py-2">⛈️ VƯỢT SÔNG TRI THỨC</span><div class="flex items-center gap-2"><span id="ferryProgress" class="bg-slate-950/60 rounded-full px-3 py-2">0/0 đã cập bến</span><button id="ferryFullscreenBtn" type="button" onclick="toggleFerryFullscreen()" class="bg-slate-950/70 hover:bg-slate-800 text-white rounded-full px-3 py-2 border border-white/40 shadow-lg" aria-label="Mở trò chơi toàn màn hình" title="Toàn màn hình">⛶ <span class="hidden sm:inline">TOÀN MÀN HÌNH</span></button></div></div>
 <div class="ferry-rain"></div><div class="ferry-lightning"></div><div class="absolute z-[2] top-16 left-5 text-5xl opacity-80">☁️🌩️</div><div class="absolute z-[2] top-20 right-8 text-4xl opacity-70">🌧️</div>
@@ -6664,5 +6672,29 @@ document.addEventListener('DOMContentLoaded',function(){
 })();
 </script>
 
-\n<script id="ferry-fullscreen-controls">\n(function(){\n  const scene=()=>document.getElementById("ferryScene");\n  const button=()=>document.getElementById("ferryFullscreenBtn");\n  function refresh(){\n    const active=document.fullscreenElement===scene();\n    const b=button();\n    if(b){b.textContent=active?"⤢ THU NHỎ":"⛶ TOÀN MÀN HÌNH";b.title=active?"Thoát toàn màn hình":"Mở toàn màn hình";b.setAttribute("aria-label",b.title);}\n    window.dispatchEvent(new Event("resize"));\n  }\n  window.toggleFerryFullscreen=async function(){\n    const el=scene();if(!el)return;\n    try{\n      if(document.fullscreenElement){await document.exitFullscreen();}\n      else if(el.requestFullscreen){await el.requestFullscreen({navigationUI:"hide"});}\n      else if(el.webkitRequestFullscreen){el.webkitRequestFullscreen();}\n      else {const b=button();if(b)b.title="Trình duyệt này không hỗ trợ toàn màn hình";}\n    }catch(error){console.warn("Không thể mở toàn màn hình:",error);const b=button();if(b){b.title="Không mở được toàn màn hình. Hãy thử lại sau khi nhấn trực tiếp nút.";}}\n    refresh();\n  };\n  document.addEventListener("fullscreenchange",refresh);\n  document.addEventListener("webkitfullscreenchange",refresh);\n})();\n</script>\n</body>
+
+<script id="ferry-fullscreen-controls">
+(function(){
+  const scene=()=>document.getElementById("ferryScene");
+  const button=()=>document.getElementById("ferryFullscreenBtn");
+  function refresh(){
+    const active=document.fullscreenElement===scene();
+    const b=button();
+    if(b){b.textContent=active?"⤢ THU NHỎ":"⛶ TOÀN MÀN HÌNH";b.title=active?"Thoát toàn màn hình":"Mở toàn màn hình";b.setAttribute("aria-label",b.title);}
+    window.dispatchEvent(new Event("resize"));
+  }
+  window.toggleFerryFullscreen=async function(){
+    const el=scene();if(!el)return;
+    try{
+      if(document.fullscreenElement){await document.exitFullscreen();}
+      else if(el.requestFullscreen){await el.requestFullscreen({navigationUI:"hide"});}
+      else if(el.webkitRequestFullscreen){el.webkitRequestFullscreen();}
+      else {const b=button();if(b)b.title="Trình duyệt này không hỗ trợ toàn màn hình";}
+    }catch(error){console.warn("Không thể mở toàn màn hình:",error);const b=button();if(b){b.title="Không mở được toàn màn hình. Hãy thử lại sau khi nhấn trực tiếp nút.";}}
+    refresh();
+  };
+  document.addEventListener("fullscreenchange",refresh);
+  document.addEventListener("webkitfullscreenchange",refresh);
+})();
+</script>\n</body>
 </html>
