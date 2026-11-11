@@ -1679,8 +1679,8 @@ body.lhp-hide-nav>nav{display:none!important}
 <div class="ferry-rain"></div><div class="ferry-lightning"></div><div class="absolute z-[2] top-16 left-5 text-5xl opacity-80">☁️🌩️</div><div class="absolute z-[2] top-20 right-8 text-4xl opacity-70">🌧️</div>
 <div id="ferryStartBank">🚩 ĐIỂM XUẤT PHÁT<br>KHỞI HÀNH</div><div id="ferryShore">🏝️<br>BẾN BỜ AN TOÀN</div><div id="ferryBridge"></div><div id="ferryBridgeLabel">🌟 CẦU LÊN BỜ TRI THỨC</div><div class="ferry-wave one"></div><div class="ferry-wave two"></div><div id="ferrySwimmers"><span>🏊</span><span>🏊‍♀️</span><span>🏊</span></div>
 <div id="ferryTeacherBoard" aria-live="polite"><div class="board-heading">📜 BẢNG THÔNG BÁO CỦA CÔ</div><div id="ferryTeacherBoardMessage" class="board-message"></div><div id="ferryTeacherBoardName" class="board-name"></div></div>
-<div id="ferryTeacher" aria-label="Cô giáo mặc áo dài xanh đội nón lá đang chèo thuyền">
-<svg id="ferryTeacherArt" viewBox="0 0 150 190" width="104" height="132" role="img" aria-label="Cô giáo Việt Nam mặc áo dài xanh, đội nón lá">
+<div id="ferryTeacher" aria-label="Cô giáo Việt Nam mặc áo dài hồng cánh sen, tóc đen búi cao, đeo kính cận đang chèo thuyền">
+<svg id="ferryTeacherArt" viewBox="0 0 150 190" width="104" height="132" role="img" aria-label="Hình minh họa dự phòng cô giáo Việt Nam">
 <defs>
  <linearGradient id="aoDaiBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bfdbfe"/><stop offset=".55" stop-color="#38bdf8"/><stop offset="1" stop-color="#0369a1"/></linearGradient>
  <linearGradient id="nonLa" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff7cc"/><stop offset="1" stop-color="#c49a45"/></linearGradient>
@@ -6358,8 +6358,8 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       const skin=mat(isTeacher?0xe9b99a:[0xf0c6a8,0xe8b99b,0xf3c9ae,0xdca98d][index%4],.82);
       // Tạo hình người Việt Nam/Đông Á: tóc đen, mắt nâu đậm, màu da tự nhiên.
       const hair=mat(0x171311,.9);
-      const shirt=isTeacher?mat(0xe6a0bd,.58):mat(0xfffdf7,.68);
-      const lower=isTeacher?mat(0xd41470,.62):mat(0x203b68,.7);
+      const shirt=isTeacher?mat(0xd81b72,.56):mat(0xfffdf7,.68);
+      const lower=isTeacher?mat(0xc2185b,.62):mat(0x203b68,.7);
       const shoe=mat(0x29252b,.48),blush=mat(0xef9a91,.88),eyeWhite=mat(0xffffff,.22),iris=mat(0x30212a,.18);
       // Thân người gọn, bo tròn; cổ áo và phần thân có lớp rõ ràng.
       const torso=add(g,new T.CapsuleGeometry(isTeacher?.36:.32,isTeacher?.68:.62,8,18),shirt,0,1.28,0);
