@@ -94,6 +94,24 @@
   body>nav{position:sticky;top:61px;z-index:20}
   body>main{margin-left:auto!important;width:100%!important}
 }
+.garden-tv-overlay{position:fixed;inset:0;z-index:11000;display:none;align-items:center;justify-content:center;padding:clamp(8px,2vw,26px);background:radial-gradient(ellipse at 50% 0%,rgba(93,42,117,.94),rgba(13,18,45,.99) 68%)}
+.garden-tv-overlay.show{display:flex;animation:gardenFadeIn .35s ease both}
+.garden-tv-frame{position:relative;width:min(1500px,100%);height:min(94vh,1000px);overflow:auto;text-align:center;padding:clamp(22px,3vw,44px);border:7px ridge #e8bd61;border-radius:30px;background:radial-gradient(ellipse at 50% 0%,#fff6d9 0%,#fffaf0 42%,#fce8f4 100%);box-shadow:0 25px 90px rgba(0,0,0,.5),inset 0 0 55px rgba(226,177,79,.18)}
+.garden-tv-close{position:sticky;float:right;top:0;z-index:5;width:42px;height:42px;border-radius:50%;background:#fff;color:#9d315f;border:2px solid #f3c5d9;font-size:28px;font-weight:900}
+.garden-tv-title{font-family:'Comfortaa',sans-serif;font-size:clamp(24px,4vw,48px);line-height:1.18;font-weight:1000;color:#71346f;text-shadow:0 2px #fff,0 5px 0 #f6dfaa;margin:12px auto;max-width:1000px}
+.garden-tv-kicker{font-size:13px;font-weight:1000;letter-spacing:.2em;color:#9b5b35}.garden-tv-subtitle{font-weight:900;color:#a64d78;margin:0 auto 24px}
+.garden-tv-students{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:20px;align-items:stretch;max-width:1250px;margin:0 auto}
+.garden-tv-student{position:relative;min-width:0;padding:18px 12px 20px;border:2px solid #e7c16c;border-radius:25px;background:linear-gradient(160deg,#fff,#fff9e8 52%,#ffedf5);box-shadow:0 9px 25px rgba(126,68,102,.13);animation:gardenPop .55s both}
+.garden-tv-portrait{position:relative;width:clamp(125px,15vw,178px);height:clamp(125px,15vw,178px);margin:18px auto}
+.garden-tv-portrait img{width:100%;height:100%;object-fit:cover;border-radius:50%;border:7px solid #fff;outline:4px solid #d7ad4d;box-shadow:0 9px 24px #6d3b5830}
+.garden-tv-laurel{position:absolute;inset:-12px;border:5px solid transparent;border-left-color:#57945d;border-right-color:#57945d;border-radius:50%;transform:rotate(-8deg);pointer-events:none}
+.garden-tv-laurel:before,.garden-tv-laurel:after{content:'❧';position:absolute;color:#4f965c;font-size:42px;top:5px;text-shadow:0 1px #fff}.garden-tv-laurel:before{left:0}.garden-tv-laurel:after{right:0;transform:scaleX(-1)}
+.garden-tv-crown{position:absolute;z-index:2;top:-27px;left:50%;transform:translateX(-50%);font-size:46px;filter:drop-shadow(0 3px 2px #a66b22)}.garden-tv-bouquet{position:absolute;z-index:3;right:-10px;bottom:-8px;font-size:46px;filter:drop-shadow(0 3px 3px #8d4b5d)}
+.garden-tv-name{font-family:'Comfortaa',sans-serif;font-size:clamp(17px,2vw,24px);line-height:1.25;font-weight:1000;color:#71346f;overflow-wrap:anywhere}.garden-tv-class{font-size:12px;font-weight:900;color:#86617c;margin-top:7px}
+.garden-tv-achievement{display:inline-block;margin-top:10px;padding:7px 13px;border-radius:999px;background:#fff0c7;color:#986018;font-size:12px;font-weight:1000}
+.garden-tv-footer{margin:24px auto 14px;color:#9b5a36;font-size:clamp(17px,2.2vw,25px);font-weight:1000}.garden-tv-done{padding:12px 26px;border-radius:16px;background:linear-gradient(100deg,#d79a32,#e65a9a,#8c55b8);color:#fff;font-weight:1000}
+.garden-honor-check{width:20px;height:20px;accent-color:#db2777;cursor:pointer;position:absolute;top:12px;left:14px;z-index:2}.garden-student-card{position:relative!important;padding-top:40px!important}
+@media(max-width:600px){.garden-tv-frame{height:96vh;border-width:4px;border-radius:18px;padding:18px 10px}.garden-tv-students{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.garden-tv-student{padding:13px 7px;border-radius:17px}.garden-tv-portrait{width:clamp(94px,28vw,130px);height:clamp(94px,28vw,130px)}.garden-tv-name{font-size:15px}.garden-tv-laurel{inset:-8px;border-width:4px}}
 </style>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -1235,7 +1253,7 @@
       </div>
 
       <div class="bg-white/90 p-4 rounded-3xl border border-pink-100 shadow-sm flex flex-wrap items-center justify-between gap-3">
-        <div><div class="text-sm font-black text-purple-800">🌷 Chọn một em để vinh danh</div><p class="text-xs text-gray-500 mt-1">Chạm vào thẻ học sinh để mở sân khấu tuyên dương trang trọng.</p></div>
+        <div><div class="text-sm font-black text-purple-800">🌷 CHỌN HỌC SINH VINH DANH</div><p class="text-xs text-gray-500 mt-1">Tích chọn một hoặc nhiều em sau khi hoàn tất ghi nhận hoa điểm tốt.</p><div class="text-xs font-black text-pink-600 mt-2" id="gardenHonorSelectionCount">Đã chọn: 0 học sinh</div></div><button type="button" onclick="showGardenHonorStage()" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-pink-500 to-purple-600 text-white text-xs sm:text-sm font-black shadow-lg">📺 MỞ MÀN HÌNH VINH DANH</button>
         <div class="flex flex-wrap gap-2">
           <button onclick="filterFlowerGarden('ALL')" id="gardenFilter-ALL" class="px-4 py-2 rounded-xl text-xs font-black bg-pink-500 text-white">Cả lớp</button>
           <button onclick="filterFlowerGarden('Tổ 1')" id="gardenFilter-Tổ 1" class="px-4 py-2 rounded-xl text-xs font-black bg-gray-100 text-gray-600">Tổ 1</button>
@@ -1267,6 +1285,17 @@
             <div class="text-3xl mt-5">🎉 🌸 👏 🌸 🎉</div>
             <button onclick="closeGardenHonor()" class="mt-5 px-8 py-3 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-black shadow-lg hover:scale-105 transition">ĐÓNG MÀN HÌNH VINH DANH</button>
           </div>
+        </div>
+      </div>
+      <div id="gardenHonorStage" class="garden-tv-overlay" aria-hidden="true">
+        <div class="garden-tv-frame">
+          <button type="button" onclick="closeGardenHonorStage()" class="garden-tv-close" aria-label="Đóng màn hình vinh danh">×</button>
+          <div class="garden-tv-kicker">LỚP HỌC HẠNH PHÚC</div>
+          <h2 class="garden-tv-title">VINH DANH NHỮNG BÔNG HOA TỎA SÁNG</h2>
+          <p class="garden-tv-subtitle">Ghi nhận nỗ lực • Trân trọng cố gắng • Lan tỏa yêu thương</p>
+          <div id="gardenHonorStageStudents" class="garden-tv-students"></div>
+          <div class="garden-tv-footer">🌟 CÔ CHÚC MỪNG CÁC EM! 🌟</div>
+          <button type="button" onclick="closeGardenHonorStage()" class="garden-tv-done">HOÀN TẤT VINH DANH</button>
         </div>
       </div>
     </section>
@@ -4947,24 +4976,34 @@ function shootDuck(idx) {
       const container = document.getElementById('flowerGardenContainer');
       if (!container) return;
       const visible = currentFlowerGardenFilter === 'ALL' ? students : students.filter(s => s.team === currentFlowerGardenFilter);
-      container.innerHTML = visible.map(s => `
-        <button type="button" onclick="openGardenHonor('${String(s.id).replace(/'/g, "\\'")}')" class="garden-student-card p-3 text-center cursor-pointer">
-          <div class="relative w-20 h-20 mx-auto">
-            <img src="${getStudentAvatarUrl(s)}" alt="" class="w-20 h-20 rounded-full object-cover border-4 border-amber-200 shadow-md" />
-            <span class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-gradient-to-br from-amber-300 to-pink-400 border-2 border-white flex items-center justify-center">🌸</span>
-          </div>
-          <div class="text-sm font-black text-purple-900 truncate mt-3">${s.name}</div>
-          <div class="text-[11px] font-bold text-gray-500 mt-1">${s.team || 'Học sinh'} • ${currentClassName || 'Lớp học'}</div>
-          <div class="inline-flex mt-2 px-3 py-1 rounded-full bg-rose-50 text-rose-600 text-xs font-black">🌸 ${Number(s.flowers)||0} bông hoa</div>
-          <div class="text-[10px] font-black text-pink-500 mt-2 tracking-wide">CHẠM ĐỂ VINH DANH ✨</div>
-        </button>
-      `).join('');
+      container.innerHTML = visible.map(s => '<label class="garden-student-card p-3 text-center cursor-pointer">' +
+        '<input type="checkbox" class="garden-honor-check" value="'+String(s.id).replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" '+(gardenHonorSelectedIds.has(String(s.id))?'checked':'')+' onchange="toggleGardenHonorSelection(this.value,this.checked)">' +
+        '<div class="relative w-20 h-20 mx-auto"><img src="'+getStudentAvatarUrl(s)+'" alt="" class="w-20 h-20 rounded-full object-cover border-4 border-amber-200 shadow-md" /><span class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-gradient-to-br from-amber-300 to-pink-400 border-2 border-white flex items-center justify-center">🌸</span></div>' +
+        '<div class="text-sm font-black text-purple-900 truncate mt-3">'+s.name+'</div>' +
+        '<div class="text-[11px] font-bold text-gray-500 mt-1">'+(s.team||'Học sinh')+' • '+(currentClassName||'Lớp học')+'</div>' +
+        '<div class="inline-flex mt-2 px-3 py-1 rounded-full bg-rose-50 text-rose-600 text-xs font-black">🌸 '+(Number(s.flowers)||0)+' bông hoa</div>' +
+        '<div class="text-[10px] font-black text-pink-500 mt-2 tracking-wide">TÍCH CHỌN ĐỂ VINH DANH ✨</div></label>').join('');
       ['ALL','Tổ 1','Tổ 2','Tổ 3','Tổ 4'].forEach(team => {
         const b=document.getElementById('gardenFilter-'+team);
         if(b)b.className='px-4 py-2 rounded-xl text-xs font-black '+(currentFlowerGardenFilter===team?'bg-pink-500 text-white shadow':'bg-gray-100 text-gray-600 hover:bg-pink-50');
       });
     }
     function filterFlowerGarden(team) { currentFlowerGardenFilter=team; renderFlowerGarden(); }
+    const gardenHonorSelectedIds = new Set();
+    function toggleGardenHonorSelection(studentId, checked) {
+      if(checked) gardenHonorSelectedIds.add(String(studentId)); else gardenHonorSelectedIds.delete(String(studentId));
+      const count=document.getElementById('gardenHonorSelectionCount'); if(count)count.textContent='Đã chọn: '+gardenHonorSelectedIds.size+' học sinh';
+    }
+    function showGardenHonorStage() {
+      const selected=students.filter(st=>gardenHonorSelectedIds.has(String(st.id)));
+      if(!selected.length){showToast('Cô hãy tích chọn ít nhất một học sinh để vinh danh!');return;}
+      const host=document.getElementById('gardenHonorStageStudents');
+      const esc=value=>String(value??'').replace(/[&<>]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch]));
+      host.innerHTML=selected.map((st,index)=>'<article class="garden-tv-student" style="animation-delay:'+(index*.12)+'s"><div class="garden-tv-portrait"><span class="garden-tv-crown">👑</span><img src="'+esc(getStudentAvatarUrl(st))+'" alt="Ảnh '+esc(st.name)+'"><span class="garden-tv-laurel" aria-hidden="true"></span><span class="garden-tv-bouquet" aria-label="Bó hoa chúc mừng">💐</span></div><div class="garden-tv-name">'+esc(st.name)+'</div><div class="garden-tv-class">'+esc(currentClassName||'Lớp học')+' • '+esc(st.team||'Học sinh')+'</div><div class="garden-tv-achievement">🌸 '+(Number(st.flowers)||0)+' BÔNG HOA ĐIỂM TỐT</div></article>').join('');
+      const stage=document.getElementById('gardenHonorStage');stage.classList.add('show');stage.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';
+      if(typeof playApplauseSound==='function')playApplauseSound();
+    }
+    function closeGardenHonorStage(){const stage=document.getElementById('gardenHonorStage');if(stage){stage.classList.remove('show');stage.setAttribute('aria-hidden','true');}document.body.style.overflow='';}
     function openGardenHonor(studentId) {
       const student=students.find(x=>String(x.id)===String(studentId));
       if(!student)return;
