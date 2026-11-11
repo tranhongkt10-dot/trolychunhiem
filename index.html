@@ -6134,6 +6134,8 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     }
     // Cây ven sông tạo thành hai bờ xanh, có tán lá nhiều tầng.
     const trunkMat=mat(0x80502e,.95),leafMats=[mat(0x3d9858,.92),mat(0x58ad64,.92),mat(0x80c96c,.92)];
+    // Khởi tạo danh sách cây trước khi riverTree() được gọi trong vòng lặp.
+    const swayTrees=[];
     function riverTree(x,z,scale=1){
       const g=new T.Group();g.position.set(x,0,z);g.scale.setScalar(scale);scene.add(g);swayTrees.push({group:g,phase:x*.17+z*.11});
       rod(g,[0,0,0],[0,2.6,0],.22,.32,trunkMat);
@@ -6156,7 +6158,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       ball(scene,.12,mat(0x5b9e56),x,.05,z+.18,1,.55,1);
     }
     // Mây bông lớn, mặt trời có tia sáng.
-    const clouds=[],swayTrees=[];
+    const clouds=[];
     function cloud(x,y,z,s=1){
       const g=new T.Group();g.position.set(x,y,z);g.scale.setScalar(s);scene.add(g);
       for(let i=0;i<7;i++)ball(g,1.15,mat(0xffffff,.98),(i-3)*.82,Math.sin(i*1.6)*.28,0,1.25,.78,.85);
