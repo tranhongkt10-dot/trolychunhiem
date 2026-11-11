@@ -6746,9 +6746,10 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       fish.forEach(f=>{f.g.position.x=f.x+Math.sin(elapsed*.6+f.p)*2;f.g.position.y=-1.1+Math.sin(elapsed*2+f.p)*.13;f.g.rotation.y=Math.sin(elapsed+f.p)*.12;});
        dolphins.forEach(d=>{const p=elapsed*1.25+d.phase;const side=d.index%2?1:-1;const leap=Math.pow(Math.max(0,Math.sin(p*1.55)),1.7);d.group.position.set(boat.position.x-3.0+Math.sin(p)*1.65,-.28+leap*1.75,-3.9+side*(2.35+(d.index%2)*1.15));d.group.rotation.z=Math.sin(p*1.55)*.16;d.group.rotation.y=side*.08;d.group.rotation.x=Math.cos(p*1.55)*.08;d.tail.rotation.x=Math.sin(p*2.4)*.38;});
       studentMeshes.forEach(p=>{
-        const m=p.mesh,u=m.userData;if(!m.visible||u.sleeping||u.walking)return;
-        const phase=elapsed*2.1+u.phase;m.position.y=p.home.y+Math.sin(phase)*.025;m.rotation.y=Math.sin(phase*.45)*.025;
+        const m=p.mesh,u=m.userData;
         if(u.update)u.update(dt);
+        if(!m.visible||u.sleeping||u.walking)return;
+        const phase=elapsed*2.1+u.phase;m.position.y=p.home.y+Math.sin(phase)*.025;m.rotation.y=Math.sin(phase*.45)*.025;
         u.arms.forEach((a,i)=>a.rotation.z=Math.sin(phase+i*Math.PI)*.045);
         u.nextBlink-=dt;if(u.nextBlink<=0){u.blink=.15;u.nextBlink=2.3+Math.random()*4;}
         if(u.blink>0){u.blink=Math.max(0,u.blink-dt);const k=Math.max(.08,Math.min(1,u.blink/.075));u.eyes.forEach(e=>e.scale.y=k);}
