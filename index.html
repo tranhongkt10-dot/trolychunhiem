@@ -140,6 +140,16 @@
 /* Thu nhỏ đồng bộ các màn hình thao tác, không cắt nội dung */
 @media(min-width:900px){#tab-seating #seatingGridContainer{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:7px!important}#tab-garden #flowerGardenContainer{gap:7px!important}#tab-garden .garden-student-card{padding:7px!important;border-radius:12px!important}#tab-garden .garden-student-card img{max-width:42px!important;max-height:42px!important}#tab-garden .garden-student-card .text-sm{font-size:10px!important}#tab-garden .garden-student-card .text-xs{font-size:9px!important}#tab-garden .garden-tv-frame{max-height:94vh}}
 @media(max-height:850px) and (min-width:900px){main{zoom:.80}header{padding-top:5px!important;padding-bottom:5px!important}nav>div{padding-top:2px!important;padding-bottom:2px!important}}
+
+/* Khóa giao diện giáo viên cho đến khi Firebase xác thực thành công */
+body.lhp-auth-pending>header,
+body.lhp-auth-pending>nav,
+body.lhp-auth-pending>main{display:none!important}
+body.lhp-app-authenticated>header,
+body.lhp-app-authenticated>nav,
+body.lhp-app-authenticated>main{visibility:visible}
+#parentDedicatedView{z-index:12000}
+#welcomeScreen{z-index:13000}
 </style>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -320,6 +330,8 @@
         if (parentAccessRequested) return;
         if (!domReady || appReleased || !window.secureAuth || !window.secureAuth.user || !window.secureAuth.cloudReady) return;
         appReleased = true;
+        document.body.classList.remove('lhp-auth-pending');
+        document.body.classList.add('lhp-app-authenticated');
         const callbacks = queuedDomReadyCallbacks.slice(); queuedDomReadyCallbacks = [];
         const evt = new Event('DOMContentLoaded');
         callbacks.forEach(listener => { try { if (typeof listener === 'function') listener.call(document, evt); else if (listener && listener.handleEvent) listener.handleEvent(evt); } catch (err) { console.error('Lỗi khởi tạo ứng dụng:', err); } });
@@ -891,7 +903,7 @@
 @media(max-width:520px){.calling-mode-btn{flex:1 1 100%;justify-content:center}.tool-modern-card{padding:18px}.noise-visualizer{height:128px}}
 </style>
 </head>
-<body class="flex flex-col min-h-screen relative">
+<body class="flex flex-col min-h-screen relative lhp-auth-pending">
 
   <!-- AUDIO TIẾNG VỖ TAY -->
   <!-- MÀN FLASH MÁY ẢNH -->
