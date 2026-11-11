@@ -4933,7 +4933,7 @@ function shootDuck(idx) {
       const list = document.getElementById('ferryPassengerList');
       const count = document.getElementById('ferryRosterCount');
       const className = document.getElementById('ferryClassName');
-      if (count) count.textContent = (students || []).length + ' hành khách';
+      if (count) { const roster = Array.isArray(students) ? students : []; const boys = roster.filter(x => String(x?.gender || '').trim().toLowerCase() === 'nam').length; const girls = roster.filter(x => String(x?.gender || '').trim().toLowerCase() === 'nữ' || String(x?.gender || '').trim().toLowerCase() === 'nu').length; const unknown = roster.length - boys - girls; count.textContent = roster.length + ' hành khách · Nam ' + boys + ' · Nữ ' + girls + (unknown ? ' · Chưa rõ ' + unknown : ''); }
       if (className) className.textContent = currentClassName || 'Lớp hiện tại';
       if (!list) return;
       if (!Array.isArray(students) || !students.length) {
