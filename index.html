@@ -5010,6 +5010,10 @@ function shootDuck(idx) {
       ferryUsedPassengerIds.clear();ferryTripQueue=[];ferrySleepingPassenger=null;ferryCurrentIndex=0;renderFerryPassengers();renderFerryDeck();
       const status=document.getElementById('ferryStatus');if(status)status.textContent='Đã làm mới danh sách. Cả lớp sẵn sàng cho chuyến đò mới!';
       const result=document.getElementById('ferryResult');if(result)result.classList.add('hidden');
+      const badge=document.getElementById('ferryPhaseBadge');if(badge)badge.innerHTML='<span class="ferry-phase-dot"></span> CHỜ KHỞI HÀNH';
+      const fill=document.getElementById('ferryProgressFill');if(fill)fill.style.width='0%';
+      const current=document.getElementById('ferryCurrentName');if(current)current.textContent='Sẵn sàng khởi hành!';
+      const launch=document.getElementById('ferryLaunchBtn');if(launch){launch.querySelector('.ferry-launch-copy b').textContent='KHỞI HÀNH CHUYẾN ĐÒ';launch.querySelector('.ferry-launch-copy small').textContent='Cùng cả lớp chinh phục bến bờ tri thức';launch.querySelector('.ferry-launch-icon').textContent='⛵';}
     }
     async function writeFerryTeacherBoard(studentName) {
       const board=document.getElementById('ferryTeacherBoard'),message=document.getElementById('ferryTeacherBoardMessage'),name=document.getElementById('ferryTeacherBoardName');
