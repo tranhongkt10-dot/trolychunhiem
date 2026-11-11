@@ -6072,11 +6072,30 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
   const status=m=>{const e=document.getElementById('ferryStatus');if(e)e.textContent=m;};
   async function boot(){
     try{
-      const THREE=await import('https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.module.js');
-      window.THREE=THREE;init(THREE);
+      const THREE=await import('https://esm.sh/three@0.149.0');
+      window.THREE=THREE;
+      let modelAssets=null;
+      try{
+        const {GLTFLoader}=await import('https://esm.sh/three@0.149.0/examples/jsm/loaders/GLTFLoader.js');
+        const SkeletonUtils=await import('https://esm.sh/three@0.149.0/examples/jsm/utils/SkeletonUtils.js');
+        const loader=new GLTFLoader();
+        const base='https://raw.githubusercontent.com/NoLimitNexus/game-models/main/library/ours/';
+        const paths={
+          body:'body/Body.glb',
+          hairBun:'parts/hair_bun.glb',hairShort:'parts/hair_short.glb',hairLong:'parts/hair_long.glb',hairPony:'parts/hair_ponytail.glb',
+          topLong:'parts/top_long.glb',topTee:'parts/top_tee.glb',trousers:'parts/bottom_trousers.glb',boots:'parts/boots_low.glb',
+          general:'../animations/Rig_Medium_General.glb',movement:'../animations/Rig_Medium_MovementBasic.glb'
+        };
+        const entries=await Promise.all(Object.entries(paths).map(async([k,p])=>[k,await loader.loadAsync(base+p)]));
+        modelAssets={SkeletonUtils,files:Object.fromEntries(entries),clips:new Map()};
+        for(const key of ['general','movement']){
+          for(const clip of modelAssets.files[key].animations||[])if(!modelAssets.clips.has(clip.name))modelAssets.clips.set(clip.name,clip);
+        }
+      }catch(assetError){console.warn('Không tải được bộ nhân vật GLB, dùng phương án dự phòng:',assetError);}
+      init(THREE,modelAssets);
     }catch(e){console.error('3D ferry:',e);status('Không tải được cảnh 3D. Hãy kiểm tra kết nối Internet và tải lại trang.');rejectReady(e);}
   }
-  function init(T){
+  function init(T,modelAssets=null){
     if(game)return;
     const host=document.getElementById('ferryScene');
     if(!host){rejectReady(new Error('Không tìm thấy ferryScene'));return;}
@@ -6354,7 +6373,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       const sp=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(c),transparent:true,depthTest:false}));
       sp.scale.set(2.25,.45,1);sp.position.y=3.35;return sp;
     }
-    function character(student,index,isTeacher=false){
+    function proceduralCharacter(student,index,isTeacher=false){
       // Nhân vật chibi điện ảnh: tỷ lệ đầu-thân cân đối, gương mặt có chiều sâu, tóc và trang phục tách lớp.
       const g=new T.Group();
       const skin=mat(isTeacher?0xe9b99a:[0xf0c6a8,0xe8b99b,0xf3c9ae,0xdca98d][index%4],.82);
@@ -6472,12 +6491,113 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       g.scale.setScalar(isTeacher?1.14:1.0);
       return g;
     }
+    // Nhân vật GLB có khung xương và hoạt ảnh thật; màu tóc, da, đồng phục được Việt hóa.
+    function riggedCharacter(student,index,isTeacher=false){
+      const g=new T.Group(),S=modelAssets.SkeletonUtils;
+      const root=S.clone(modelAssets.files.body.scene);g.add(root);
+      const boneMap=new Map(),bodyMeshes=[];
+      root.traverse(o=>{
+        if(o.isBone)boneMap.set(o.name,o);
+        if(o.isSkinnedMesh){
+          o.frustumCulled=false;o.castShadow=true;o.material=Array.isArray(o.material)?o.material.map(m=>m.clone()):o.material.clone();
+          bodyMeshes.push(o);
+        }
+      });
+      const skinColors=['#e7b797','#edc2a2','#dca887','#f0c6a6'];
+      const colors={
+        skin:isTeacher?'#e7b797':skinColors[index%skinColors.length],
+        hair:'#111111',eyes:'#241a14',eyeshine:'#ffffff',mouth:'#a5483a',
+        shirt:isTeacher?'#e94f9b':'#fffdf7',
+        trousers:isTeacher?'#e86ca6':'#243c68',
+        boots:'#25252b',linen:'#fff7ed'
+      };
+      function paint(material){
+        const list=Array.isArray(material)?material:[material];
+        list.forEach(m=>{if(colors[m.name])m.color.set(colors[m.name]);});
+        return material;
+      }
+      bodyMeshes.forEach(o=>{o.material=paint(o.material);});
+      function attachPart(fileKey,hiddenNames=[]){
+        const gltf=modelAssets.files[fileKey];if(!gltf)return;
+        gltf.scene.traverse(src=>{
+          if(!src.isSkinnedMesh)return;
+          const srcMats=Array.isArray(src.material)?src.material:[src.material];
+          const mats=srcMats.map(m=>{const c=m.clone();if(colors[c.name])c.color.set(colors[c.name]);return c;});
+          const bones=src.skeleton.bones.map(b=>boneMap.get(b.name)||boneMap.get(b.name.replace(/\s/g,''))||[...boneMap.values()][0]);
+          const mesh=new T.SkinnedMesh(src.geometry,mats.length===1?mats[0]:mats);
+          mesh.name=src.name;mesh.bind(new T.Skeleton(bones,src.skeleton.boneInverses),src.bindMatrix);
+          mesh.frustumCulled=false;mesh.castShadow=true;root.add(mesh);
+        });
+        if(hiddenNames.length)bodyMeshes.forEach(mesh=>{if(hiddenNames.includes(mesh.name))mesh.visible=false;});
+      }
+      if(isTeacher){
+        attachPart('hairBun');
+        attachPart('topLong',['skin_torso','skin_armUpperL','skin_armUpperR','skin_armLowerL','skin_armLowerR']);
+        attachPart('trousers',['skin_legUpperL','skin_legUpperR','skin_legLowerL','skin_legLowerR']);
+        attachPart('boots');
+        // Tà áo dài hồng cánh sen phủ ngoài quần, có hai vạt trước tách mềm.
+        const aoDaiMat=new T.MeshStandardMaterial({color:0xe94f9b,roughness:.68,side:T.DoubleSide});
+        const aoDai=new T.Mesh(new T.CylinderGeometry(.24,.43,1.38,48,2,true),aoDaiMat);
+        aoDai.position.set(0,.77,0);aoDai.castShadow=true;root.add(aoDai);
+        const panelShape=new T.Shape();panelShape.moveTo(-.16,1.48);panelShape.quadraticCurveTo(-.22,.78,-.30,.03);panelShape.quadraticCurveTo(-.13,-.02,0,.03);panelShape.lineTo(0,1.48);panelShape.closePath();
+        const panel=new T.Mesh(new T.ShapeGeometry(panelShape),new T.MeshStandardMaterial({color:0xff91bf,roughness:.62,side:T.DoubleSide}));
+        panel.position.set(-.02,0,.36);root.add(panel);
+        const panel2=panel.clone();panel2.material=panel.material.clone();panel2.material.color.set('#f56eaa');panel2.position.x=.02;panel2.position.z=.365;root.add(panel2);
+        // Kính gọng mảnh đặt phía trước khuôn mặt.
+        const glasses=new T.Group(),frame=new T.MeshStandardMaterial({color:0x211b1b,metalness:.25,roughness:.3});
+        for(const x of [-.145,.145]){
+          const lens=new T.Mesh(new T.TorusGeometry(.105,.012,8,28),frame);lens.position.set(x,0,0);lens.scale.y=.82;glasses.add(lens);
+        }
+        const bridge=new T.Mesh(new T.BoxGeometry(.08,.018,.018),frame);glasses.add(bridge);
+        glasses.position.set(0,1.98,.255);root.add(glasses);
+      }else{
+        const hairKey=['hairShort','hairLong','hairPony'][index%3];
+        attachPart(hairKey);
+        attachPart('topTee',['skin_torso','skin_armUpperL','skin_armUpperR']);
+        attachPart('trousers',['skin_legUpperL','skin_legUpperR','skin_legLowerL','skin_legLowerR']);
+        attachPart('boots');
+        // Khăn quàng đỏ nổi khối trước ngực.
+        const scarfShape=new T.Shape();scarfShape.moveTo(-.19,0);scarfShape.lineTo(.19,0);scarfShape.lineTo(.035,-.43);scarfShape.lineTo(-.025,-.43);scarfShape.closePath();
+        const scarf=new T.Mesh(new T.ShapeGeometry(scarfShape),new T.MeshStandardMaterial({color:0xd91f32,roughness:.7,side:T.DoubleSide}));
+        scarf.position.set(0,1.63,.22);root.add(scarf);
+        const knot=new T.Mesh(new T.SphereGeometry(.075,16,12),new T.MeshStandardMaterial({color:0xd91f32}));knot.position.set(0,1.64,.24);root.add(knot);
+      }
+      const mixer=new T.AnimationMixer(root),actions=new Map();let current=null,currentName='';
+      function playRole(role){
+        const name=role==='walk'?'Walking_A':role==='sit'?'Sit_Chair_Idle':role==='wave'?'Waving':'Idle_A';
+        const source=modelAssets.clips.get(name);if(!source){if(role!=='idle')return playRole('idle');return false;}
+        if(currentName===name&&current)return true;
+        const tracks=source.tracks.filter(track=>boneMap.has(track.name.split('.')[0]));
+        const clip=new T.AnimationClip(name,source.duration,tracks);
+        const action=mixer.clipAction(clip);action.reset();action.setLoop(T.LoopRepeat,Infinity);action.clampWhenFinished=false;action.play();
+        if(current&&current!==action)action.crossFadeFrom(current,.24,false);
+        current=action;currentName=name;actions.set(name,action);return true;
+      }
+      const label=makeLabel(isTeacher?'CÔ GIÁO':String(student?.name||student?.fullName||'Bạn nhỏ'),isTeacher);
+      label.position.y=2.8;g.add(label);
+      g.scale.setScalar(isTeacher?.92:.72);
+      const data={student,arms:[],legs:[],eyes:[],phase:index*.71,sleeping:false,walking:false,nextBlink:3,blink:0,seated:false,
+        playRole,update:dt=>mixer.update(dt)};
+      g.userData=data;
+      if(isTeacher){
+        const paddle=new T.Group();paddle.position.set(.9,1.02,.08);g.add(paddle);
+        rod(paddle,[0,1.05,0],[.95,-.9,0],.055,.045,M.wood);
+        const blade=add(paddle,new T.CapsuleGeometry(.14,.48,4,10),M.wood2,.95,-.9,0);blade.rotation.z=-.18;blade.scale.set(.85,1.12,.42);
+        data.paddle=paddle;
+      }
+      playRole('sit');
+      return g;
+    }
+    function character(student,index,isTeacher=false){
+      return modelAssets?riggedCharacter(student,index,isTeacher):proceduralCharacter(student,index,isTeacher);
+    }
     const teacher=character({},0,true);teacher.position.set(-6.05,.78,0);boat.add(teacher);
     function setCharacterSeated(mesh,seated=true){
       mesh.userData.seated=seated;
       mesh.position.y=seated ? .78 : 1.02;
       mesh.userData.legs.forEach((leg,i)=>{leg.rotation.x=seated?-.98:0;leg.rotation.z=0;});
       mesh.userData.arms.forEach((arm,i)=>{arm.rotation.x=seated?-.12:0;arm.rotation.z=seated?(i===0?.16:-.16):0;});
+      if(mesh.userData.playRole)mesh.userData.playRole(seated?'sit':'idle');
     }
     let studentMeshes=[];
     function populate(){
@@ -6525,6 +6645,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
            await wait(15);
          }
          teacher.userData.seated=false;
+         if(teacher.userData.playRole)teacher.userData.playRole('idle');
          teacher.userData.arms.forEach((a,i)=>a.rotation.z=i===0 ? .12 : -.12);
        },
        async wakeSleeper(st){
@@ -6552,12 +6673,14 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
          }
 
          m.rotation.z=0;m.rotation.x=0;m.position.copy(p.home);
+         if(m.userData.playRole)m.userData.playRole('idle');
 
        },
 
        async disembark(st){
          const p=findStudent(st);if(!p||p.mesh.userData.sleeping)return;
          const m=p.mesh;m.userData.walking=true;
+         if(m.userData.playRole)m.userData.playRole('walk');
          const standFrom=m.userData.legs.map(l=>l.rotation.x),standAt=performance.now();
          const startY=m.position.y;
          while(performance.now()-standAt<260){
@@ -6599,8 +6722,9 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       // Camera bám theo thuyền, giữ cô giáo và học sinh ở trung tâm khung hình.
       const followX=boat.position.x*.72;if(sleeperFocus&&sleeperFocus.visible){const world=sleeperFocus.getWorldPosition(new T.Vector3());const desired=new T.Vector3(world.x+2.8,world.y+4.2,world.z+8.5);camera.position.lerp(desired,Math.min(1,dt*1.35));camera.lookAt(world.x,world.y+1.15,world.z);}else if(elapsed<cinematicSkyUntil){const shot=Math.max(0,Math.min(1,1-(cinematicSkyUntil-elapsed)/3.8));const low=new T.Vector3(boat.position.x+2.5,1.8+shot*1.2,17.5);const look=new T.Vector3(boat.position.x*.25,2.5+shot*8.5,-10);camera.position.lerp(low,Math.min(1,dt*1.25));camera.lookAt(look);}else{camera.position.x+=(followX-camera.position.x)*Math.min(1,dt*1.8);camera.position.y+=(15.5-camera.position.y)*Math.min(1,dt*1.2);camera.position.z+=(24.5-camera.position.z)*Math.min(1,dt*1.2);camera.lookAt(followX,1.35,0);}
       teacher.userData.paddle.rotation.z=Math.sin(elapsed*(storm?7:4))*.22;
-      teacher.userData.arms[0].rotation.z=Math.sin(elapsed*3.5)*.12;
-      teacher.userData.arms[1].rotation.z=-.18+Math.sin(elapsed*3.5+.8)*.12;
+      if(teacher.userData.arms[0])teacher.userData.arms[0].rotation.z=Math.sin(elapsed*3.5)*.12;
+      if(teacher.userData.arms[1])teacher.userData.arms[1].rotation.z=-.18+Math.sin(elapsed*3.5+.8)*.12;
+      if(teacher.userData.update)teacher.userData.update(dt);
       teacher.userData.nextBlink-=dt;if(teacher.userData.nextBlink<=0){teacher.userData.blink=.16;teacher.userData.nextBlink=2.5+Math.random()*3;}
       if(teacher.userData.blink>0){teacher.userData.blink=Math.max(0,teacher.userData.blink-dt);const k=Math.max(.08,Math.min(1,teacher.userData.blink/.08));teacher.userData.eyes.forEach(e=>e.scale.y=k);}
       rain.visible=storm;
@@ -6624,6 +6748,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       studentMeshes.forEach(p=>{
         const m=p.mesh,u=m.userData;if(!m.visible||u.sleeping||u.walking)return;
         const phase=elapsed*2.1+u.phase;m.position.y=p.home.y+Math.sin(phase)*.025;m.rotation.y=Math.sin(phase*.45)*.025;
+        if(u.update)u.update(dt);
         u.arms.forEach((a,i)=>a.rotation.z=Math.sin(phase+i*Math.PI)*.045);
         u.nextBlink-=dt;if(u.nextBlink<=0){u.blink=.15;u.nextBlink=2.3+Math.random()*4;}
         if(u.blink>0){u.blink=Math.max(0,u.blink-dt);const k=Math.max(.08,Math.min(1,u.blink/.075));u.eyes.forEach(e=>e.scale.y=k);}
