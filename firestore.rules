@@ -7,7 +7,7 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Quyền quản trị gắn với UID đã xác minh, không dựa vào trường role do người dùng tự sửa.
+    // Quyền quản trị chỉ dành cho email quản trị đã xác minh; không dựa vào trường role do người dùng tự sửa.
     function isAdmin() {
       return signedIn()
         && request.auth.token.email_verified == true
