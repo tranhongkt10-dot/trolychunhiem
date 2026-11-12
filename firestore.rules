@@ -147,6 +147,10 @@ service cloud.firestore {
       match /lessonBookWeeks/{weekId} {
         allow read, create, update, delete: if signedIn();
       }
+      // Nhật ký nhận xét riêng: chỉ người dùng đã đăng nhập mới được xem và ghi nhận xét của lớp.
+      match /lessonBookComments/{commentId} {
+        allow read, create, update, delete: if signedIn();
+      }
     }
 
     // Thống kê lượt mở ứng dụng: giáo viên đã đăng nhập được ghi lượt của chính mình;
