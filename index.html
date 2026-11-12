@@ -776,9 +776,22 @@ body.lhp-hide-nav>nav{display:none!important}
           status('Đã tải dữ liệu riêng và xác thực quyền truy cập.');
           maybeReleaseApp();
         } catch (err) {
-          console.error(err); window.secureAuth.cloudReady = false;
-          status('Không thể tải dữ liệu bảo mật. Kiểm tra cấu hình Firebase/Firestore Rules rồi tải lại trang. ' + (err.message || ''), true);
+          console.error('Lỗi tải dữ liệu sau đăng nhập:', err);
+          window.secureAuth.cloudReady = false;
+          window.secureAuth.user = null;
+          window.secureAuth.profile = null;
+          window.secureAuth.isAdmin = false;
           bootingUid = '';
+          sessionStorage.removeItem('lhp_active_uid');
+          sessionStorage.removeItem('lhp_cloud_ready_uid');
+          try { await window.secureAuth.auth.signOut(); } catch (signOutError) { console.warn('Không thể kết thúc phiên đăng nhập lỗi:', signOutError); }
+          document.body.classList.remove('lhp-app-authenticated');
+          document.body.classList.add('lhp-auth-pending');
+          const welcome = document.getElementById('welcomeScreen');
+          if (welcome) welcome.classList.remove('hidden');
+          const passwordInput = document.getElementById('authPasswordInput');
+          if (passwordInput) passwordInput.value = '';
+          status('Đăng nhập được nhưng chưa tải được dữ liệu lớp. Hệ thống đã đưa cô về màn hình đăng nhập. Chi tiết: ' + (err.message || 'Lỗi Firebase/Firestore.'), true);
         }
       }
 
