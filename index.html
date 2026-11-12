@@ -3857,7 +3857,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     }
 
     async function adminSyncLocalClassToCloud(cloudClassId,localClassId) {
-      if(!window.secureAuth?.isAdmin || window.secureAuth.user?.uid!==ADMIN_UID){alert('Chỉ quản trị viên mới được đồng bộ dữ liệu lớp.');return;}
+      if(!window.secureAuth?.isAdmin || !isAuthorizedAdmin(window.secureAuth.user)){alert('Chỉ quản trị viên mới được đồng bộ dữ liệu lớp.');return;}
       const source=classRecords.find(c=>c.id===localClassId);
       if(!source){alert('Không tìm thấy lớp dữ liệu trên tài khoản quản trị.');return;}
       const snap=source.data||{};
@@ -3921,7 +3921,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     }
 
     async function adminCreateClass() {
-      if(!window.secureAuth?.isAdmin || window.secureAuth.user?.uid!==ADMIN_UID){alert('Chỉ quản trị viên mới được tạo lớp.');return;}
+      if(!window.secureAuth?.isAdmin || !isAuthorizedAdmin(window.secureAuth.user)){alert('Chỉ quản trị viên mới được tạo lớp.');return;}
       const className=document.getElementById('adminNewClassName')?.value.trim()||'';
       const schoolName=document.getElementById('adminNewClassSchool')?.value.trim()||'';
       const year=document.getElementById('adminNewClassYear')?.value.trim()||'2026-2027';
@@ -3939,7 +3939,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     }
 
     async function adminAssignClassTeacher(classId,teacherUid) {
-      if(!window.secureAuth?.isAdmin || window.secureAuth.user?.uid!==ADMIN_UID){alert('Chỉ quản trị viên mới được phân công.');return;}
+      if(!window.secureAuth?.isAdmin || !isAuthorizedAdmin(window.secureAuth.user)){alert('Chỉ quản trị viên mới được phân công.');return;}
       const teacher=adminTeacherCache.find(t=>t.uid===teacherUid);if(!teacherUid||!teacher){alert('Hãy chọn giáo viên hợp lệ.');return;}
       try {
         const ref=firebase.firestore().collection('classes').doc(classId),snap=await ref.get();
