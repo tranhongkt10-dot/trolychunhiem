@@ -343,7 +343,7 @@ body.lhp-hide-nav>nav{display:none!important}
             document.getElementById('parentDedicatedTeamDisplay').textContent = teamEmoji + ' ' + team;
             document.getElementById('parentDedicatedDeskDisplay').textContent = data.desk ? 'Bàn số ' + data.desk : 'Chưa xếp bàn';
             const flowers = Number(data.flowers) || 0;
-            document.getElementById('parentDedicatedFlowerCount').textContent = '🌸 ' + flowers + ' Bông Hoa';
+            document.getElementById('parentDedicatedFlowerCount').textContent = '❤️ ' + flowers + ' Tim tích lũy';
             document.getElementById('parentDedicatedRankDisplay').textContent = flowers >= 14 ? '🏆 Xuất sắc' : flowers >= 11 ? '⭐ Chăm ngoan' : '🌱 Cố gắng';
             document.getElementById('parentDedicatedTeacherNote').textContent = data.teacherNote || 'Cô giáo chưa gửi lời nhận xét.';
             document.getElementById('parentDedicatedTeacherTime').textContent = data.teacherNoteTime || '';
@@ -1269,7 +1269,7 @@ body.lhp-hide-nav>nav{display:none!important}
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-pink-100 flex items-center gap-4">
           <div class="w-14 h-14 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-2xl font-bold">🌸</div>
           <div>
-            <p class="text-xs text-gray-500 font-bold">Tổng hoa việc tốt</p>
+            <p class="text-xs text-gray-500 font-bold">Tổng tim thi đua</p>
             <h3 class="text-2xl font-black text-gray-800" id="statTotalFlowers">0 bông</h3>
           </div>
         </div>
@@ -5713,8 +5713,9 @@ renderFlowerGarden=function(){
 renderCompetition=function(){
   const week=Number(selectedCompetitionWeek)||1, saved=competitionWeeks[String(week)]||null;
   const live=buildHeartWeekRanking(week);
-  const rows=live;
-  const total=rows.reduce((n,x)=>n+x.hearts,0),yearTotal=students.reduce((n,x)=>n+getStudentYearHearts(x),0);
+  const rows=saved&&Array.isArray(saved.ranking)?saved.ranking:live;
+  const total=saved&&Number.isFinite(Number(saved.totalHearts))?Number(saved.totalHearts):rows.reduce((n,x)=>n+x.hearts,0),yearTotal=students.reduce((n,x)=>n+getStudentYearHearts(x),0);
+  const reportSelect=document.getElementById('competitionWeekSelect');if(reportSelect)reportSelect.value=String(week);
   const label=document.getElementById('competitionPeriodLabel');
   if(label)label.textContent='Lớp '+currentClassName+' · Tuần '+week+'/36 · '+(saved?'Đã chốt lúc '+new Date(saved.savedAt).toLocaleString('vi-VN'):'Chưa chốt tuần này — số tim đang được cập nhật trực tiếp.');
   const stats=document.getElementById('competitionSummaryStats');
@@ -5809,7 +5810,7 @@ function installHeartCompetitionUI(){
   document.head.appendChild(style);
   const title=garden?.querySelector('h2');if(title)title.textContent='❤️ VƯỜN TRÁI TIM VIỆC TỐT';
   const desc=garden?.querySelector('.text-pink-50');if(desc)desc.textContent='Mỗi trái tim ghi nhận một cố gắng, một việc tốt và sự tiến bộ của học sinh.';
-  const flowerLabel=document.querySelector('label[for="formStudentFlowers"]');if(flowerLabel)flowerLabel.textContent='Tim khởi tạo:';
+  const flowerField=document.getElementById('formStudentFlowers');if(flowerField&&flowerField.parentElement)flowerField.parentElement.style.display='none';
   renderHeartWeekSelectors();initializeHeartData();renderFlowerGarden();renderCompetition();
 }
 document.addEventListener('DOMContentLoaded',()=>{
