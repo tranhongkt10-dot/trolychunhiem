@@ -705,19 +705,43 @@ body.lhp-hide-nav>nav{display:none!important}
           return { count: records.length };
         },
         async logout() {
-          if (!this.user) { status('Vui lòng đăng nhập bằng tài khoản giáo viên.'); return; }
+          if (!this.user) { status('Tài khoản hiện chưa đăng nhập.'); return; }
+          const logoutButton = document.querySelector('[onclick="logoutToWelcomeScreen()"]');
+          if (logoutButton) { logoutButton.disabled = true; logoutButton.title = 'Đang đồng bộ và đăng xuất…'; }
           try {
-            // Đồng bộ toàn bộ bản lưu cục bộ lên Firestore trước khi kết thúc phiên.
+            // Hoàn tất đồng bộ trước khi kết thúc phiên; không xóa dữ liệu lớp trên thiết bị.
             const result = await this.syncAllData();
             await Promise.all(Array.from(pendingWrites));
-            alert('Đã đồng bộ ' + result.count + ' mục dữ liệu lên Firebase. Bản lưu trên máy tính cũng được giữ nguyên.');
-            // Chỉ kết thúc phiên đăng nhập; tuyệt đối không xóa localStorage theo UID.
             await this.auth.signOut();
-            sessionStorage.removeItem('lhp_active_uid'); sessionStorage.removeItem('lhp_teacher_name'); sessionStorage.removeItem('lhp_class_name'); sessionStorage.removeItem('lhp_cloud_ready_uid');
-            location.reload();
+            sessionStorage.removeItem('lhp_active_uid');
+            sessionStorage.removeItem('lhp_teacher_name');
+            sessionStorage.removeItem('lhp_class_name');
+            sessionStorage.removeItem('lhp_cloud_ready_uid');
+
+            // Chuyển thẳng về màn hình đăng nhập, không phụ thuộc việc tải lại trang.
+            this.user = null;
+            this.profile = null;
+            this.isAdmin = false;
+            this.cloudReady = false;
+            bootingUid = '';
+            appReleased = false;
+            document.body.classList.remove('lhp-app-authenticated');
+            document.body.classList.add('lhp-auth-pending');
+            const welcome = document.getElementById('welcomeScreen');
+            if (welcome) welcome.classList.remove('hidden');
+            const badge = document.getElementById('accountBadge');
+            if (badge) badge.textContent = 'Chưa đăng nhập';
+            const adminButton = document.getElementById('adminPanelButton');
+            if (adminButton) adminButton.classList.add('hidden');
+            const passwordInput = document.getElementById('authPasswordInput');
+            if (passwordInput) passwordInput.value = '';
+            if (typeof switchAuthTab === 'function') switchAuthTab('login');
+            status('Đã đăng xuất thành công. Đã đồng bộ ' + result.count + ' mục dữ liệu; dữ liệu lớp vẫn được lưu an toàn trên thiết bị và Firebase.');
           } catch (err) {
             console.error('Lỗi đồng bộ trước khi đăng xuất:', err);
             alert('Chưa đăng xuất để bảo vệ dữ liệu. Đồng bộ Firebase chưa hoàn tất: ' + (err.message || this.friendlyError(err)));
+          } finally {
+            if (logoutButton) { logoutButton.disabled = false; logoutButton.title = 'Đăng xuất tài khoản'; }
           }
         },
         async openAdminPanel() {
@@ -746,9 +770,23 @@ body.lhp-hide-nav>nav{display:none!important}
 
       async function handleAuthenticatedUser(user) {
         if (!user) {
-          window.secureAuth.user = null; window.secureAuth.profile = null; window.secureAuth.isAdmin = false; window.secureAuth.cloudReady = false;
-          const badge = document.getElementById('accountBadge'); if (badge) badge.textContent = 'Chưa đăng nhập';
-          const adminBtn = document.getElementById('adminPanelButton'); if (adminBtn) adminBtn.classList.add('hidden');
+          window.secureAuth.user = null;
+          window.secureAuth.profile = null;
+          window.secureAuth.isAdmin = false;
+          window.secureAuth.cloudReady = false;
+          bootingUid = '';
+          appReleased = false;
+          const badge = document.getElementById('accountBadge');
+          if (badge) badge.textContent = 'Chưa đăng nhập';
+          const adminBtn = document.getElementById('adminPanelButton');
+          if (adminBtn) adminBtn.classList.add('hidden');
+          // Luôn đưa giao diện về trạng thái chưa đăng nhập khi Firebase báo signOut.
+          if (!parentAccessRequested) {
+            document.body.classList.remove('lhp-app-authenticated');
+            document.body.classList.add('lhp-auth-pending');
+            const welcome = document.getElementById('welcomeScreen');
+            if (welcome) welcome.classList.remove('hidden');
+          }
           return;
         }
         if (!user.emailVerified) { if (window.secureAuth.registrationInProgress) return; try { await window.secureAuth.auth.signOut(); } catch (_) {} status('Email chưa được xác minh. Hãy xác minh email trước khi sử dụng ứng dụng.', true); return; }
