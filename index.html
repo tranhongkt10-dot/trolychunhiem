@@ -3175,6 +3175,20 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       }
     }
 
+    // Dừng ngay mọi âm thanh chúc mừng khi giáo viên đóng trò chơi hoặc rời màn hình game.
+    function stopClassroomGameAudio() {
+      const players = window.__lhpPersistentAudio || {};
+      ['victory', 'applause'].forEach(key => {
+        const player = players[key];
+        if (!player) return;
+        try {
+          player.pause();
+          player.currentTime = 0;
+          player.muted = false;
+        } catch (_) {}
+      });
+    }
+
     // Âm thanh trò chơi: giai điệu chiến thắng vui tươi, tách riêng tiếng vỗ tay.
     // Hiệu ứng chúc mừng dạng trống sân khấu, không dùng chuông/ting cao gây cảm giác rích rắc.
     function playApplauseSound() {
@@ -4874,6 +4888,7 @@ function openDuckGame() {
 
 // ĐÓNG TRÒ CHƠI BẮN VỊT
 function closeDuckGame() {
+  if (typeof stopClassroomGameAudio === 'function') stopClassroomGameAudio();
   const board = document.getElementById('duckGameBoard');
   const openBtn = document.getElementById('duckOpenBtn');
   const closeBtn = document.getElementById('duckCloseBtn');
@@ -6893,7 +6908,23 @@ document.addEventListener('DOMContentLoaded',function(){
      b.setAttribute('aria-label',b.title);
    });
  }
+ // Nhấn nút đóng hoặc chuyển sang khu vực khác trong ứng dụng sẽ dừng nhạc ngay.
+ function bindStopOnLeavingGame(){
+   document.addEventListener('click',event=>{
+     const target=event.target;
+     if(!target || !target.closest) return;
+     if(target.closest(gameSelectors.join(','))) return;
+     if(typeof stopClassroomGameAudio==='function') stopClassroomGameAudio();
+   },true);
+   document.addEventListener('visibilitychange',()=>{
+     if(document.hidden && typeof stopClassroomGameAudio==='function') stopClassroomGameAudio();
+   });
+   window.addEventListener('pagehide',()=>{
+     if(typeof stopClassroomGameAudio==='function') stopClassroomGameAudio();
+   });
+ }
  function install(){
+   bindStopOnLeavingGame();
    gameSelectors.forEach(sel=>{
      const host=document.querySelector(sel);
      if(!host || host.querySelector(':scope > .lhp-game-fullscreen'))return;
