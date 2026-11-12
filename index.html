@@ -1038,7 +1038,7 @@ body.lhp-hide-nav>nav{display:none!important}
             <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-xl text-xs font-black" id="parentDedicatedRankDisplay">🏆 Xuất sắc</span>
           </div>
           <div class="pt-1">
-            <span class="text-xs text-gray-500 font-bold block">Tổng hoa việc tốt tích lũy:</span>
+            <span class="text-xs text-gray-500 font-bold block">Tổng tim thi đua tích lũy:</span>
             <span class="text-3xl font-black text-rose-600" id="parentDedicatedFlowerCount">🌸 12 Bông Hoa</span>
           </div>
         </div>
@@ -1292,7 +1292,7 @@ body.lhp-hide-nav>nav{display:none!important}
       <div class="bg-gradient-to-r from-pink-500 to-purple-600 rounded-3xl p-6 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
           <h2 class="text-2xl font-extrabold font-comfortaa mb-1"><span id="overviewClassDisplay">Lớp 2A7</span> – Mái Trường Hạnh Phúc ✨</h2>
-          <p class="text-pink-100 text-sm">Cùng các con chăm ngoan, tiến bộ và gặt hái thật nhiều bông hoa điểm tốt mỗi ngày!</p>
+          <p class="text-pink-100 text-sm">Cùng các con chăm ngoan, tiến bộ và trao nhau thật nhiều trái tim yêu thương mỗi ngày!</p>
         </div>
         <div class="flex gap-2">
           <button onclick="switchMainTab('calling')" class="px-5 py-2.5 bg-white text-pink-600 rounded-2xl font-bold text-sm shadow hover:scale-105 active:scale-95 transition-all">
@@ -1401,14 +1401,14 @@ body.lhp-hide-nav>nav{display:none!important}
             <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-100 text-amber-800 text-xs font-black tracking-wider">🏅 VINH DANH HỌC SINH TIÊU BIỂU 🏅</div>
             <div class="text-5xl mt-4">🌟 🏆 🌟</div>
             <img id="gardenHonorAvatar" class="garden-honor-avatar" src="" alt="Ảnh học sinh được vinh danh">
-            <div class="text-xs font-black uppercase tracking-[.2em] text-pink-500">Bông hoa tỏa sáng</div>
+            <div class="text-xs font-black uppercase tracking-[.2em] text-pink-500">Trái tim tỏa sáng</div>
             <h2 id="gardenHonorName" class="text-3xl sm:text-4xl font-black text-purple-900 mt-2">Tên học sinh</h2>
             <div id="gardenHonorClass" class="text-sm font-bold text-gray-600 mt-2">Lớp học</div>
             <div class="mx-auto my-5 w-32 h-1.5 rounded-full bg-gradient-to-r from-pink-400 via-amber-300 to-purple-400"></div>
             <div class="inline-flex flex-col items-center px-8 py-4 rounded-3xl bg-gradient-to-br from-amber-100 to-pink-100 border-2 border-amber-300 shadow-sm">
               <span class="text-xs font-black text-amber-800 uppercase tracking-wider">Thành tích hoa điểm tốt</span>
               <strong id="gardenHonorFlowers" class="text-4xl text-rose-600 font-black mt-1">🌸 0</strong>
-              <span class="text-xs text-purple-800 font-bold mt-1">Bông hoa chăm ngoan</span>
+              <span class="text-xs text-purple-800 font-bold mt-1">Trái tim chăm ngoan</span>
             </div>
             <p id="gardenHonorPraise" class="text-base sm:text-lg leading-relaxed text-purple-900 font-bold mt-5">Chúc mừng em! Cô tự hào về những cố gắng của em.</p>
             <div id="gardenHonorReasons" class="text-xs text-gray-600 mt-3"></div>
@@ -2248,7 +2248,7 @@ body.lhp-hide-nav>nav{display:none!important}
       </div>
       <div class="flex gap-2 pt-2">
         <button onclick="rewardWheelWinner()" class="flex-1 py-2.5 bg-gradient-to-r from-pink-500 to-amber-500 text-white rounded-xl text-xs font-black shadow hover:scale-105 active:scale-95">
-          🌸 +1 HOA KHEN THƯỞNG
+          ❤️ +1 TIM KHEN THƯỞNG
         </button>
         <button onclick="closeWheelWinnerModal()" class="px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold hover:bg-gray-200">
           Đóng
@@ -2848,7 +2848,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
 
               <div class="text-right">
                 <span class="px-3 py-1 bg-gradient-to-r from-amber-100 to-pink-100 text-amber-800 rounded-full text-xs font-black shadow-2xs inline-block">
-                  🌸 ${s.flowers} Hoa
+                  ❤️ ${s.flowers} Tim
                 </span>
                 <button onclick="openParentDedicatedView(students.find(x => x.id === '${s.id}'))" class="block text-[11px] font-extrabold text-purple-600 hover:text-purple-800 hover:underline mt-1" title="Xem giao diện đúng như phụ huynh nhìn thấy trên điện thoại">
                   👁️ Xem Thử
@@ -3566,7 +3566,9 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
           criteriaPos:Array.isArray(settings.criteriaPos)?settings.criteriaPos:cloneData(DEFAULT_CRITERIA_POS),
           criteriaNeg:Array.isArray(settings.criteriaNeg)?settings.criteriaNeg:cloneData(DEFAULT_CRITERIA_NEG),
           rewards:Array.isArray(settings.rewards)?settings.rewards:cloneData(DEFAULT_REWARDS),
-          customBaseUrl:settings.customBaseUrl||''
+          customBaseUrl:settings.customBaseUrl||'',
+          competitionWeeks:settings.competitionWeeks||{},
+          selectedCompetitionWeek:Number(settings.selectedCompetitionWeek)||1
         };
         cloudClasses.push({
           id:'cloud_'+classDoc.id,cloudClassId:classDoc.id,schoolId,
@@ -3780,6 +3782,8 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
         criteriaNeg:cloneData(snapshot.criteriaNeg||DEFAULT_CRITERIA_NEG),
         rewards:cloneData(snapshot.rewards||DEFAULT_REWARDS),
         customBaseUrl:String(snapshot.customBaseUrl||''),
+        competitionWeeks:cloneData(snapshot.competitionWeeks||{}),
+        selectedCompetitionWeek:Number(snapshot.selectedCompetitionWeek)||1,
         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
       });
       existing.forEach(doc=>{if(doc.id.startsWith('student_')&&!keep.has(doc.id))batch.delete(doc.ref);});
@@ -4325,7 +4329,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
               </div>
             </td>
             <td class="py-3 px-4 text-center">
-              <span class="px-2.5 py-1 bg-amber-100 text-amber-700 rounded-xl text-xs font-black">🌸 ${s.flowers}</span>
+              <span class="px-2.5 py-1 bg-amber-100 text-amber-700 rounded-xl text-xs font-black">❤️ ${s.flowers}</span>
             </td>
             <td class="py-3 px-4 text-center">
               <div class="flex items-center justify-center gap-1.5">
@@ -4410,13 +4414,11 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
           s.gender = gender;
           s.team = team;
           s.desk = desk;
-          const beforeFlowers = Number(s.flowers) || 0;
-          s.flowers = flowers;
-          if (Number(flowers) !== beforeFlowers) recordCompetitionTransaction(s, Number(flowers) - beforeFlowers, 'Điều chỉnh số hoa trong hồ sơ học sinh');
+          if (!s.weeklyHearts || typeof s.weeklyHearts !== 'object') s.weeklyHearts = {};
           showToast(`Đã cập nhật thông tin bạn ${name}! ✨`);
         }
       } else {
-        const newStudent = { id, name, gender, team, desk, flowers };
+        const newStudent = { id, name, gender, team, desk, flowers: 0, weeklyHearts: {} };
         students.push(newStudent);
         showToast(`Đã thêm bạn mới ${name} vào lớp! 🎉`);
       }
@@ -5281,7 +5283,7 @@ function shootDuck(idx) {
             <span class="text-3xl">${r.icon}</span>
             <div>
               <h4 class="text-sm font-bold text-gray-800">${r.name}</h4>
-              <span class="text-xs font-black text-pink-600">🌸 ${r.flowers} Bông Hoa</span>
+              <span class="text-xs font-black text-pink-600">❤️ ${r.flowers} Tim</span>
             </div>
           </div>
           <button onclick="redeemRewardPrompt('${r.id}')" class="px-3.5 py-1.5 bg-pink-500 hover:bg-pink-600 text-white rounded-xl text-xs font-bold transition-all">
@@ -5621,7 +5623,202 @@ function shootDuck(idx) {
       clearTimeout(window.__lhpToastTimer);
       window.__lhpToastTimer = setTimeout(() => toast.classList.add('hidden'), 4500);
     }
-  </script>
+  
+/* ===== THI ĐUA TRÁI TIM – 36 TUẦN ===== */
+let competitionWeeks = {};
+let selectedCompetitionWeek = 1;
+function heartWeekKey(){return String(Math.max(1,Math.min(36,Number(selectedCompetitionWeek)||1)));}
+function getStudentWeekHearts(st,week=selectedCompetitionWeek){
+  if(!st.weeklyHearts||typeof st.weeklyHearts!=='object')st.weeklyHearts={};
+  return Math.max(0,Math.floor(Number(st.weeklyHearts[String(week)])||0));
+}
+function getStudentYearHearts(st){
+  let total=0;for(let w=1;w<=36;w++)total+=getStudentWeekHearts(st,w);return total;
+}
+function initializeHeartData(){
+  if(!Array.isArray(students))students=[];
+  students.forEach(st=>{
+    if(!st.weeklyHearts||typeof st.weeklyHearts!=='object'||Array.isArray(st.weeklyHearts))st.weeklyHearts={};
+    st.flowers=getStudentYearHearts(st);
+  });
+  if(!competitionWeeks||typeof competitionWeeks!=='object'||Array.isArray(competitionWeeks))competitionWeeks={};
+  selectedCompetitionWeek=Math.max(1,Math.min(36,Number(selectedCompetitionWeek)||1));
+}
+const _heartCurrentSnapshot=currentClassSnapshot;
+currentClassSnapshot=function(){
+  const snap=_heartCurrentSnapshot();
+  snap.competitionWeeks=cloneData(competitionWeeks||{});
+  snap.selectedCompetitionWeek=selectedCompetitionWeek;
+  return snap;
+};
+const _heartLoadClassSnapshot=loadClassSnapshot;
+loadClassSnapshot=function(record){
+  _heartLoadClassSnapshot(record);
+  const d=record&&record.data?record.data:{};
+  competitionWeeks=cloneData(d.competitionWeeks||{});
+  selectedCompetitionWeek=Math.max(1,Math.min(36,Number(d.selectedCompetitionWeek)||1));
+  initializeHeartData();
+  saveActiveClassSnapshot();
+};
+const _heartWriteClassSnapshotToCloud=writeClassSnapshotToCloud;
+writeClassSnapshotToCloud=async function(classId,snapshot){
+  snapshot=Object.assign({},snapshot,{competitionWeeks:cloneData(snapshot.competitionWeeks||competitionWeeks||{}),selectedCompetitionWeek:Number(snapshot.selectedCompetitionWeek)||selectedCompetitionWeek});
+  return _heartWriteClassSnapshotToCloud(classId,snapshot);
+};
+function selectCompetitionWeek(value){
+  selectedCompetitionWeek=Math.max(1,Math.min(36,Number(value)||1));
+  const gardenSel=document.getElementById('heartWeekSelect');if(gardenSel)gardenSel.value=String(selectedCompetitionWeek);
+  const reportSel=document.getElementById('competitionWeekSelect');if(reportSel)reportSel.value=String(selectedCompetitionWeek);
+  saveActiveClassSnapshot();
+  scheduleCentralClassSync();
+  renderFlowerGarden();renderCompetition();renderTeamRanking();renderOverviewStats();
+}
+function changeStudentWeeklyHearts(studentId,delta){
+  const st=students.find(x=>String(x.id)===String(studentId));if(!st)return;
+  const week=heartWeekKey(),before=getStudentWeekHearts(st,week);
+  st.weeklyHearts[week]=Math.max(0,before+(Number(delta)||0));
+  st.flowers=getStudentYearHearts(st);
+  saveStudentsToStorage();renderAllViews();
+  if(delta>0)playApplauseSound();
+  showToast((delta>0?'Đã cộng ':'Đã trừ ')+Math.abs(Number(delta)||0)+' ❤️ cho '+st.name+' · Tuần '+week);
+}
+function buildHeartWeekRanking(week){
+  return students.map(st=>({studentId:String(st.id),studentName:String(st.name||''),team:String(st.team||''),hearts:getStudentWeekHearts(st,week),yearTotal:getStudentYearHearts(st)}))
+    .sort((a,b)=>b.hearts-a.hearts||a.studentName.localeCompare(b.studentName,'vi'));
+}
+function renderHeartWeekSelectors(){
+  const options=Array.from({length:36},(_,i)=>'<option value="'+(i+1)+'">Tuần '+(i+1)+'</option>').join('');
+  ['heartWeekSelect','competitionWeekSelect'].forEach(id=>{const el=document.getElementById(id);if(el){el.innerHTML=options;el.value=String(selectedCompetitionWeek);}});
+}
+const _heartRenderFlowerGarden=renderFlowerGarden;
+renderFlowerGarden=function(){
+  const container=document.getElementById('flowerGardenContainer');if(!container)return;
+  initializeHeartData();
+  const visible=currentFlowerGardenFilter==='ALL'?students:students.filter(st=>st.team===currentFlowerGardenFilter);
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const week=heartWeekKey();
+  container.innerHTML=visible.map(st=>{
+    const id=esc(st.id),hearts=getStudentWeekHearts(st,week),year=getStudentYearHearts(st);
+    return '<article class="garden-student-card heart-student-card">'+
+      '<input type="checkbox" class="garden-honor-check" value="'+id+'" '+(gardenHonorSelectedIds.has(String(st.id))?'checked':'')+' onchange="toggleGardenHonorSelection(this.value,this.checked)" aria-label="Chọn '+esc(st.name)+' để vinh danh">'+
+      '<div class="heart-student-avatar"><img src="'+esc(getStudentAvatarUrl(st))+'" alt="Ảnh '+esc(st.name)+'"></div>'+
+      '<div class="heart-student-info"><div class="heart-student-name">'+esc(st.name)+'</div><div class="heart-student-meta">'+esc(st.team||'Học sinh')+' · '+esc(currentClassName||'Lớp học')+'</div>'+
+      '<div class="heart-count-line"><span class="heart-big">❤️ '+hearts+'</span><span class="heart-week-label">Tuần '+week+'</span><span class="heart-year-total">Cả năm: '+year+' tim</span></div>'+
+      '<div class="heart-stepper"><button type="button" class="heart-minus" onclick="changeStudentWeeklyHearts(\''+id+'\',-1)" aria-label="Trừ một tim">−</button><span>Điều chỉnh tim</span><button type="button" class="heart-plus" onclick="changeStudentWeeklyHearts(\''+id+'\',1)" aria-label="Cộng một tim">+</button></div></div></article>';
+  }).join('')||'<div class="col-span-full text-center text-gray-400 p-8">Chưa có học sinh trong danh sách.</div>';
+  ['ALL','Tổ 1','Tổ 2','Tổ 3','Tổ 4'].forEach(team=>{const b=document.getElementById('gardenFilter-'+team);if(b)b.className='px-4 py-2 rounded-xl text-xs font-black '+(currentFlowerGardenFilter===team?'bg-pink-500 text-white shadow':'bg-gray-100 text-gray-600 hover:bg-pink-50');});
+  const sel=document.getElementById('heartWeekSelect');if(sel)sel.value=week;
+  const count=document.getElementById('gardenHonorSelectionCount');if(count)count.textContent='Đã chọn: '+gardenHonorSelectedIds.size+' học sinh';
+};
+renderCompetition=function(){
+  const week=Number(selectedCompetitionWeek)||1, saved=competitionWeeks[String(week)]||null;
+  const live=buildHeartWeekRanking(week);
+  const rows=live;
+  const total=rows.reduce((n,x)=>n+x.hearts,0),yearTotal=students.reduce((n,x)=>n+getStudentYearHearts(x),0);
+  const label=document.getElementById('competitionPeriodLabel');
+  if(label)label.textContent='Lớp '+currentClassName+' · Tuần '+week+'/36 · '+(saved?'Đã chốt lúc '+new Date(saved.savedAt).toLocaleString('vi-VN'):'Chưa chốt tuần này — số tim đang được cập nhật trực tiếp.');
+  const stats=document.getElementById('competitionSummaryStats');
+  if(stats)stats.innerHTML=[['Tổng tim tuần '+week,total],['Học sinh được ghi nhận',rows.filter(x=>x.hearts>0).length+'/'+students.length],['Tổng tim tích lũy 36 tuần',yearTotal]].map(x=>'<div class="p-4 rounded-2xl bg-rose-50 border border-rose-100"><div class="text-xs text-gray-500 font-bold">'+x[0]+'</div><div class="text-2xl font-black text-rose-600">'+x[1]+'</div></div>').join('');
+  const body=document.getElementById('competitionRankingBody');
+  if(body)body.innerHTML=rows.map((x,i)=>'<tr class="border-b"><td class="p-3 font-black">'+(i+1)+'</td><td class="p-3 font-bold">'+escapeHtml(x.studentName)+' ('+escapeHtml(x.studentId)+')</td><td class="p-3">'+escapeHtml(x.team)+'</td><td class="p-3 text-rose-600 font-black">❤️ '+x.hearts+'</td><td class="p-3 font-bold">'+x.yearTotal+'</td></tr>').join('')||'<tr><td colspan="5" class="p-4 text-center text-gray-400">Chưa có học sinh.</td></tr>';
+  const status=document.getElementById('competitionSavedStatus');if(status)status.textContent=saved?'ĐÃ LƯU TỔNG KẾT TUẦN '+week:'TUẦN '+week+' CHƯA ĐƯỢC CHỐT';
+  renderCompetitionHistory();
+};
+function saveCompetitionSummary(){
+  const week=Number(selectedCompetitionWeek)||1;
+  if(competitionWeeks[String(week)]&&!confirm('Tuần '+week+' đã được chốt. Cô có muốn cập nhật lại tổng kết theo số tim hiện tại không?'))return;
+  const ranking=buildHeartWeekRanking(week);
+  competitionWeeks[String(week)]={week,savedAt:new Date().toISOString(),classId:competitionClassId(),className:currentClassName,teacher:currentTeacherName,ranking,totalHearts:ranking.reduce((n,x)=>n+x.hearts,0)};
+  saveStudentsToStorage();renderCompetition();
+  showToast('Đã chốt và lưu tổng kết thi đua tuần '+week+'/36.');
+}
+function renderCompetitionHistory(){
+  const el=document.getElementById('competitionHistoryList');if(!el)return;
+  el.innerHTML=Array.from({length:36},(_,i)=>i+1).map(w=>{
+    const rec=competitionWeeks[String(w)];
+    const sum=rec?Number(rec.totalHearts)||0:students.reduce((n,s)=>n+getStudentWeekHearts(s,w),0);
+    return '<button type="button" class="week-history-item '+(w===Number(selectedCompetitionWeek)?'active':'')+'" onclick="selectCompetitionWeek('+w+')"><span><b>Tuần '+w+'</b><small>'+(rec?'Đã chốt · '+new Date(rec.savedAt).toLocaleDateString('vi-VN'):'Chưa chốt')+'</small></span><strong>❤️ '+sum+'</strong></button>';
+  }).join('');
+}
+function exportCompetitionCsv(){
+  const week=Number(selectedCompetitionWeek)||1,rows=buildHeartWeekRanking(week);
+  const csv=[['Tuần','Mã học sinh','Họ và tên','Tổ','Số tim tuần','Tổng tim 36 tuần'],...rows.map(x=>[week,x.studentId,x.studentName,x.team,x.hearts,x.yearTotal])].map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Tong_ket_thi_dua_tuan_'+week+'.csv';a.click();URL.revokeObjectURL(url);
+}
+const _heartRenderTeamRanking=renderTeamRanking;
+renderTeamRanking=function(){
+  const box=document.getElementById('teamRankingCards');if(!box)return;
+  const teams=['Tổ 1','Tổ 2','Tổ 3','Tổ 4'],emojis={'Tổ 1':'🐰','Tổ 2':'🐻','Tổ 3':'🐼','Tổ 4':'🦊'},week=Number(selectedCompetitionWeek)||1;
+  const rank=teams.map(t=>{const members=students.filter(s=>s.team===t);return{team:t,emoji:emojis[t],members,total:members.reduce((n,s)=>n+getStudentWeekHearts(s,week),0)};}).sort((a,b)=>b.total-a.total);
+  const leader=document.getElementById('statLeadingTeam');if(leader)leader.textContent=rank[0]?rank[0].team+' '+rank[0].emoji:'Chưa có';
+  box.innerHTML=rank.map((r,i)=>'<div class="bg-white p-5 rounded-3xl border-2 '+(i===0?'border-amber-400 bg-amber-50/20 shadow-md':'border-pink-100')+' text-center space-y-3"><div class="text-4xl">'+r.emoji+'</div><h3 class="text-lg font-black text-gray-800">'+r.team+'</h3><div class="text-2xl font-black text-rose-600">❤️ '+r.total+' tim</div><p class="text-xs text-gray-400 font-bold">'+r.members.length+' thành viên · Tuần '+week+'</p></div>').join('');
+};
+const _heartRenderOverviewStats=renderOverviewStats;
+renderOverviewStats=function(){
+  const total=document.getElementById('statTotalStudents');if(total)total.textContent=students.length+' bạn';
+  const hearts=students.reduce((n,s)=>n+getStudentWeekHearts(s,selectedCompetitionWeek),0);
+  const out=document.getElementById('statTotalFlowers');if(out)out.textContent=hearts+' tim';
+};
+const _heartRenderStudentsTable=renderStudentsTable;
+renderStudentsTable=function(){
+  _heartRenderStudentsTable();
+  const tbody=document.getElementById('studentsTableBody');if(!tbody)return;
+  Array.from(tbody.querySelectorAll('tr')).forEach(tr=>{
+    const id=(tr.querySelector('td:first-child')?.textContent||'').trim(),st=students.find(x=>String(x.id)===id),cell=tr.querySelector('td:nth-child(5)');
+    if(st&&cell)cell.innerHTML='<span class="px-2.5 py-1 bg-rose-100 text-rose-700 rounded-xl text-xs font-black">❤️ '+getStudentWeekHearts(st,selectedCompetitionWeek)+' tim</span>';
+  });
+};
+const _heartRewardWheelWinner=rewardWheelWinner;
+rewardWheelWinner=function(){
+  if(wheelWinnerStudent){changeStudentWeeklyHearts(wheelWinnerStudent.id,1);}
+  closeWheelWinnerModal();
+};
+const _heartApplyCriteriaScore=applyCriteriaScore;
+applyCriteriaScore=function(points,criteriaName){
+  const delta=Number(points)||0;
+  selectedHonorStudentIds.forEach(id=>{const st=students.find(x=>String(x.id)===String(id));if(st)changeStudentWeeklyHeartsSilent(st,delta);});
+  saveStudentsToStorage();renderAllViews();
+  if(delta>0)playApplauseSound();else showToast('Đã ghi nhận điều chỉnh tim: '+criteriaName);
+  selectedHonorStudentIds.clear();backToHonorStep1();renderHonorStep1Students();
+};
+function changeStudentWeeklyHeartsSilent(st,delta){
+  const week=heartWeekKey(),before=getStudentWeekHearts(st,week);
+  st.weeklyHearts[week]=Math.max(0,before+delta);st.flowers=getStudentYearHearts(st);
+}
+const _heartRenderAllViews=renderAllViews;
+renderAllViews=function(){
+  initializeHeartData();
+  _heartRenderAllViews();
+  renderFlowerGarden();renderCompetition();renderTeamRanking();renderOverviewStats();
+};
+function installHeartCompetitionUI(){
+  const garden=document.getElementById('tab-garden');
+  if(garden&&!document.getElementById('heartWeekToolbar')){
+    const toolbar=document.createElement('div');toolbar.id='heartWeekToolbar';toolbar.className='heart-week-toolbar';
+    toolbar.innerHTML='<div><b>❤️ BẢNG THEO DÕI TIM THI ĐUA</b><small>Mỗi học sinh bắt đầu từ 0 tim. Mỗi lần bấm + hoặc − điều chỉnh 1 tim trong tuần đang chọn.</small></div><div class="heart-week-actions"><label for="heartWeekSelect">Tuần học</label><select id="heartWeekSelect" onchange="selectCompetitionWeek(this.value)"></select><button type="button" onclick="switchMainTab(\'competition\')">🏆 Tổng kết 36 tuần</button></div>';
+    const hero=garden.firstElementChild;if(hero)hero.insertAdjacentElement('afterend',toolbar);else garden.prepend(toolbar);
+  }
+  const comp=document.getElementById('tab-competition');
+  if(comp){
+    comp.innerHTML='<div class="bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 p-6 rounded-3xl text-white shadow-md"><h2 class="text-2xl font-black">❤️ SỔ TỔNG KẾT THI ĐUA 36 TUẦN</h2><p class="text-sm mt-2">Theo dõi số tim từng tuần, chốt kết quả tuần 1 đến tuần 36 và xem tổng tim tích lũy cả năm.</p></div>'+
+      '<div class="bg-white rounded-3xl border border-pink-100 shadow-sm p-5 space-y-4"><div class="flex flex-wrap items-center gap-3"><label class="font-bold" for="competitionWeekSelect">Chọn tuần:</label><select id="competitionWeekSelect" onchange="selectCompetitionWeek(this.value)" class="border rounded-xl px-3 py-2 font-bold"></select><button onclick="saveCompetitionSummary()" class="px-4 py-2 rounded-xl bg-pink-600 text-white font-bold">💾 CHỐT & LƯU TUẦN</button><button onclick="exportCompetitionCsv()" class="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold">⬇️ Xuất CSV</button></div><div id="competitionSavedStatus" class="text-xs font-black text-rose-600"></div><div id="competitionPeriodLabel" class="text-sm text-gray-500 font-bold"></div><div id="competitionSummaryStats" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-pink-50"><tr><th class="p-3">Hạng</th><th class="p-3">Học sinh</th><th class="p-3">Tổ</th><th class="p-3">Tim tuần</th><th class="p-3">Tổng tim năm</th></tr></thead><tbody id="competitionRankingBody"></tbody></table></div></div>'+
+      '<div class="bg-white rounded-3xl border border-pink-100 shadow-sm p-5"><h3 class="font-black text-gray-800 text-lg mb-3">📚 LỊCH SỬ TỔNG KẾT TỪ TUẦN 1 ĐẾN TUẦN 36</h3><div id="competitionHistoryList" class="week-history-grid"></div></div>';
+  }
+  const style=document.createElement('style');
+  style.textContent='.heart-week-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:16px 18px;margin:12px 0;background:linear-gradient(120deg,#fff1f2,#fff7fb 55%,#f5f3ff);border:1px solid #fecdd3;border-radius:20px;box-shadow:0 5px 18px #be185d12}.heart-week-toolbar b{display:block;color:#9f1239;font-size:14px;font-weight:1000}.heart-week-toolbar small{display:block;color:#64748b;font-size:11px;font-weight:700;margin-top:4px}.heart-week-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.heart-week-actions label{font-size:12px;font-weight:900;color:#9f1239}.heart-week-actions select,.heart-week-actions button{border-radius:11px;padding:9px 12px;font-size:12px;font-weight:900}.heart-week-actions select{border:1px solid #fda4af;background:#fff}.heart-week-actions button{background:#be185d;color:#fff}.heart-student-card{display:flex!important;align-items:center;gap:12px;text-align:left!important;min-height:104px;padding:12px!important}.heart-student-avatar{flex:0 0 58px;width:58px;height:58px}.heart-student-avatar img{width:58px;height:58px;object-fit:cover;border-radius:50%;border:3px solid #fda4af}.heart-student-info{flex:1;min-width:0}.heart-student-name{font-weight:1000;color:#581c87;font-size:13px;overflow-wrap:anywhere}.heart-student-meta{font-size:10px;color:#64748b;font-weight:800;margin-top:3px}.heart-count-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:7px}.heart-big{font-size:16px;font-weight:1000;color:#e11d48}.heart-week-label{font-size:10px;font-weight:900;color:#9f1239;background:#ffe4e6;padding:3px 7px;border-radius:20px}.heart-year-total{font-size:10px;font-weight:800;color:#64748b}.heart-stepper{display:flex;align-items:center;gap:8px;margin-top:8px}.heart-stepper button{width:30px;height:28px;border-radius:9px;font-size:18px;line-height:1;font-weight:1000;box-shadow:0 2px 6px #0001}.heart-stepper span{font-size:10px;font-weight:800;color:#64748b}.heart-minus{background:#f1f5f9;color:#475569}.heart-plus{background:linear-gradient(135deg,#fb7185,#e11d48);color:#fff}.week-history-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px}.week-history-item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;border:1px solid #fbcfe8;border-radius:12px;background:#fff7fb;text-align:left}.week-history-item span{display:flex;flex-direction:column}.week-history-item b{font-size:12px;color:#831843}.week-history-item small{font-size:9px;color:#64748b}.week-history-item strong{font-size:12px;color:#e11d48;white-space:nowrap}.week-history-item.active{border:2px solid #e11d48;background:#ffe4e6}@media(max-width:600px){.heart-student-card{gap:8px;padding:9px!important}.heart-student-avatar{flex-basis:46px;width:46px;height:46px}.heart-student-avatar img{width:46px;height:46px}.heart-stepper{gap:5px}}#formStudentFlowers{display:none!important}';
+  document.head.appendChild(style);
+  const title=garden?.querySelector('h2');if(title)title.textContent='❤️ VƯỜN TRÁI TIM VIỆC TỐT';
+  const desc=garden?.querySelector('.text-pink-50');if(desc)desc.textContent='Mỗi trái tim ghi nhận một cố gắng, một việc tốt và sự tiến bộ của học sinh.';
+  const flowerLabel=document.querySelector('label[for="formStudentFlowers"]');if(flowerLabel)flowerLabel.textContent='Tim khởi tạo:';
+  renderHeartWeekSelectors();initializeHeartData();renderFlowerGarden();renderCompetition();
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  initializeHeartData();
+  installHeartCompetitionUI();
+  renderAllViews();
+});
+
+</script>
 
 <script type="module">
 import { FaceLandmarker, FilesetResolver, DrawingUtils } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
