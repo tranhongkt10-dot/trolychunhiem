@@ -3270,8 +3270,28 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     }
 
     function playWheelTick(progress) {
-      // Tắt tiếng tick điện tử cao lặp liên tục để tránh gây khó chịu trong lớp.
-      return false;
+      // Tiếng gõ nhẹ, trầm và ngắn theo nhịp vòng quay; không dùng tiếng chuông cao.
+      try {
+        const ctx = classroomAudioContext || ensureClassroomAudioContext();
+        if (!ctx || ctx.state !== 'running') return false;
+        const out = getClassroomAudioOutput(ctx);
+        const now = ctx.currentTime + 0.006;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(360 + Math.min(1, Math.max(0, progress || 0)) * 90, now);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.linearRampToValueAtTime(0.026, now + 0.006);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.055);
+        osc.connect(gain);
+        gain.connect(out || ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.06);
+        return true;
+      } catch (error) {
+        console.warn('Không phát được tiếng vòng quay:', error);
+        return false;
+      }
     }
 
     // Một AudioContext dùng chung. Khởi tạo và resume đồng bộ ngay trong cú chạm/bấm,
