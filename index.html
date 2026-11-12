@@ -1489,8 +1489,8 @@ body.lhp-hide-nav>nav{display:none!important}
 
         <div class="space-y-1">
           <span class="px-3 py-1 bg-pink-100 text-pink-600 rounded-full text-xs font-bold" id="stageTeamBadge">Lớp 2A7</span>
-          <h2 class="text-2xl sm:text-3xl font-black text-gray-800 font-comfortaa mt-1" id="stageStudentName">Bé nào sẽ lên bảng?</h2>
-          <p class="text-xs text-gray-400 font-bold" id="stageStudentIdText">Bấm nút bên dưới để máy ảnh bắt đầu chụp!</p>
+          <h2 class="text-2xl sm:text-3xl font-black text-gray-800 font-comfortaa mt-1" id="stageStudentName">Ai sẽ được gọi tên?</h2>
+          <p class="text-xs text-gray-400 font-bold" id="stageStudentIdText">Bấm nút để chọn ngẫu nhiên một bạn trong lớp.</p>
         </div>
 
         <button onclick="startStageCountdown()" id="stageStartBtn" class="w-full py-4 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-2xl font-black text-base sm:text-lg shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2">
@@ -2238,7 +2238,7 @@ body.lhp-hide-nav>nav{display:none!important}
   <div id="wheelWinnerModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl border-4 border-amber-300">
       <span class="text-4xl">🎉</span>
-      <h3 class="text-xl font-black text-pink-600 font-comfortaa">Chúc Mừng Học Sinh!</h3>
+      <h3 class="text-xl font-black text-pink-600 font-comfortaa">BẠN ĐƯỢC CHỌN!</h3>
       <div class="w-32 h-32 mx-auto rounded-full p-1 bg-gradient-to-tr from-amber-400 to-pink-500 shadow-md">
         <img id="wheelWinnerImg" src="" alt="Chiến thắng" class="w-full h-full object-cover rounded-full bg-white" />
       </div>
@@ -4655,7 +4655,7 @@ function switchCallingMode(mode) {
           if (led) led.className = "w-3 h-3 rounded-full bg-amber-400";
           imgEl.style.transform = "scale(1)";
           playApplauseSound();
-          showToast(`📸 Chúc mừng bạn ${rand.name} đã được gọi lên bảng!`);
+          showCallingStudentResult(rand, 'Máy ảnh gọi tên');
         }
       }, 100);
     }
@@ -4960,7 +4960,7 @@ function shootDuck(idx) {
   if (img) img.src = getStudentAvatarUrl(s);
   if (name) name.innerText = s.name || '';
   if (team) team.innerText = `${s.team || ''} • Vịt số ${idx + 1}`;
-  if (modal) modal.classList.remove('hidden');
+  if (modal) showCallingStudentResult(s, 'Bắn vịt Carnival');
 
   primeClassroomAudioFromGesture();
   playCelebrationSound().catch(err => console.error('Lỗi nhạc bắn vịt:', err));
@@ -5085,11 +5085,11 @@ function shootDuck(idx) {
           ferryCurrentIndex++;
           ferryUsedPassengerIds.add(String(student.id || student.name || ferryCurrentIndex));
           if (shoreStudent) {
-            shoreStudent.innerHTML = '🎉 CHÚC MỪNG!<br><span class="text-lg">' + ferryEscape(student.name || 'Bạn nhỏ') + '</span><br>ĐÃ CẬP BẾN AN TOÀN!';
+            shoreStudent.innerHTML = '🌟 BẠN NHỎ ĐÃ CẬP BẾN<br><span class="text-lg">' + ferryEscape(student.name || 'Bạn nhỏ') + '</span><br><button type="button" data-ferry-score="plus" class="ferry-score-btn ferry-score-plus">＋ CỘNG ĐIỂM</button> <button type="button" data-ferry-score="minus" class="ferry-score-btn ferry-score-minus">－ TRỪ ĐIỂM</button>';
             shoreStudent.style.display = 'block';
           }
-          if (current) current.textContent = '🏆 Chúc mừng ' + (student.name || 'bạn nhỏ') + ' đã cập bến!';
-          if (status) status.textContent = '👏 ' + (student.name || 'Bạn nhỏ') + ' đã lên bờ an toàn. Cả lớp cùng chúc mừng!';
+          if (current) current.textContent = '🌟 ' + (student.name || 'bạn nhỏ') + ' đã cập bến.';
+          if (status) status.textContent = '👏 ' + (student.name || 'Bạn nhỏ') + ' đã cập bến an toàn.';
           renderFerryDeck();
           renderFerryPassengers();
           if (ferryCurrentIndex % 5 === 0 || ferryCurrentIndex === ferryTripQueue.length) playApplauseSound();
@@ -5106,9 +5106,9 @@ function shootDuck(idx) {
         const card = document.getElementById('ferryQuestionCard');
         if (title) title.textContent = '😴 CÔ GIÁO GỌI BẠN NHỎ THỨC DẬY';
         if (name) name.textContent = ferrySleepingPassenger?.name || 'Bạn nhỏ';
-        if (meta) meta.textContent = 'Con ơi, dậy thôi! Các bạn đã lên bờ rồi. Cô mời con thức dậy và lên bảng nhé!';
+        if (meta) meta.textContent = 'Con ơi, dậy thôi! Các bạn đã cập bến rồi. Cô mời con thức dậy và cùng cập bến nhé!';
         if (result) result.classList.remove('hidden');
-        if (status) status.textContent = '💗 Cô giáo nhẹ nhàng gọi ' + (ferrySleepingPassenger?.name || 'bạn nhỏ') + ' thức dậy và mời con lên bảng.';
+        if (status) status.textContent = '💗 Cô giáo nhẹ nhàng đánh thức ' + (ferrySleepingPassenger?.name || 'bạn nhỏ') + ' để cùng cập bến.';
         await wait(900);
         if (window.ferry3DGame && window.ferry3DGame.wakeSleeper) await window.ferry3DGame.wakeSleeper(ferrySleepingPassenger);
         if (current) current.textContent = '🚶 ' + (ferrySleepingPassenger?.name || 'Bạn nhỏ') + ' đã thức dậy, đang bước lên bờ...';
@@ -6986,5 +6986,151 @@ document.addEventListener('DOMContentLoaded',function(){
   document.addEventListener("fullscreenchange",refresh);
   document.addEventListener("webkitfullscreenchange",refresh);
 })();
-</script>\n</body>
+</script>\n
+<script id="lhp-unified-game-scoring">
+(function(){
+ let activeGameScoreStudent=null,activeGameScoreMode='positive';
+ const $=id=>document.getElementById(id);
+ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ function ensureModal(){
+  if(!$('quickGameScoreModal')){
+   const wrap=document.createElement('div');wrap.id='quickGameScoreModal';wrap.className='quick-game-score-overlay';
+   wrap.innerHTML='<div class="quick-game-score-panel" role="dialog" aria-modal="true" aria-labelledby="quickGameScoreTitle"><button type="button" class="quick-score-close" id="quickScoreClose" aria-label="Đóng">×</button><div class="quick-score-student"><img id="quickScoreAvatar" alt="Ảnh học sinh"><div><div class="quick-score-kicker">GHI NHẬN THI ĐUA</div><h2 id="quickGameScoreTitle">Cộng điểm tốt</h2><p id="quickScoreStudentName"></p><small id="quickScoreStudentBalance"></small></div></div><div class="quick-score-tabs"><button type="button" id="quickScorePositiveTab">＋ CỘNG ĐIỂM</button><button type="button" id="quickScoreNegativeTab">－ TRỪ ĐIỂM</button></div><div id="quickScoreCriteriaList" class="quick-score-criteria-list"></div><div class="quick-score-footer"><button type="button" id="quickScoreManageBtn">⚙️ Chỉnh sửa tiêu chí</button><button type="button" id="quickScoreCloseBottom">Đóng</button></div><div id="quickScoreManagePanel" class="quick-score-manage hidden"><div class="quick-score-manage-head"><b>QUẢN LÝ TIÊU CHÍ</b><button type="button" id="quickScoreAddCriterion">＋ Thêm tiêu chí</button></div><p>Giáo viên có thể thêm, sửa tên, thay đổi điểm hoặc xóa tiêu chí. Thay đổi được lưu theo lớp.</p><div id="quickScoreManageList"></div></div></div>';
+   document.body.appendChild(wrap);
+   $('quickScoreClose').onclick=closeQuickGameScore;$('quickScoreCloseBottom').onclick=closeQuickGameScore;
+   wrap.addEventListener('click',e=>{if(e.target===wrap)closeQuickGameScore();});
+   $('quickScorePositiveTab').onclick=()=>renderQuickGameScore('positive');
+   $('quickScoreNegativeTab').onclick=()=>renderQuickGameScore('negative');
+   $('quickScoreManageBtn').onclick=()=>{$('quickScoreManagePanel').classList.toggle('hidden');renderQuickScoreManager();};
+   $('quickScoreAddCriterion').onclick=addQuickScoreCriterion;
+  }
+ }
+ function criteriaArray(){return activeGameScoreMode==='positive'?customCriteriaPos:customCriteriaNeg;}
+ function openQuickGameScore(student,mode){
+  if(!student)return;
+  activeGameScoreStudent=student;ensureModal();
+  $('quickScoreAvatar').src=getStudentAvatarUrl(student);
+  $('quickScoreStudentName').textContent=student.name||'Học sinh';
+  $('quickScoreManagePanel').classList.add('hidden');
+  renderQuickGameScore(mode||'positive');
+  $('quickGameScoreModal').classList.add('show');
+ }
+ function closeQuickGameScore(){if($('quickGameScoreModal'))$('quickGameScoreModal').classList.remove('show');}
+ function renderQuickGameScore(mode){
+  activeGameScoreMode=mode==='negative'?'negative':'positive';
+  const st=activeGameScoreStudent;if(!st)return;
+  const week=Number(window.selectedCompetitionWeek||1);
+  const current=typeof getStudentWeekHearts==='function'?getStudentWeekHearts(st,week):0;
+  const total=typeof getStudentYearHearts==='function'?getStudentYearHearts(st):Number(st.flowers)||0;
+  $('quickGameScoreTitle').textContent=activeGameScoreMode==='positive'?'CỘNG ĐIỂM TỐT ❤️':'TRỪ ĐIỂM NHẮC NHỞ';
+  $('quickScoreStudentBalance').textContent='Tuần '+week+': '+current+' tim · Cả năm: '+total+' tim';
+  $('quickScorePositiveTab').classList.toggle('active',activeGameScoreMode==='positive');
+  $('quickScoreNegativeTab').classList.toggle('active',activeGameScoreMode==='negative');
+  $('quickScoreCriteriaList').innerHTML='';
+  criteriaArray().forEach(c=>{
+   const btn=document.createElement('button');btn.type='button';btn.className='quick-score-criterion '+(activeGameScoreMode==='positive'?'positive':'negative');
+   const icon=document.createElement('span');icon.className='quick-score-criterion-icon';icon.textContent=c.icon|| (activeGameScoreMode==='positive'?'⭐':'⚠️');
+   const name=document.createElement('span');name.className='quick-score-criterion-name';name.textContent=c.name;
+   const pts=document.createElement('b');pts.className='quick-score-criterion-points';pts.textContent=(activeGameScoreMode==='positive'?'+':'')+c.points+' điểm';
+   btn.append(icon,name,pts);btn.onclick=()=>applyQuickGameScore(c);$('quickScoreCriteriaList').appendChild(btn);
+  });
+  if(!criteriaArray().length)$('quickScoreCriteriaList').textContent='Chưa có tiêu chí. Cô hãy vào Chỉnh sửa tiêu chí để thêm.';
+ }
+ function applyQuickGameScore(criterion){
+  const st=activeGameScoreStudent;if(!st)return;
+  const week=String(Math.max(1,Math.min(36,Number(window.selectedCompetitionWeek)||1)));
+  if(!st.weeklyHearts||typeof st.weeklyHearts!=='object')st.weeklyHearts={};
+  const before=Math.max(0,Number(st.weeklyHearts[week])||0);
+  const requested=Number(criterion.points)||0;
+  const after=Math.max(0,before+requested),actual=after-before;
+  if(!actual){showToast('Số tim của học sinh đã là 0, không thể trừ thêm.');return;}
+  st.weeklyHearts[week]=after;
+  st.flowers=typeof getStudentYearHearts==='function'?getStudentYearHearts(st):Math.max(0,(Number(st.flowers)||0)+actual);
+  if(typeof recordCompetitionTransaction==='function')recordCompetitionTransaction(st,actual,criterion.name);
+  saveStudentsToStorage();renderAllViews();
+  if(actual>0)playApplauseSound();
+  showToast((actual>0?'Đã cộng ':'Đã trừ ')+Math.abs(actual)+' tim cho '+st.name+' · '+criterion.name);
+  closeQuickGameScore();
+ }
+ function persistCriteria(){
+  try{appStorage.setItem('lophanhphuc_crit_pos_v4',JSON.stringify(customCriteriaPos));appStorage.setItem('lophanhphuc_crit_neg_v4',JSON.stringify(customCriteriaNeg));}catch(e){}
+  saveActiveClassSnapshot();scheduleCentralClassSync();
+ }
+ function addQuickScoreCriterion(){
+  const name=prompt('Tên tiêu chí mới:');if(!name||!name.trim())return;
+  const raw=prompt('Số điểm '+(activeGameScoreMode==='positive'?'cộng':'trừ')+' (nhập số nguyên dương):','2');
+  const n=Math.max(1,Math.floor(Math.abs(Number(raw)||0)));if(!n)return;
+  const arr=criteriaArray(),id=(activeGameScoreMode==='positive'?'pos_':'neg_')+Date.now();
+  arr.push({id,icon:activeGameScoreMode==='positive'?'⭐':'⚠️',name:name.trim(),points:activeGameScoreMode==='positive'?n:-n});
+  persistCriteria();renderQuickGameScore(activeGameScoreMode);renderQuickScoreManager();
+ }
+ function editQuickScoreCriterion(id){
+  const arr=criteriaArray(),c=arr.find(x=>String(x.id)===String(id));if(!c)return;
+  const name=prompt('Sửa tên tiêu chí:',c.name);if(name===null)return;
+  const raw=prompt('Sửa số điểm:',String(Math.abs(Number(c.points)||1)));if(raw===null)return;
+  const n=Math.max(1,Math.floor(Math.abs(Number(raw)||0)));if(!n)return;
+  c.name=name.trim()||c.name;c.points=activeGameScoreMode==='positive'?n:-n;
+  const icon=prompt('Biểu tượng (emoji), để trống nếu giữ nguyên:',c.icon||'');if(icon!==null&&icon.trim())c.icon=icon.trim();
+  persistCriteria();renderQuickGameScore(activeGameScoreMode);renderQuickScoreManager();
+ }
+ function deleteQuickScoreCriterion(id){
+  if(!confirm('Xóa tiêu chí này khỏi danh sách?'))return;
+  if(activeGameScoreMode==='positive')customCriteriaPos=customCriteriaPos.filter(x=>String(x.id)!==String(id));
+  else customCriteriaNeg=customCriteriaNeg.filter(x=>String(x.id)!==String(id));
+  persistCriteria();renderQuickGameScore(activeGameScoreMode);renderQuickScoreManager();
+ }
+ function renderQuickScoreManager(){
+  const box=$('quickScoreManageList');if(!box)return;box.innerHTML='';
+  criteriaArray().forEach(c=>{
+   const row=document.createElement('div');row.className='quick-score-manage-row';
+   const label=document.createElement('span');label.textContent=(c.icon||'')+' '+c.name+' ('+c.points+')';
+   const edit=document.createElement('button');edit.type='button';edit.textContent='Sửa';edit.onclick=()=>editQuickScoreCriterion(c.id);
+   const del=document.createElement('button');del.type='button';del.textContent='Xóa';del.onclick=()=>deleteQuickScoreCriterion(c.id);
+   row.append(label,edit,del);box.appendChild(row);
+  });
+ }
+ function showCallingStudentResult(student,source){
+  if(!student)return;
+  wheelWinnerStudent=student;
+  const img=$('wheelWinnerImg'),name=$('wheelWinnerName'),team=$('wheelWinnerTeam'),modal=$('wheelWinnerModal');
+  if(img)img.src=getStudentAvatarUrl(student);
+  if(name)name.textContent=student.name||'';
+  if(team)team.textContent=(student.team||'')+' · '+(source||'Được chọn');
+  if(modal)modal.classList.remove('hidden');
+  if($('wheelWinnerModal')){
+   const old=$('wheelWinnerModal').querySelector('.flex.gap-2.pt-2');
+   if(old)old.innerHTML='<button type="button" id="callingWinnerPlus" class="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-black">＋ CỘNG ĐIỂM</button><button type="button" id="callingWinnerMinus" class="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-sm font-black">－ TRỪ ĐIỂM</button><button type="button" onclick="closeWheelWinnerModal()" class="px-4 py-3 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold">Đóng</button>';
+   $('callingWinnerPlus').onclick=()=>openQuickGameScore(student,'positive');
+   $('callingWinnerMinus').onclick=()=>openQuickGameScore(student,'negative');
+  }
+ }
+ function installFerryScoreDelegation(){
+  const shore=$('ferryShoreStudent');if(shore&&!shore.dataset.scoreBound){shore.dataset.scoreBound='1';shore.addEventListener('click',e=>{const b=e.target.closest('[data-ferry-score]');if(!b)return;const student=window._ferrySpotlightStudent;if(student)openQuickGameScore(student,b.dataset.ferryScore==='minus'?'negative':'positive');});}
+  const result=$('ferryResult');if(result&&!$('ferryScoreActions')){const actions=document.createElement('div');actions.id='ferryScoreActions';actions.className='flex justify-center gap-2 flex-wrap mt-3';actions.innerHTML='<button type="button" class="ferry-score-btn ferry-score-plus" id="ferryFinalPlus">＋ CỘNG ĐIỂM</button><button type="button" class="ferry-score-btn ferry-score-minus" id="ferryFinalMinus">－ TRỪ ĐIỂM</button>';result.appendChild(actions);$('ferryFinalPlus').onclick=()=>openQuickGameScore(window._ferrySpotlightStudent,'positive');$('ferryFinalMinus').onclick=()=>openQuickGameScore(window._ferrySpotlightStudent,'negative');}
+ }
+ window.openQuickScoreForStudent=(id,mode)=>{const st=students.find(x=>String(x.id)===String(id));if(st)openQuickGameScore(st,mode);};
+ window.showCallingStudentResult=showCallingStudentResult;
+ window.closeQuickGameScore=closeQuickGameScore;
+ window.openQuickGameScore=openQuickGameScore;
+ window._setFerrySpotlightStudent=st=>{window._ferrySpotlightStudent=st;installFerryScoreDelegation();};
+ const css=document.createElement('style');css.textContent='.quick-game-score-overlay{position:fixed;inset:0;z-index:12050;display:none;align-items:center;justify-content:center;padding:16px;background:#0f172acc;backdrop-filter:blur(8px)}.quick-game-score-overlay.show{display:flex}.quick-game-score-panel{position:relative;width:min(100%,520px);max-height:min(90dvh,800px);overflow:auto;background:#fff;border-radius:26px;padding:22px;box-shadow:0 25px 80px #02061766}.quick-score-close{position:absolute;right:13px;top:12px;width:36px;height:36px;border:0;border-radius:50%;background:#f1f5f9;font-size:24px;color:#475569}.quick-score-student{display:flex;align-items:center;gap:14px;padding:8px 36px 16px 0}.quick-score-student img{width:78px;height:78px;object-fit:cover;border-radius:50%;border:4px solid #fbcfe8;box-shadow:0 4px 14px #be185d22}.quick-score-kicker{font-size:10px;font-weight:1000;letter-spacing:1.5px;color:#db2777}.quick-score-student h2{font-size:20px;font-weight:1000;color:#831843;margin-top:3px}.quick-score-student p{font-size:15px;font-weight:900;color:#1e293b;margin-top:2px}.quick-score-student small{font-size:11px;font-weight:800;color:#64748b}.quick-score-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 14px}.quick-score-tabs button{padding:12px;border-radius:13px;background:#f1f5f9;color:#475569;font-size:12px;font-weight:1000}.quick-score-tabs button.active:first-child{background:#dcfce7;color:#166534}.quick-score-tabs button.active:last-child{background:#ffe4e6;color:#9f1239}.quick-score-criteria-list{display:grid;grid-template-columns:1fr;gap:8px}.quick-score-criterion{display:flex;align-items:center;gap:10px;text-align:left;padding:13px;border-radius:14px;border:1px solid}.quick-score-criterion.positive{background:#f0fdf4;border-color:#bbf7d0;color:#14532d}.quick-score-criterion.negative{background:#fff1f2;border-color:#fecdd3;color:#9f1239}.quick-score-criterion-icon{font-size:20px}.quick-score-criterion-name{flex:1;font-size:13px;font-weight:900}.quick-score-criterion-points{font-size:13px;white-space:nowrap}.quick-score-footer{display:flex;justify-content:space-between;gap:8px;margin-top:15px}.quick-score-footer button,.quick-score-manage-head button{padding:9px 12px;border-radius:10px;background:#f1f5f9;color:#475569;font-size:11px;font-weight:900}.quick-score-manage{margin-top:14px;padding:13px;border-radius:15px;background:#f8fafc;border:1px solid #e2e8f0}.quick-score-manage-head{display:flex;justify-content:space-between;align-items:center;gap:8px}.quick-score-manage-head b{font-size:12px;color:#334155}.quick-score-manage p{font-size:10px;color:#64748b;margin:8px 0}.quick-score-manage-row{display:flex;align-items:center;gap:6px;padding:8px 0;border-top:1px solid #e2e8f0}.quick-score-manage-row span{flex:1;font-size:11px;font-weight:800;color:#334155}.quick-score-manage-row button{padding:6px 8px;border-radius:8px;background:#e2e8f0;font-size:10px;font-weight:900}.quick-score-manage-row button:last-child{background:#ffe4e6;color:#be123c}.ferry-score-btn{padding:7px 11px;border-radius:10px;font-size:10px;font-weight:1000;margin:4px}.ferry-score-plus{background:#059669;color:#fff}.ferry-score-minus{background:#e11d48;color:#fff}@media(max-width:480px){.quick-game-score-panel{padding:16px}.quick-score-student img{width:62px;height:62px}.quick-score-student h2{font-size:17px}}';document.head.appendChild(css);
+ document.addEventListener('DOMContentLoaded',()=>{
+  ensureModal();
+  const stageTitle=$('stageStudentName');if(stageTitle&&stageTitle.textContent.includes('lên bảng'))stageTitle.textContent='Ai sẽ được gọi tên?';
+  const stageText=$('stageStudentIdText');if(stageText&&stageText.textContent.includes('lên bảng'))stageText.textContent='Bấm nút để chọn ngẫu nhiên một bạn trong lớp.';
+  const modal=$('wheelWinnerModal');if(modal){const title=modal.querySelector('h3');if(title)title.textContent='BẠN ĐƯỢC CHỌN!';}
+  installFerryScoreDelegation();
+ });
+ const _oldShowToast=window.showToast;
+ const oldStageCountdown=window.startStageCountdown;
+ const oldShootDuck=window.shootDuck;
+ // The original game callbacks are patched at source for the winner popup.
+ const oldFerryResult=window.startFerryTrip;
+ if(typeof oldFerryResult==='function'){
+  window.startFerryTrip=async function(){return oldFerryResult.apply(this,arguments);};
+ }
+})();
+</script>
+
+</body>
 </html>
