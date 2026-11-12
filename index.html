@@ -2597,7 +2597,7 @@ body.lhp-hide-nav>nav{display:none!important}
           <button onclick="adminCreateClass()" class="mt-3 w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-black">Tạo lớp</button>
           <p class="mt-2 text-[11px] text-amber-900">Tạo hồ sơ lớp và phân công. Bước này chưa chuyển hoặc xóa dữ liệu học sinh đang lưu ở tài khoản cũ.</p>
         </section>
-        <section><h4 class="font-black text-sm text-slate-800 mb-2">🏫 Danh sách lớp và phân công</h4><div id="adminClassesList" class="space-y-2"><p class="text-sm text-slate-500">Đang tải danh sách lớp...</p></div></section>
+        <section><h4 class="font-black text-sm text-slate-800 mb-2">🏫 Danh sách tất cả lớp toàn hệ thống</h4><p class="text-xs text-slate-500 mb-2">Quản trị viên có thể mở từng lớp để sử dụng đầy đủ các chức năng như giáo viên chủ nhiệm.</p><div id="adminClassesList" class="space-y-2"><p class="text-sm text-slate-500">Đang tải danh sách lớp...</p></div></section>
         <section><h4 class="font-black text-sm text-slate-800 mb-2">👩‍🏫 Tài khoản giáo viên</h4><p class="text-xs text-slate-600 mb-2">Mỗi lớp chỉ được gán một giáo viên chủ nhiệm tại một thời điểm.</p><div id="adminAccountsList" class="space-y-2"><p class="text-sm text-slate-500">Đang tải...</p></div></section>
       </div>
     </div>
@@ -3823,7 +3823,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
           classes.innerHTML='';
           if(cs.empty) classes.textContent='Chưa có lớp tập trung. Tạo lớp ở biểu mẫu phía trên.';
           cs.forEach(d=>{const c=d.data()||{},row=document.createElement('div');row.className='p-3 border border-slate-200 rounded-xl space-y-2';
-            const info=document.createElement('div');info.innerHTML='<div class="font-black text-sm">'+escapeHtml(c.className||'Lớp chưa đặt tên')+'</div><div class="text-xs text-slate-500">'+escapeHtml(c.schoolName||'Chưa có trường')+' · '+escapeHtml(c.year||'')+' · '+Number(c.studentCount||0)+' học sinh</div>';
+            const info=document.createElement('div');info.innerHTML='<div class="font-black text-sm">'+escapeHtml(c.className||'Lớp chưa đặt tên')+'</div><div class="text-xs text-slate-500">'+escapeHtml(c.schoolName||'Chưa có trường')+' · '+escapeHtml(c.year||'')+' · GVCN: '+escapeHtml(c.teacherName||'Chưa phân công')+' · '+Number(c.studentCount||0)+' học sinh</div>';
             const controls=document.createElement('div');controls.className='flex flex-col sm:flex-row gap-2';
             const localClass=classRecords.find(rec=>rec.cloudClassId===d.id);
             const openClassBtn=document.createElement('button');
