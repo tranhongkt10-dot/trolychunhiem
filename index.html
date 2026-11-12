@@ -1007,6 +1007,32 @@ body.lhp-hide-nav>nav{display:none!important}
 .applause-modern-card button:hover,.bell-modern-card button:hover{transform:translateY(-2px);filter:brightness(1.06)}
 @media(max-width:520px){.calling-mode-btn{flex:1 1 100%;justify-content:center}.tool-modern-card{padding:18px}.noise-visualizer{height:128px}}
 </style>
+<style id="wheel-pointer-direction-fix">
+/* Mũi tên vòng quay: đầu nhọn luôn hướng xuống tâm vòng quay */
+#callingView-wheel .wheel-pointer{
+  top:-13px!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  width:clamp(32px,4.5vw,46px)!important;
+  height:clamp(34px,5vh,43px)!important;
+  border:0!important;
+  background:linear-gradient(180deg,#fff8bd 0%,#f5c94b 100%);
+  clip-path:polygon(0 0,100% 0,50% 100%);
+  filter:drop-shadow(0 3px 3px #551344);
+}
+#callingView-wheel .wheel-pointer:after{
+  content:"";
+  position:absolute;
+  top:4px;
+  left:50%;
+  transform:translateX(-50%);
+  width:52%;
+  height:58%;
+  border:0;
+  background:linear-gradient(180deg,#ff7897,#df174e);
+  clip-path:polygon(0 0,100% 0,50% 100%);
+}
+</style>
 </head>
 <body class="flex flex-col min-h-screen relative lhp-auth-pending">
 
