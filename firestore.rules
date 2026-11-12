@@ -10,7 +10,9 @@ service cloud.firestore {
     // Quyền quản trị gắn với UID đã xác minh, không dựa vào trường role do người dùng tự sửa.
     function isAdmin() {
       return signedIn()
-        && request.auth.uid == 'dqVutQQEqVWlAEqvA2C89cLhDw63';
+        && request.auth.uid == 'dqVutQQEqVWlAEqvA2C89cLhDw63'
+        && request.auth.token.email_verified == true
+        && request.auth.token.email == 'khachungvietanh8790@gmail.com';
     }
 
     function validParentView() {
@@ -121,10 +123,11 @@ service cloud.firestore {
       );
     }
 
-    // Hồ sơ lớp tập trung: người dùng đã đăng nhập được đọc metadata để chọn lớp trong Sổ đầu bài.
-    // Việc tạo/sửa/xóa hồ sơ lớp vẫn do quản trị viên kiểm soát.
+    // Hồ sơ lớp tập trung: quản trị viên duy nhất được xem tất cả;
+    // giáo viên chỉ được đọc lớp đang được phân công theo teacherUid.
     match /classes/{classId} {
-      allow get, list: if signedIn();
+      allow get, list: if isAdmin()
+        || (signedIn() && resource.data.teacherUid == request.auth.uid);
       allow create, delete: if isAdmin();
       allow update: if isAdmin()
         || (signedIn()
@@ -139,17 +142,22 @@ service cloud.firestore {
             && get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid);
       }
 
-      // Sổ đầu bài: mọi tài khoản đã đăng nhập đều được đọc/ghi sổ của lớp đã chọn.
-      // Không phụ thuộc teacherUid; người chưa đăng nhập vẫn bị từ chối.
+      // Sổ đầu bài và nhật ký nhận xét: quản trị viên xem mọi lớp;
+      // giáo viên chỉ xem/ghi dữ liệu lớp được phân công.
       match /lessonBook/{entryId} {
-        allow read, create, update, delete: if signedIn();
+        allow read, create, update, delete: if isAdmin()
+          || (signedIn()
+            && get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid);
       }
       match /lessonBookWeeks/{weekId} {
-        allow read, create, update, delete: if signedIn();
+        allow read, create, update, delete: if isAdmin()
+          || (signedIn()
+            && get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid);
       }
-      // Nhật ký nhận xét riêng: chỉ người dùng đã đăng nhập mới được xem và ghi nhận xét của lớp.
       match /lessonBookComments/{commentId} {
-        allow read, create, update, delete: if signedIn();
+        allow read, create, update, delete: if isAdmin()
+          || (signedIn()
+            && get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid);
       }
     }
 
