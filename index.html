@@ -2110,7 +2110,14 @@ body.lhp-hide-nav>nav{display:none!important}
       <div class="bg-white rounded-2xl border p-5 space-y-3">
         <div class="flex flex-wrap justify-between items-end gap-3"><div><h3 class="font-extrabold text-lg">📅 Sổ đầu bài năm học 2026–2027</h3><p class="text-xs text-gray-500 mt-1">36 tuần quản lý riêng; Tuần 1 bắt đầu ngày 07/09/2026.</p></div><label class="text-sm font-bold">Chọn tuần<select id="lbAcademicWeek" class="mt-1 block border rounded-xl p-2 min-w-48" onchange="selectLessonBookWeek(this.value)"></select></label><div id="lbWeekRangeLabel" class="text-sm font-bold text-indigo-800 bg-indigo-50 rounded-xl px-3 py-2">Tuần 1: 07/09/2026 – 13/09/2026</div><input id="lbWeekDate" type="hidden"></div>
         <div id="lbWeeklySummary" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div><div id="lbEntries" class="space-y-2"></div>
-        <label class="block text-sm font-bold">Nhận xét chung của giáo viên chủ nhiệm<textarea id="lbWeeklyComment" rows="3" class="mt-1 w-full border rounded-xl p-3"></textarea></label><button onclick="saveLessonBookWeeklyComment()" class="px-4 py-2 rounded-xl bg-indigo-600 text-white font-bold">Lưu nhận xét tuần</button>
+        <label class="block text-sm font-bold">Nhận xét chung của giáo viên chủ nhiệm<textarea id="lbWeeklyComment" rows="3" class="mt-1 w-full border rounded-xl p-3"></textarea></label><button onclick="saveLessonBookWeeklyComment()" class="px-4 py-2 rounded-xl bg-indigo-600 text-white font-bold">Lưu nhận xét tuần</button></div>
+      <div class="bg-white rounded-2xl border border-emerald-200 p-5 space-y-3">
+        <div><h3 class="font-extrabold text-lg text-emerald-800">📝 Nhật ký nhận xét – Minh chứng thi đua</h3><p class="text-xs text-gray-500">Mỗi lần thêm là một bản ghi riêng, không ghi đè nhận xét cũ. Lưu trên Firebase theo từng lớp, kèm thứ, ngày, tuần, tháng, năm học và giáo viên ghi nhận.</p></div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3"><label class="text-sm font-bold">Ngày nhận xét<input id="lbCommentDate" type="date" class="mt-1 w-full border rounded-xl p-2.5"></label><label class="text-sm font-bold">Tiết / thời điểm<select id="lbCommentPeriod" class="mt-1 w-full border rounded-xl p-2.5"><option value="1">Tiết 1</option><option value="2">Tiết 2</option><option value="3">Tiết 3</option><option value="4">Tiết 4</option><option value="5">Tiết 5</option><option value="0">Nhận xét chung trong ngày</option></select></label><label class="text-sm font-bold">Nhóm nhận xét<select id="lbCommentCategory" class="mt-1 w-full border rounded-xl p-2.5"><option>Nề nếp</option><option>Học tập</option><option>Chuyên cần</option><option>Vệ sinh</option><option>Phong trào – hoạt động</option><option>Thi đua lớp</option><option>Khác</option></select></label></div>
+        <label class="block text-sm font-bold">Nội dung nhận xét<textarea id="lbCommentText" rows="3" placeholder="Ghi nhận xét cụ thể, khách quan; nêu ưu điểm, hạn chế và đề xuất..." class="mt-1 w-full border rounded-xl p-3"></textarea></label>
+        <div class="flex flex-wrap items-center gap-2"><button onclick="addLessonBookComment()" class="px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-extrabold">＋ Thêm nhận xét và lưu</button><button onclick="printLessonBookComments()" class="px-4 py-2.5 rounded-xl bg-indigo-600 text-white font-bold">🖨️ In nhật ký nhận xét</button><span id="lbCommentStatus" class="text-sm font-bold"></span></div>
+        <div class="flex flex-wrap items-center justify-between gap-2"><h4 class="font-extrabold text-emerald-900">Lịch sử nhận xét đã lưu</h4><label class="text-xs font-bold">Sắp xếp theo<select id="lbCommentGroupBy" onchange="renderLessonBookComments()" class="ml-2 border rounded-lg p-2"><option value="date">Ngày / thứ</option><option value="week">Tuần</option><option value="month">Tháng</option><option value="year">Năm học</option></select></label></div><div id="lbCommentHistory" class="space-y-2"></div>
+      </div>
       </div>
     </section>
   </main>
@@ -3133,68 +3140,19 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     }
 
     async function playCelebrationSound() {
-  try {
-    const ctx = ensureClassroomAudioContext();
-    if (!ctx) return false;
-    if (ctx.state !== 'running') await ctx.resume();
-    if (ctx.state !== 'running') return false;
-    const out = getClassroomAudioOutput(ctx);
-    const start = ctx.currentTime + 0.04;
-    // Giai điệu chiến thắng nguyên bản: hợp âm nền, bass và melody sáng kiểu game phiêu lưu.
-    const beat = 0.22;
-    const progression = [
-      { t: 0, notes: [293.66, 369.99, 440.00], bass: 146.83 },
-      { t: 4, notes: [246.94, 293.66, 369.99], bass: 123.47 },
-      { t: 8, notes: [220.00, 293.66, 349.23], bass: 110.00 },
-      { t: 12, notes: [261.63, 329.63, 392.00], bass: 130.81 }
-    ];
-    progression.forEach(ch => {
-      const at = start + ch.t * beat;
-      ch.notes.forEach((f, j) => {
-        const osc = ctx.createOscillator(), g = ctx.createGain(), filter = ctx.createBiquadFilter();
-        osc.type = 'triangle'; osc.frequency.setValueAtTime(f, at);
-        filter.type = 'lowpass'; filter.frequency.value = 2400;
-        g.gain.setValueAtTime(0.0001, at);
-        g.gain.linearRampToValueAtTime(0.045, at + 0.045);
-        g.gain.setValueAtTime(0.038, at + 0.42);
-        g.gain.exponentialRampToValueAtTime(0.0001, at + 0.82);
-        osc.connect(filter); filter.connect(g); g.connect(out);
-        osc.start(at); osc.stop(at + 0.85);
-      });
-      const bass = ctx.createOscillator(), bg = ctx.createGain();
-      bass.type = 'sine'; bass.frequency.setValueAtTime(ch.bass, at);
-      bg.gain.setValueAtTime(0.0001, at);
-      bg.gain.linearRampToValueAtTime(0.13, at + 0.025);
-      bg.gain.exponentialRampToValueAtTime(0.0001, at + 0.42);
-      bass.connect(bg); bg.connect(out); bass.start(at); bass.stop(at + 0.45);
-    });
-    const melody = [
-      [587.33,0],[739.99,1],[880.00,2],[739.99,3],
-      [659.25,4],[739.99,5],[987.77,6],[880.00,7],
-      [587.33,8],[659.25,9],[783.99,10],[880.00,11],
-      [783.99,12],[987.77,13],[1174.66,14],[1318.51,16]
-    ];
-    melody.forEach(([f,step],i) => {
-      const at = start + step * beat, osc = ctx.createOscillator(), g = ctx.createGain();
-      osc.type = i % 3 === 0 ? 'sine' : 'triangle';
-      osc.frequency.setValueAtTime(f,at);
-      g.gain.setValueAtTime(0.0001,at);
-      g.gain.linearRampToValueAtTime(i===15?0.085:0.055,at+0.018);
-      g.gain.exponentialRampToValueAtTime(0.0001,at+0.22);
-      osc.connect(g);g.connect(out);osc.start(at);osc.stop(at+0.24);
-    });
-    // Lấp lánh cuối câu nhạc.
-    [1318.51,1567.98,1760.00].forEach((f,i)=>{
-      const at=start+3.15+i*0.045,osc=ctx.createOscillator(),g=ctx.createGain();
-      osc.type='sine';osc.frequency.value=f;
-      g.gain.setValueAtTime(0.0001,at);g.gain.linearRampToValueAtTime(0.035,at+0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001,at+0.65);
-      osc.connect(g);g.connect(out);osc.start(at);osc.stop(at+0.68);
-    });
-    return true;
-  } catch (error) { console.error('Lỗi phát nhạc game:',error); return false; }
-}
-
+      try {
+        const ctx=ensureClassroomAudioContext();if(!ctx)return false;if(ctx.state!=='running')await ctx.resume();if(ctx.state!=='running')return false;
+        const out=getClassroomAudioOutput(ctx),start=ctx.currentTime+.035,beat=60/142,bar=beat*4;
+        const kick=(t)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(145,t);o.frequency.exponentialRampToValueAtTime(48,t+.13);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.38,t+.006);g.gain.exponentialRampToValueAtTime(.0001,t+.17);o.connect(g);g.connect(out);o.start(t);o.stop(t+.18);};
+        const noise=(t,high=false)=>{const n=ctx.createBufferSource(),b=ctx.createBuffer(1,Math.floor(ctx.sampleRate*(high?.045:.12)),ctx.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);n.buffer=b;const f=ctx.createBiquadFilter(),g=ctx.createGain();f.type=high?'highpass':'bandpass';f.frequency.value=high?6500:1800;g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(high?.06:.22,t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+(high?.04:.12));n.connect(f);f.connect(g);g.connect(out);n.start(t);n.stop(t+(high?.05:.13));};
+        const chords=[[261.63,329.63,392],[220,261.63,329.63],[174.61,220,261.63],[196,246.94,293.66]],melody=[659.25,783.99,987.77,783.99,880,987.77,1174.66,987.77,783.99,880,1046.5,1174.66,1318.51,1174.66,1567.98,1318.51];
+        for(let step=0;step<32;step++){const t=start+step*beat/2;if(step%4===0)kick(t);if(step%8===4)noise(t);if(step%2===1)noise(t,true);
+          if(step%8===0)chords[Math.floor(step/8)%4].forEach(f=>{const o=ctx.createOscillator(),g=ctx.createGain(),filter=ctx.createBiquadFilter();o.type='sawtooth';o.frequency.value=f;filter.type='lowpass';filter.frequency.value=1900;g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.045,t+.025);g.gain.setValueAtTime(.032,t+bar*.72);g.gain.exponentialRampToValueAtTime(.0001,t+bar);o.connect(filter);filter.connect(g);g.connect(out);o.start(t);o.stop(t+bar+.02);});
+          const o=ctx.createOscillator(),g=ctx.createGain();o.type='square';o.frequency.value=melody[step%melody.length];g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.075,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+beat*.36);o.connect(g);g.connect(out);o.start(t);o.stop(t+beat*.38);
+        }
+        [1046.5,1318.51,1567.98].forEach((f,i)=>{const t=start+32*beat/2+i*.055,o=ctx.createOscillator(),g=ctx.createGain();o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.11,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.72);o.connect(g);g.connect(out);o.start(t);o.stop(t+.74);});return true;
+      }catch(error){console.error('Lỗi phát nhạc game:',error);return false;}
+    }
     function playWheelTick(progress) {
       const ctx=classroomAudioContext;
       if(!ctx||ctx.state!=='running')return;
@@ -3224,12 +3182,12 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       if (!classroomAudioOutput || classroomAudioOutput.context !== ctx) {
         const master = ctx.createGain();
         const compressor = ctx.createDynamicsCompressor();
-        master.gain.value = 0.72;
-        compressor.threshold.value = -20;
-        compressor.knee.value = 18;
-        compressor.ratio.value = 4;
-        compressor.attack.value = 0.012;
-        compressor.release.value = 0.28;
+        master.gain.value = 1.0;
+        compressor.threshold.value = -12;
+        compressor.knee.value = 10;
+        compressor.ratio.value = 8;
+        compressor.attack.value = 0.004;
+        compressor.release.value = 0.18;
         master.connect(compressor);
         compressor.connect(ctx.destination);
         classroomAudioOutput = { context: ctx, node: master };
@@ -4996,9 +4954,8 @@ function shootDuck(idx) {
       board.classList.remove('show');board.style.display='block';board.offsetHeight;board.classList.add('show');
       if(name)name.textContent='';
       const words='CÔ SẼ GIÚP EM LÊN BỜ';
-      message.textContent='';
-      for(let i=0;i<words.length;i++){message.textContent+=words[i];await new Promise(resolve=>setTimeout(resolve,85));}
-      await new Promise(resolve=>setTimeout(resolve,1500));
+      message.textContent=words;
+      await new Promise(resolve=>setTimeout(resolve,320));
       board.classList.remove('show');board.style.display='none';
     }
     function setFerryPhase(label,headline,detail){
@@ -5011,7 +4968,7 @@ function shootDuck(idx) {
     }
     function getFerryPaceDelay(){
       const pace=document.getElementById('ferryPace')?.value||'normal';
-      return pace==='fast'?110:pace==='slow'?520:260;
+      return pace==='fast'?25:pace==='slow'?90:55;
     }
     async function startFerryTrip() {
       if (ferryTripRunning) return;
@@ -5044,15 +5001,15 @@ function shootDuck(idx) {
         if (window.ferry3DGameReady) await window.ferry3DGameReady;
         if (window.ferry3DGame) window.ferry3DGame.beginTrip();
         setFerryPhase('GIAI ĐOẠN 01 · KHỞI HÀNH','⛵ CON ĐÒ RỜI BẾN — KHỞI ĐẦU HÀNH TRÌNH','☁️ Con đò nhẹ nhàng rời bến. Cả lớp bắt đầu hành trình khám phá tri thức!');
-           await wait(700);
+           await wait(220);
         if (window.ferry3DGame && window.ferry3DGame.startStorm) window.ferry3DGame.startStorm();
         setFerryPhase('GIAI ĐOẠN 02 · VƯỢT SÓNG','🌊 VƯỢT QUA GIÔNG BÃO — CÁ HEO ĐỒNG HÀNH','⛈️ Sóng lớn xuất hiện! Cô và các bạn cùng vững tay chèo vượt qua thử thách.');
-         await wait(2600);
+         await wait(850);
         if (window.ferry3DGame) await window.ferry3DGame.sailToShore();
         if (scene) scene.classList.add('ferry-calm');
         if (window.ferry3DGame) window.ferry3DGame.finishTrip();
         setFerryPhase('GIAI ĐOẠN 03 · CẬP BẾN','🌈 ĐÃ ĐẾN BẾN TRI THỨC — CÁC BẠN LẦN LƯỢT LÊN BỜ','🌈 Bão đã tan, cầu vồng xuất hiện. Cả lớp chuẩn bị lên bờ an toàn!');
-        await wait(3000);
+        await wait(650);
         setFerryPhase('GIAI ĐOẠN 04 · VINH DANH','🏅 TỪNG BẠN NHỎ LẦN LƯỢT CẬP BẾN','👏 Mỗi hành khách đều có cơ hội được gọi tên và tỏa sáng!');
         for (const student of ferryTripQueue) {
           if (window._setFerrySpotlightStudent) window._setFerrySpotlightStudent(student);
@@ -5088,7 +5045,7 @@ function shootDuck(idx) {
         if (meta) meta.textContent = 'Con ơi, dậy thôi! Các bạn đã cập bến rồi. Cô mời con thức dậy và cùng cập bến nhé!';
         if (result) result.classList.add('hidden');
         if (status) status.textContent = '💗 Cô giáo nhẹ nhàng đánh thức ' + (ferrySleepingPassenger?.name || 'bạn nhỏ') + ' để cùng cập bến.';
-        await wait(900);
+        await wait(220);
         if (window.ferry3DGame && window.ferry3DGame.wakeSleeper) await window.ferry3DGame.wakeSleeper(ferrySleepingPassenger);
         if (current) current.textContent = '🚶 ' + (ferrySleepingPassenger?.name || 'Bạn nhỏ') + ' đã thức dậy, đang bước lên bờ...';
         if (status) status.textContent = '👏 ' + (ferrySleepingPassenger?.name || 'Bạn nhỏ') + ' đã thức dậy và đang bước lên bờ.';
@@ -5814,7 +5771,7 @@ function loop(){if(!faceRunning)return;const v=$('faceVideo'),c=$('faceCanvas'),
 window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[sel.selectedIndex];const record={studentId:sel.value||'',studentName:sel.value?opt.text:'Cả lớp',className:document.querySelector('[id*="className"]')?.textContent||'',score,createdAt:new Date().toISOString(),activity:'Gương mặt thần kỳ'};if(score<=0){alert('Bé hãy chơi và ghi điểm trước khi lưu nhé!');return;}if(typeof window.recordFaceGameResult!=='function'){alert('Chưa kết nối được chức năng lưu thành tích.');return;}window.recordFaceGameResult(record);$('faceSaveStatus').textContent='Đã lưu '+score+' điểm cho '+record.studentName+'. Không lưu ảnh/video khuôn mặt.';};
 
     // Electronic lesson book: isolated class subcollections, separate from roster snapshots.
-    let lessonBookEditingId=null, lessonBookEntries=[];
+    let lessonBookEditingId=null, lessonBookEntries=[], lessonBookCommentEntries=[];
     let lessonBookClassOptions=[], lessonBookSelectedClassId='', lessonBookSelectedClassMeta=null;
     function lbClass(){return getActiveClassRecord();}
     function lbClassId(){return lessonBookSelectedClassId||lbClass()?.cloudClassId||'';}
@@ -5914,7 +5871,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     function lbRangeByWeek(n){const d=new Date(LB_START+'T12:00:00');d.setDate(d.getDate()+(Number(n)-1)*7);const e=new Date(d);e.setDate(e.getDate()+6);return{start:lbDateStr(d),end:lbDateStr(e),week:Number(n)};}
     function lbWeekFromDate(value){const d=new Date((value||LB_START)+'T12:00:00'),start=new Date(LB_START+'T12:00:00');return Math.max(1,Math.min(LB_WEEKS,Math.floor((d-start)/604800000)+1));}
     function lbRange(){return lbRangeByWeek(document.getElementById('lbAcademicWeek')?.value||1);}
-    function lbInitWeeks(){const sel=document.getElementById('lbAcademicWeek');if(!sel||sel.options.length)return;for(let n=1;n<=LB_WEEKS;n++){const r=lbRangeByWeek(n),o=document.createElement('option');o.value=n;o.textContent='Tuần '+n+' ('+lbFmt(new Date(r.start+'T12:00:00'))+' – '+lbFmt(new Date(r.end+'T12:00:00'))+')';sel.appendChild(o);}const today=lbDateStr(new Date()),week=lbWeekFromDate(today);sel.value=String(week);document.getElementById('lbWeekDate').value=lbRangeByWeek(week).start;document.getElementById('lbWeekRangeLabel').textContent='Tuần '+week+': '+lbFmt(new Date(lbRangeByWeek(week).start+'T12:00:00'))+' – '+lbFmt(new Date(lbRangeByWeek(week).end+'T12:00:00'));}
+    function lbInitWeeks(){const sel=document.getElementById('lbAcademicWeek');if(!sel||sel.options.length)return;for(let n=1;n<=LB_WEEKS;n++){const r=lbRangeByWeek(n),o=document.createElement('option');o.value=n;o.textContent='Tuần '+n+' ('+lbFmt(new Date(r.start+'T12:00:00'))+' – '+lbFmt(new Date(r.end+'T12:00:00'))+')';sel.appendChild(o);}const today=lbDateStr(new Date()),week=lbWeekFromDate(today);sel.value=String(week);document.getElementById('lbWeekDate').value=lbRangeByWeek(week).start;const commentDate=document.getElementById('lbCommentDate');if(commentDate&&!commentDate.value)commentDate.value=today;document.getElementById('lbWeekRangeLabel').textContent='Tuần '+week+': '+lbFmt(new Date(lbRangeByWeek(week).start+'T12:00:00'))+' – '+lbFmt(new Date(lbRangeByWeek(week).end+'T12:00:00'));}
     function selectLessonBookWeek(n){const r=lbRangeByWeek(n);document.getElementById('lbWeekDate').value=r.start;document.getElementById('lbWeekRangeLabel').textContent='Tuần '+n+': '+lbFmt(new Date(r.start+'T12:00:00'))+' – '+lbFmt(new Date(r.end+'T12:00:00'));const dateEl=document.getElementById('lbDate');if(!dateEl.value||dateEl.value<r.start||dateEl.value>r.end)dateEl.value=r.start;loadLessonBook();}
     function syncLessonBookWeekFromDate(){const d=document.getElementById('lbDate').value;if(!d)return;const n=lbWeekFromDate(d);document.getElementById('lbAcademicWeek').value=String(n);selectLessonBookWeek(n);}
     function resetLessonBookForm(){lessonBookEditingId=null;['lbPeriod','lbSubject','lbTeacher','lbLessonTitle','lbComments','lbPresent','lbAbsentCount','lbAbsentees','lbRating'].forEach(id=>document.getElementById(id).value=id==='lbPeriod'?'1':'');const r=lbRange();document.getElementById('lbDate').value=r.start;document.getElementById('lbSaveButton').textContent='💾 Lưu tiết học';lbStatus('');}
@@ -5925,15 +5882,31 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       try{await loadLessonBookClassOptions();if(!lbClassId()){lbStatus('Chưa có lớp để ghi Sổ đầu bài.',true);return;}
       const selected=lessonBookSelectedClassMeta||{};
       el('lbClassName').textContent=selected.className||active?.className||currentClassName||'—';el('lbHomeroomTeacher').textContent=selected.teacherName||active?.teacherName||currentTeacherName||'—';el('lbStudentCount').textContent=lbRosterCount()+' học sinh';
-      const db=firebase.firestore(),snap=await db.collection('classes').doc(lbClassId()).collection('lessonBook').get();lessonBookEntries=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.date>=range.start&&x.date<=range.end).sort((a,b)=>a.date.localeCompare(b.date)||a.period-b.period);const ws=await db.collection('classes').doc(lbClassId()).collection('lessonBookWeeks').doc(range.start).get();el('lbWeeklyComment').value=ws.exists?(ws.data().comment||''):'';renderLessonBook();lbStatus('Đã tải '+lessonBookEntries.length+' tiết của năm học '+LB_YEAR+', tuần '+range.week+' ('+range.start+' đến '+range.end+').');}catch(e){console.error(e);lbStatus('Không tải được dữ liệu: '+(e.message||e),true);}
+      const db=firebase.firestore(),classRef=db.collection('classes').doc(lbClassId()),snap=await classRef.collection('lessonBook').get();lessonBookEntries=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.date>=range.start&&x.date<=range.end).sort((a,b)=>a.date.localeCompare(b.date)||a.period-b.period);const commentSnap=await classRef.collection('lessonBookComments').get();lessonBookCommentEntries=commentSnap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||((b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)));const ws=await classRef.collection('lessonBookWeeks').doc(range.start).get();el('lbWeeklyComment').value=ws.exists?(ws.data().comment||''):'';renderLessonBook();renderLessonBookComments();lbStatus('Đã tải '+lessonBookEntries.length+' tiết và '+lessonBookCommentEntries.length+' nhận xét của năm học '+LB_YEAR+', tuần '+range.week+' ('+range.start+' đến '+range.end+').');}catch(e){console.error(e);lbStatus('Không tải được dữ liệu: '+(e.message||e),true);}
     }
     function renderLessonBook(){const total=lessonBookEntries.length,abs=lessonBookEntries.reduce((n,x)=>n+(Number(x.absentCount)||0),0),sub=lessonBookEntries.filter(x=>x.substituteTeacher).length;document.getElementById('lbWeeklySummary').innerHTML=[['Tổng số tiết',total],['Tiết dạy thay',sub],['Lượt vắng',abs],['Sĩ số lớp',students.length]].map(x=>'<div class="rounded-xl bg-indigo-50 p-3 text-sm">'+x[0]+'<div class="text-xl font-black text-indigo-800">'+x[1]+'</div></div>').join('');document.getElementById('lbEntries').innerHTML=lessonBookEntries.length?lessonBookEntries.map(x=>'<article class="border rounded-xl p-3 flex flex-wrap justify-between gap-3"><div><b class="text-indigo-800">'+lbEscape(x.date)+' • Tiết '+lbEscape(x.period)+' • '+lbEscape(x.subject)+'</b><div class="font-bold mt-1">'+lbEscape(x.lessonTitle)+'</div><div class="text-xs text-gray-500">GV: '+lbEscape(x.teacherName)+' • Có mặt: '+x.presentCount+' • Vắng: '+x.absentCount+(x.rating?' • '+lbEscape(x.rating):'')+'</div><p class="text-sm mt-2 whitespace-pre-wrap">'+lbEscape(x.comments||'')+'</p>'+(x.absentees?'<p class="text-xs text-rose-700">Vắng: '+lbEscape(x.absentees)+'</p>':'')+'</div><div class="flex gap-2"><button class="px-3 py-1 rounded bg-amber-100 text-amber-800" onclick="editLessonBookEntry(\''+x.id+'\')">Sửa</button><button class="px-3 py-1 rounded bg-rose-100 text-rose-700" onclick="deleteLessonBookEntry(\''+x.id+'\')">Xóa</button></div></article>').join(''):'<p class="text-sm text-gray-500 p-3 bg-gray-50 rounded-xl">Tuần này chưa có tiết học nào.</p>';}
     async function saveLessonBookEntry(){if(!lbClassId()||!window.secureAuth?.user||!window.secureAuth?.cloudReady){lbStatus('Vui lòng đăng nhập và chọn lớp để ghi Sổ đầu bài.',true);return;}const v=id=>document.getElementById(id).value.trim(),date=v('lbDate'),period=Number(v('lbPeriod')),subject=v('lbSubject'),title=v('lbLessonTitle'),absent=Number(v('lbAbsentCount')||0),present=Number(v('lbPresent')||Math.max(0,lbRosterCount()-absent)),range=lbRange();if(!date||date<range.start||date>range.end){lbStatus('Ngày học phải nằm trong khoảng tuần '+range.week+': '+range.start+' đến '+range.end+'.',true);return;}if(!period||period>10||period<1||!subject||!title){lbStatus('Cần nhập ngày, tiết, môn học và tên bài học.',true);return;}if(absent<0||present<0||present+absent>lbRosterCount()){lbStatus('Số học sinh có mặt/vắng không hợp lệ. Sĩ số lớp: '+lbRosterCount()+'.',true);return;}const c=lbClass(),selected=lessonBookSelectedClassMeta||{},teacher=v('lbTeacher')||selected.teacherName||c?.teacherName||currentTeacherName||'',data={academicYear:LB_YEAR,academicWeek:range.week,date,weekday:['Chủ nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'][new Date(date+'T12:00:00').getDay()],period,subject,lessonTitle:title,teacherName:teacher,teacherUid:window.secureAuth.user.uid,presentCount:present,absentCount:absent,absentees:v('lbAbsentees'),comments:v('lbComments'),rating:v('lbRating'),substituteTeacher:teacher!==String(selected.teacherName||c?.teacherName||currentTeacherName||''),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};try{const ref=firebase.firestore().collection('classes').doc(lbClassId()).collection('lessonBook');if(lessonBookEditingId)await ref.doc(lessonBookEditingId).set(data,{merge:true});else await ref.add({...data,createdBy:window.secureAuth.user.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp()});document.getElementById('lbAcademicWeek').value=String(range.week);document.getElementById('lbWeekDate').value=range.start;document.getElementById('lbDate').value=date;await loadLessonBook();resetLessonBookForm();lbStatus('Đã lưu tiết học lên Firebase.');}catch(e){console.error(e);lbStatus('Lưu không thành công: '+(e.message||e),true);}}
     function editLessonBookEntry(id){const x=lessonBookEntries.find(a=>a.id===id);if(!x)return;lessonBookEditingId=id;const m={lbDate:x.date,lbPeriod:x.period,lbSubject:x.subject,lbTeacher:x.teacherName,lbLessonTitle:x.lessonTitle,lbComments:x.comments,lbPresent:x.presentCount,lbAbsentCount:x.absentCount,lbAbsentees:x.absentees,lbRating:x.rating};Object.entries(m).forEach(([k,v])=>document.getElementById(k).value=v??'');document.getElementById('lbSaveButton').textContent='Cập nhật tiết học';window.scrollTo({top:0,behavior:'smooth'});}
     async function deleteLessonBookEntry(id){if(!confirm('Xóa tiết học này?'))return;try{await firebase.firestore().collection('classes').doc(lbClassId()).collection('lessonBook').doc(id).delete();await loadLessonBook();lbStatus('Đã xóa tiết học.');}catch(e){lbStatus('Không xóa được: '+(e.message||e),true);}}
+    function lbCommentStatus(message,bad=false){const el=document.getElementById('lbCommentStatus');if(el){el.textContent=message;el.style.color=bad?'#b91c1c':'#047857';}}
+    function renderLessonBookComments(){
+      const box=document.getElementById('lbCommentHistory');if(!box)return;const mode=document.getElementById('lbCommentGroupBy')?.value||'date';
+      if(!lessonBookCommentEntries.length){box.innerHTML='<p class="rounded-xl bg-gray-50 p-3 text-sm text-gray-500">Chưa có nhận xét nào được lưu. Cô có thể thêm nhận xét đầu tiên ở phía trên.</p>';return;}
+      const groups=new Map();lessonBookCommentEntries.forEach(x=>{const date=String(x.date||''),d=date?new Date(date+'T12:00:00'):new Date(),week=Number(x.academicWeek)||lbWeekFromDate(date),key=mode==='week'?'Tuần '+week+' · '+LB_YEAR:mode==='month'?date.slice(0,7):mode==='year'?(x.academicYear||LB_YEAR):date,title=mode==='week'?key:mode==='month'?'Tháng '+date.slice(5,7)+'/'+date.slice(0,4):mode==='year'?'Năm học '+(x.academicYear||LB_YEAR):((x.weekday||['Chủ nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'][d.getDay()])+' · '+lbFmt(d));if(!groups.has(key))groups.set(key,{title,items:[]});groups.get(key).items.push(x);});
+      box.innerHTML=[...groups.values()].map(g=>'<section class="rounded-xl border border-emerald-100 overflow-hidden"><h5 class="bg-emerald-50 px-3 py-2 text-sm font-black text-emerald-900">'+lbEscape(g.title)+' · '+g.items.length+' nhận xét</h5><div class="divide-y">'+g.items.map(x=>'<article class="p-3"><div class="flex flex-wrap justify-between gap-2"><b class="text-sm text-indigo-800">'+lbEscape(x.weekday||'')+' '+lbEscape(x.date||'')+' · '+(Number(x.period)>0?'Tiết '+lbEscape(x.period):'Nhận xét trong ngày')+'</b><span class="text-xs rounded-full bg-amber-50 text-amber-800 px-2 py-1">'+lbEscape(x.category||'Khác')+'</span></div><p class="mt-2 text-sm whitespace-pre-wrap">'+lbEscape(x.comment||'')+'</p><p class="mt-2 text-xs text-gray-500">GV ghi nhận: '+lbEscape(x.teacherName||'')+' · Tuần '+lbEscape(x.academicWeek)+' · '+lbEscape(x.monthLabel||'')+' · Năm học '+lbEscape(x.academicYear||LB_YEAR)+'</p><div class="mt-2 text-right"><button class="rounded-lg bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700" onclick="deleteLessonBookComment(\''+x.id+'\')">Xóa nhận xét</button></div></article>').join('')+'</div></section>').join('');
+    }
+    async function addLessonBookComment(){
+      const date=document.getElementById('lbCommentDate').value,comment=document.getElementById('lbCommentText').value.trim(),period=Number(document.getElementById('lbCommentPeriod').value),category=document.getElementById('lbCommentCategory').value;
+      if(!lbClassId()||!window.secureAuth?.user||!window.secureAuth?.cloudReady){lbCommentStatus('Vui lòng đăng nhập và chọn lớp.',true);return;}if(!date||!comment){lbCommentStatus('Cần chọn ngày và nhập nội dung nhận xét.',true);return;}
+      const d=new Date(date+'T12:00:00'),week=lbWeekFromDate(date),weekday=['Chủ nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'][d.getDay()],selected=lessonBookSelectedClassMeta||{},teacher=selected.teacherName||currentTeacherName||'';
+      const data={academicYear:LB_YEAR,academicWeek:week,weekStart:lbRangeByWeek(week).start,date,weekday,month:Number(date.slice(5,7)),monthLabel:'Tháng '+date.slice(5,7)+'/'+date.slice(0,4),year:Number(date.slice(0,4)),period,category,comment,teacherName:teacher,teacherUid:window.secureAuth.user.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+      try{await firebase.firestore().collection('classes').doc(lbClassId()).collection('lessonBookComments').add(data);document.getElementById('lbCommentText').value='';await loadLessonBook();lbCommentStatus('Đã lưu nhận xét riêng vào nhật ký của lớp.');}catch(e){console.error(e);lbCommentStatus('Không lưu được nhận xét: '+(e.message||e),true);}
+    }
+    async function deleteLessonBookComment(id){if(!confirm('Xóa nhận xét này khỏi nhật ký?'))return;try{await firebase.firestore().collection('classes').doc(lbClassId()).collection('lessonBookComments').doc(id).delete();await loadLessonBook();lbCommentStatus('Đã xóa nhận xét.');}catch(e){lbCommentStatus('Không xóa được: '+(e.message||e),true);}}
+    function printLessonBookComments(){const rows=lessonBookCommentEntries.map(x=>'<tr><td>'+lbEscape(x.weekday)+' '+lbEscape(x.date)+'</td><td>'+lbEscape(x.academicWeek)+'</td><td>'+lbEscape(x.period?('Tiết '+x.period):'Trong ngày')+'</td><td>'+lbEscape(x.category)+'</td><td>'+lbEscape(x.comment)+'</td><td>'+lbEscape(x.teacherName)+'</td></tr>').join(''),w=window.open('','_blank');if(!w){alert('Hãy cho phép cửa sổ bật lên để in.');return;}w.document.write('<meta charset="utf-8"><title>Nhật ký nhận xét thi đua</title><style>body{font:13px Arial;padding:24px}h2,p{text-align:center}table{border-collapse:collapse;width:100%}td,th{border:1px solid #555;padding:7px;vertical-align:top}th{background:#e8f5ee}.sign{display:flex;justify-content:space-around;margin-top:45px;text-align:center}</style><h2>NHẬT KÝ NHẬN XÉT – MINH CHỨNG THI ĐUA</h2><p>'+lbEscape(lessonBookSelectedClassMeta?.className||currentClassName)+' • Năm học '+LB_YEAR+' • Tổng số: '+lessonBookCommentEntries.length+' nhận xét</p><table><tr><th>Thứ, ngày</th><th>Tuần</th><th>Tiết</th><th>Nhóm</th><th>Nội dung nhận xét</th><th>Giáo viên</th></tr>'+rows+'</table><div class="sign"><div>Giáo viên ghi nhận<br><br><br>'+lbEscape(currentTeacherName)+'</div><div>Ban giám hiệu</div></div><script>onload=()=>print()<\/script>');w.document.close();}
     async function saveLessonBookWeeklyComment(){if(!lbClassId()||!window.secureAuth?.user||!window.secureAuth?.cloudReady){lbStatus('Vui lòng đăng nhập và chọn lớp.',true);return;}const range=lbRange();try{await firebase.firestore().collection('classes').doc(lbClassId()).collection('lessonBookWeeks').doc(range.start).set({weekStart:range.start,comment:document.getElementById('lbWeeklyComment').value.trim(),teacherUid:window.secureAuth.user.uid,teacherName:currentTeacherName,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});lbStatus('Đã lưu nhận xét tuần.');}catch(e){lbStatus('Không lưu được: '+(e.message||e),true);}}
     function printLessonBook(){const range=lbRange(),rows=lessonBookEntries.map(x=>'<tr><td>'+lbEscape(x.date)+'</td><td>'+lbEscape(x.period)+'</td><td>'+lbEscape(x.subject)+'</td><td>'+lbEscape(x.lessonTitle)+'</td><td>'+lbEscape(x.teacherName)+'</td><td>'+x.presentCount+'</td><td>'+x.absentCount+'</td><td>'+lbEscape(x.comments||'')+'</td></tr>').join(''),w=window.open('','_blank');if(!w){alert('Hãy cho phép cửa sổ bật lên để in.');return;}w.document.write('<meta charset="utf-8"><title>Sổ đầu bài</title><style>body{font:13px Arial;padding:24px}h2,p{text-align:center}table{border-collapse:collapse;width:100%}td,th{border:1px solid #555;padding:6px;vertical-align:top}.sign{display:flex;justify-content:space-around;margin-top:45px;text-align:center}</style><h2>SỔ GHI ĐẦU BÀI</h2><p>'+lbEscape(lessonBookSelectedClassMeta?.className||currentClassName)+' • Năm học '+LB_YEAR+' – Tuần '+range.week+' ('+range.start+' đến '+range.end+')</p><table><tr><th>Ngày</th><th>Tiết</th><th>Môn</th><th>Tên bài</th><th>Giáo viên</th><th>Có mặt</th><th>Vắng</th><th>Nhận xét</th></tr>'+rows+'</table><div class="sign"><div>Giáo viên chủ nhiệm<br><br><br>'+lbEscape(currentTeacherName)+'</div><div>Ban giám hiệu</div></div><script>onload=()=>print()<\/script>');w.document.close();}
-    Object.assign(window,{loadLessonBook,resetLessonBookForm,saveLessonBookEntry,editLessonBookEntry,deleteLessonBookEntry,saveLessonBookWeeklyComment,printLessonBook,selectLessonBookWeek,syncLessonBookWeekFromDate});
+    Object.assign(window,{loadLessonBook,resetLessonBookForm,saveLessonBookEntry,editLessonBookEntry,deleteLessonBookEntry,saveLessonBookWeeklyComment,printLessonBook,selectLessonBookWeek,syncLessonBookWeekFromDate,addLessonBookComment,deleteLessonBookComment,printLessonBookComments,renderLessonBookComments});
 
     const oldSwitch=window.switchMainTab;window.addEventListener('DOMContentLoaded',()=>{const sel=$('faceStudentSelect');if(sel&&window.getFaceGameStudentList){window.getFaceGameStudentList().forEach(s=>{const o=document.createElement('option');o.value=s.id;o.textContent=s.id+' – '+s.name;sel.appendChild(o);});}});
 </script>
@@ -6793,21 +6766,21 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
          if(m.userData.playRole)m.userData.playRole('walk');
          const standFrom=m.userData.legs.map(l=>l.rotation.x),standAt=performance.now();
          const startY=m.position.y;
-         while(performance.now()-standAt<260){
-           const q=Math.min(1,(performance.now()-standAt)/260);
+         while(performance.now()-standAt<110){
+           const q=Math.min(1,(performance.now()-standAt)/110);
            m.userData.legs.forEach((l,i)=>l.rotation.x=standFrom[i]*(1-q));
            m.position.y=startY+.24*q;
-           await wait(12);
+           await wait(8);
          }
          m.userData.seated=false;
-         const from=m.position.clone(),to=new T.Vector3(7.65,.18,2.8),t=performance.now(),dur=420;
+         const from=m.position.clone(),to=new T.Vector3(7.65,.18,2.8),t=performance.now(),dur=180;
          while(performance.now()-t<dur){
            const q=Math.min(1,(performance.now()-t)/dur),e=q*q*(3-2*q);
            m.position.lerpVectors(from,to,e);
            const phase=q*Math.PI*7;
            m.userData.legs.forEach((l,i)=>l.rotation.x=Math.sin(phase+i*Math.PI)*.5*(1-q*.35));
            m.userData.arms.forEach((a,i)=>a.rotation.z=(i?1:-1)*Math.sin(phase+i*Math.PI)*.22);
-           await wait(10);
+           await wait(8);
          }
          m.visible=false;m.userData.walking=false;
        },
