@@ -5104,6 +5104,8 @@ function shootDuck(idx) {
         if (window.ferry3DGame) window.ferry3DGame.showSleeper(ferrySleepingPassenger);
         if (window._setFerrySpotlightStudent) window._setFerrySpotlightStudent(ferrySleepingPassenger);
         await writeFerryTeacherBoard(ferrySleepingPassenger?.name || 'Bạn nhỏ');
+        // Hiện bảng cộng/trừ điểm dùng chung ngay sau khi cô giáo gọi tên bạn cuối cùng.
+        if (typeof window.showCallingStudentResult === 'function') window.showCallingStudentResult(ferrySleepingPassenger, 'Lái Đò Tri Thức');
         const title = document.getElementById('ferryWinnerTitle');
         const name = document.getElementById('ferryWinnerName');
         const meta = document.getElementById('ferryWinnerMeta');
@@ -7110,7 +7112,6 @@ document.addEventListener('DOMContentLoaded',function(){
  }
  function installFerryScoreDelegation(){
   const shore=$('ferryShoreStudent');if(shore&&!shore.dataset.scoreBound){shore.dataset.scoreBound='1';shore.addEventListener('click',e=>{const b=e.target.closest('[data-ferry-score]');if(!b)return;const student=window._ferrySpotlightStudent;if(student)openQuickGameScore(student,b.dataset.ferryScore==='minus'?'negative':'positive');});}
-  const result=$('ferryResult');if(result&&!$('ferryScoreActions')){const actions=document.createElement('div');actions.id='ferryScoreActions';actions.className='flex justify-center gap-2 flex-wrap mt-3';actions.innerHTML='<button type="button" class="ferry-score-btn ferry-score-plus" id="ferryFinalPlus" aria-label="Cộng điểm">＋</button><button type="button" class="ferry-score-btn ferry-score-minus" id="ferryFinalMinus" aria-label="Trừ điểm">－</button>';result.appendChild(actions);$('ferryFinalPlus').onclick=()=>openQuickGameScore(window._ferrySpotlightStudent,'positive');$('ferryFinalMinus').onclick=()=>openQuickGameScore(window._ferrySpotlightStudent,'negative');}
  }
  window.openQuickScoreForStudent=(id,mode)=>{const st=students.find(x=>String(x.id)===String(id));if(st)openQuickGameScore(st,mode);};
  window.showCallingStudentResult=showCallingStudentResult;
