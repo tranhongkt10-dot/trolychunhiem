@@ -3886,6 +3886,9 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       if(accounts) accounts.textContent='Đang tải tài khoản...';
       if(classes) classes.textContent='Đang tải lớp...';
       try {
+        // Mỗi lần mở màn hình quản trị đều chạy rà soát/tổng hợp lại để không phụ thuộc
+        // vào thứ tự khởi tạo trang hoặc lần đăng nhập trước đó.
+        await hydrateAssignedClassesFromCloud();
         const db=firebase.firestore();
         const [us,cs]=await Promise.all([db.collection('users').get(),db.collection('classes').get()]);
         adminTeacherCache=[];
@@ -3902,7 +3905,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
         }
         if(classes) {
           classes.innerHTML='';
-          if(cs.empty) classes.textContent='Chưa có lớp tập trung. Tạo lớp ở biểu mẫu phía trên.';
+          if(cs.empty) classes.textContent='Chưa tìm thấy lớp trong kho tập trung. Hệ thống đã rà soát dữ liệu userData của '+us.size+' hồ sơ tài khoản. Nếu giáo viên chưa từng đăng nhập và đồng bộ Firebase trên thiết bị đang lưu lớp, dữ liệu lớp đó chưa có trên máy chủ để quản trị viên truy xuất.';
           cs.forEach(d=>{const c=d.data()||{},row=document.createElement('div');row.className='p-3 border border-slate-200 rounded-xl space-y-2';
             const info=document.createElement('div');info.innerHTML='<div class="font-black text-sm">'+escapeHtml(c.className||'Lớp chưa đặt tên')+'</div><div class="text-xs text-slate-500">'+escapeHtml(c.schoolName||'Chưa có trường')+' · '+escapeHtml(c.year||'')+' · GVCN: '+escapeHtml(c.teacherName||'Chưa phân công')+' · '+Number(c.studentCount||0)+' học sinh</div>';
             const controls=document.createElement('div');controls.className='flex flex-col sm:flex-row gap-2';
