@@ -3214,15 +3214,16 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     // Lưu Audio trên window để khi đóng/ẩn game, trình phát không bị hủy theo DOM.
     const LHP_RECORDED_AUDIO = {
       victory: 'https://upload.wikimedia.org/wikipedia/commons/8/86/Jubilant_Fanfare.mp3',
-      applause: 'https://upload.wikimedia.org/wikipedia/commons/5/5b/Applause_i.ogg'
+      applause: 'https://upload.wikimedia.org/wikipedia/commons/5/5b/Applause_i.ogg',
+      duckPond: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Pekin_duck_%26_mallard.ogg'
     };
     function getPersistentClassroomAudio(key) {
       window.__lhpPersistentAudio = window.__lhpPersistentAudio || {};
       if (!window.__lhpPersistentAudio[key]) {
         const player = new Audio(LHP_RECORDED_AUDIO[key]);
         player.preload = 'auto';
-        player.loop = false;
-        player.volume = key === 'victory' ? 0.72 : 0.68;
+        player.loop = key === 'duckPond';
+        player.volume = key === 'duckPond' ? 0.30 : (key === 'victory' ? 0.72 : 0.68);
         window.__lhpPersistentAudio[key] = player;
       }
       return window.__lhpPersistentAudio[key];
@@ -3233,7 +3234,8 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
         player.pause();
         player.currentTime = 0;
         player.muted = false;
-        player.volume = key === 'victory' ? 0.72 : 0.68;
+        player.loop = key === 'duckPond';
+        player.volume = key === 'duckPond' ? 0.30 : (key === 'victory' ? 0.72 : 0.68);
         await player.play();
         return true;
       } catch (error) {
@@ -3245,7 +3247,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     // Dừng ngay mọi âm thanh chúc mừng khi giáo viên đóng trò chơi hoặc rời màn hình game.
     function stopClassroomGameAudio() {
       const players = window.__lhpPersistentAudio || {};
-      ['victory', 'applause'].forEach(key => {
+      ['victory', 'applause', 'duckPond'].forEach(key => {
         const player = players[key];
         if (!player) return;
         try {
@@ -3264,9 +3266,11 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     }
 
     async function playCelebrationSound() {
-      // Bản nhạc kèn đồng do ban nhạc nghi lễ Hải quân Hoa Kỳ trình diễn;
-      // âm thanh được lưu ở Audio độc lập nên đóng game không làm dừng bản nhạc.
-      return await playPersistentClassroomAudio('victory');
+      // Mọi trò chơi dùng cùng hiệu ứng vỗ tay sân khấu khi kết thúc/lộ diện người thắng.
+      const players = window.__lhpPersistentAudio || {};
+      const victory = players.victory;
+      if (victory) { try { victory.pause(); victory.currentTime = 0; } catch (_) {} }
+      return await playPersistentClassroomAudio('applause');
     }
 
     function playWheelTick(progress) {
@@ -4965,6 +4969,8 @@ function openDuckGame() {
   if (!board || !openBtn || !closeBtn) return;
 
   renderDuckPond();
+  primeClassroomAudioFromGesture();
+  playPersistentClassroomAudio('duckPond').catch(error => console.warn('Không phát được tiếng vịt:', error));
 
   board.classList.remove('hidden');
   openBtn.classList.add('hidden');
@@ -5022,8 +5028,7 @@ function shootDuck(idx) {
   if (team) team.innerText = `${s.team || ''} • Vịt số ${idx + 1}`;
   if (modal) showCallingStudentResult(s, 'Bắn vịt Carnival');
 
-  primeClassroomAudioFromGesture();
-  playCelebrationSound().catch(err => console.error('Lỗi nhạc bắn vịt:', err));
+  // Âm thanh ao vịt tự nhiên đã phát nền từ lúc mở trò chơi; không phát nhạc thắng sau từng phát bắn.
   const status = document.getElementById('duckGameStatus');
   if (status) status.textContent = '💥 BẮN TRÚNG! Chúc mừng ' + (s.name || 'học sinh') + ' được gọi tên!';
 }
@@ -6360,7 +6365,6 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       openButton.addEventListener('click', function () {
         try {
           if (typeof primeClassroomAudioFromGesture === 'function') primeClassroomAudioFromGesture();
-          if (typeof playCelebrationSound === 'function') playCelebrationSound();
         } catch (error) { console.warn('Không phát được nhạc mở hội chợ:', error); }
       });
     }
@@ -6554,7 +6558,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     // Lối ván ngắn từ cầu gỗ vào sân trường.
     for(let i=0;i<5;i++)box(scene,.72,.12,1.65,M.wood2,19.6,.16,-.1-i*1.45);
     // Cầu vồng nhiều dải, ẩn cho đến khi bão tan.
-    const rainbow=new T.Group();scene.add(rainbow);
+    const rainbow=new T.Group();rainbow.position.set(0,1.2,-18);scene.add(rainbow);
     // Tia sét hình ziczac, chỉ xuất hiện trong chặng giông bão.
     const lightningGroup=new T.Group();scene.add(lightningGroup);
     const boltMat=new T.MeshBasicMaterial({color:0xe8f7ff,transparent:true,opacity:.98});
@@ -6567,7 +6571,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     [0xef4444,0xf59e0b,0xfde047,0x22c55e,0x3b82f6,0x8b5cf6].forEach((c,i)=>{
       const pts=[];for(let j=0;j<=80;j++){const t=Math.PI*j/80;pts.push(new T.Vector3(12*Math.cos(t),7+7*Math.sin(t)-i*.38,0));}
       rainbow.add(add(rainbow,new T.TubeGeometry(new T.CatmullRomCurve3(pts),100,.17,8,false),mat(c,.42),0,0,-10));
-    });rainbow.visible=false;
+    });rainbow.visible=true;
     // ĐÀN CÁ HEO 3D phong cách phim hoạt hình: thân mượt, bụng sáng, mõm tròn và vây cong.
     const dolphins=[];
     const dolphinMat=mat(0x4b9fc2,.3,.06),dolphinBelly=mat(0xd8f1e9,.38),dolphinFinMat=mat(0x347b9e,.34);
@@ -6822,14 +6826,13 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     function findStudent(st){return studentMeshes.find(p=>p.student===st);}
     game={
       populate,
-      beginTrip(){sleeperFocus=null;populate();teacher.position.set(-6.05,.78,0);setCharacterSeated(teacher,true);boat.position.x=-10;boatTarget=-8.5;storm=false;calm=false;sailing=false;rain.visible=false;rainbow.visible=false;rainbow.scale.setScalar(1);rainbowRevealStart=-1;cinematicSkyUntil=0;nextLightningAt=elapsed+2.8;lightningUntil=0;dolphins.forEach(d=>d.group.visible=false);scene.background.copy(skyCalm);scene.fog.color.copy(skyCalm);},
+      beginTrip(){sleeperFocus=null;populate();teacher.position.set(-6.05,.78,0);setCharacterSeated(teacher,true);boat.position.x=-10;boatTarget=-8.5;storm=false;calm=false;sailing=false;rain.visible=false;rainbow.visible=true;rainbow.scale.setScalar(1);rainbowRevealStart=-1;cinematicSkyUntil=0;nextLightningAt=elapsed+2.8;lightningUntil=0;dolphins.forEach(d=>d.group.visible=false);scene.background.copy(skyCalm);scene.fog.color.copy(skyCalm);},
       startStorm(){storm=true;calm=false;boatTarget=0;rain.visible=true;rainbow.visible=false;lightningGroup.visible=true;nextLightningAt=elapsed+1.8;lightningUntil=0;dolphins.forEach(d=>d.group.visible=true);},
        async sailToShore(){
          sailing=true;boatTarget=10;const t=performance.now();
          while(performance.now()-t<6500)await wait(30);
          boat.position.x=10;sailing=false;storm=false;calm=true;rain.visible=false;
-         lightningGroup.visible=false;rainbow.visible=true;scene.background.copy(skyClear);scene.fog.color.copy(skyClear);
-         rainbow.scale.setScalar(.015);rainbowRevealStart=elapsed;
+         lightningGroup.visible=false;rainbow.visible=true;rainbow.scale.setScalar(1);rainbowRevealStart=-1;scene.background.copy(skyClear);scene.fog.color.copy(skyClear);
           const st=performance.now(),from=teacher.userData.legs.map(l=>l.rotation.x);
          while(performance.now()-st<780){
            const q=Math.min(1,(performance.now()-st)/780);
@@ -6903,12 +6906,12 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     function animate(){
       requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);elapsed+=dt;
       const pos=water.geometry.attributes.position;
-      for(let i=0;i<pos.count;i++){const x=waterBase[i*3],z=waterBase[i*3+2];const amp=storm?1.08:(calm?.10:.075);pos.array[i*3+1]=waterBase[i*3+1]+Math.sin(x*.48+elapsed*2.2)*amp+Math.cos(z*.62-elapsed*1.7)*amp*.55;}
+      for(let i=0;i<pos.count;i++){const x=waterBase[i*3],z=waterBase[i*3+2];const amp=storm?1.42:(calm?.10:.075);pos.array[i*3+1]=waterBase[i*3+1]+Math.sin(x*.48+elapsed*2.2)*amp+Math.cos(z*.62-elapsed*1.7)*amp*.55;}
       pos.needsUpdate=true;water.geometry.computeVertexNormals();
       ripples.forEach((r,i)=>{r.position.x+=dt*(storm?1.8:.55);if(r.position.x>23)r.position.x=-23;r.position.y=-.18+Math.sin(elapsed*2+i)*.07;r.rotation.z=Math.sin(elapsed+i)*.18;});
       boat.position.x+=(boatTarget-boat.position.x)*Math.min(1,dt*(sailing?.68:1.9));
-      boat.rotation.z=Math.sin(elapsed*(storm?5.2:1.2))*(storm?.16:.014);
-      boat.rotation.x=Math.sin(elapsed*(storm?4.4:1.0))*(storm?.11:.009);
+      boat.rotation.z=Math.sin(elapsed*(storm?5.2:1.2))*(storm?.22:.014);
+      boat.rotation.x=Math.sin(elapsed*(storm?4.4:1.0))*(storm?.16:.009);
       boat.position.y=storm?Math.sin(elapsed*3.8)*.17:Math.sin(elapsed*1.2)*.035;
       const targetSky=storm?skyStorm:(calm?skyClear:skyCalm);scene.background.lerp(targetSky,Math.min(1,dt*(calm?.48:.32)));scene.fog.color.lerp(targetSky,Math.min(1,dt*(calm?.18:.32)));
        if(rainbow.visible&&rainbowRevealStart>=0){const reveal=Math.min(1,(elapsed-rainbowRevealStart)/2.6);rainbow.scale.setScalar(.015+reveal*.985);}
