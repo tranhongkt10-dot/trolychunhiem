@@ -3654,7 +3654,6 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       let migrated=0, skipped=0, studentTotal=0, teacherScanned=0;
       for(const userDoc of usersSnap.docs) {
         const teacherUid=userDoc.id;
-        if(teacherUid===auth.user.uid) continue;
         const profile=userDoc.data()||{};
         const dataSnap=await db.collection('userData').doc(teacherUid).collection('items').get();
         if(dataSnap.empty) continue;
