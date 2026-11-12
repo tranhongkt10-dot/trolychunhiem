@@ -3668,7 +3668,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
             if(!Number.isInteger(count)||count<1||count>10000) continue;
             const parts=[]; let valid=true;
             for(let n=0;n<count;n++) {
-              const part=items.get(encodeKey(item.key)+'__chunk_'+n);
+              const part=items.get(encodeURIComponent(item.key).replace(/\\./g,'%2E')+'__chunk_'+n);
               if(!part||part.chunkParent!==item.key||Number(part.chunkIndex)!==n||typeof part.value!=='string'){valid=false;break;}
               parts.push(part.value);
             }
