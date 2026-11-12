@@ -7097,7 +7097,7 @@ document.addEventListener('DOMContentLoaded',function(){
   if(modal)modal.classList.remove('hidden');
   if($('wheelWinnerModal')){
    const old=$('wheelWinnerModal').querySelector('.flex.gap-2.pt-2');
-   if(old)old.innerHTML='<button type="button" id="callingWinnerPlus" class="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-black">＋ CỘNG ĐIỂM</button><button type="button" id="callingWinnerMinus" class="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-sm font-black" aria-label="Trừ điểm">－</button><button type="button" onclick="closeWheelWinnerModal()" class="px-4 py-3 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold">Đóng</button>';
+   if(old)old.innerHTML='<button type="button" id="callingWinnerPlus" class="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-black" aria-label="Cộng điểm">＋</button><button type="button" id="callingWinnerMinus" class="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-sm font-black" aria-label="Trừ điểm">－</button><button type="button" onclick="closeWheelWinnerModal()" class="px-4 py-3 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold">Đóng</button>';
    $('callingWinnerPlus').onclick=()=>openQuickGameScore(student,'positive');
    $('callingWinnerMinus').onclick=()=>openQuickGameScore(student,'negative');
   }
