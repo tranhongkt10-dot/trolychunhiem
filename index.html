@@ -47,7 +47,7 @@
       box-shadow: 0 4px 14px rgba(236, 72, 153, 0.35);
     }
   
-/* Vinh danh học sinh từ Vườn điểm tốt */
+/* Vinh danh học sinh từ Vườn trái tim */
 .garden-student-card{position:relative;overflow:hidden;border:1px solid #fbcfe8;border-radius:24px;background:linear-gradient(145deg,#fff 0%,#fff7fb 100%);box-shadow:0 5px 16px rgba(190,24,93,.08);transition:transform .22s,box-shadow .22s,border-color .22s}
 .garden-student-card:hover{transform:translateY(-4px);box-shadow:0 12px 26px rgba(190,24,93,.16);border-color:#f9a8d4}
 .garden-student-card:focus{outline:3px solid #f9a8d4;outline-offset:3px}
@@ -68,7 +68,7 @@
   body>header{margin-left:252px;width:calc(100% - 252px);position:sticky;top:0;z-index:35}
   body>header>div{max-width:none;margin:0;align-items:center}
   body>nav{position:fixed!important;left:0;top:0;bottom:0;width:252px;height:100vh;z-index:45;overflow-y:auto;overflow-x:hidden;padding:0 12px 18px!important;background:linear-gradient(180deg,#fff9e8 0%,#fff0f6 45%,#f8edff 100%);border-right:4px solid #e8a5d1!important;border-bottom:0!important;box-shadow:8px 0 28px rgba(131,55,119,.12)}
-  body>nav:before{content:"🌸  LỚP HỌC HẠNH PHÚC";position:sticky;top:0;display:flex;align-items:center;justify-content:center;height:78px;margin:0 -12px 12px;padding:12px;background:linear-gradient(120deg,#ffe9a9,#ffd7eb 55%,#e9d8ff);color:#743b79;font-weight:1000;font-size:15px;letter-spacing:.2px;text-align:center;border-bottom:2px solid #efc1db;z-index:2}
+  body>nav:before{content:"❤️  LỚP HỌC HẠNH PHÚC";position:sticky;top:0;display:flex;align-items:center;justify-content:center;height:78px;margin:0 -12px 12px;padding:12px;background:linear-gradient(120deg,#ffe9a9,#ffd7eb 55%,#e9d8ff);color:#743b79;font-weight:1000;font-size:15px;letter-spacing:.2px;text-align:center;border-bottom:2px solid #efc1db;z-index:2}
   body>nav>div{max-width:none!important;min-width:0!important;width:100%;display:flex;flex-direction:column;align-items:stretch;gap:5px;padding:0 0 12px!important}
   body>nav>div>button{width:100%;min-width:0;justify-content:flex-start;text-align:left;padding:11px 12px!important;border-radius:16px!important;font-size:13px!important;line-height:1.25;white-space:normal;box-shadow:0 2px 5px rgba(117,67,119,.06)}
   body>nav>div>button:hover{background:#ffe3f0!important;color:#873d83!important;transform:translateX(2px)}
@@ -1022,7 +1022,7 @@ body.lhp-hide-nav>nav{display:none!important}
       <!-- Header Sổ liên lạc -->
       <div class="text-center space-y-2 border-b border-pink-100 pb-5">
         <div class="inline-flex items-center gap-2 px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-xs font-black">
-          <span>🌸</span>
+          <span>❤️</span>
           <span>SỔ LIÊN LẠC ĐIỆN TỬ HỌC ĐƯỜNG 4.0</span>
         </div>
         <h1 class="text-2xl sm:text-3xl font-black text-gray-800 font-comfortaa" id="parentDedicatedStudentName">Bé: Hoàng Thanh Mai</h1>
@@ -1052,7 +1052,7 @@ body.lhp-hide-nav>nav{display:none!important}
           </div>
           <div class="pt-1">
             <span class="text-xs text-gray-500 font-bold block">Tổng tim thi đua tích lũy:</span>
-            <span class="text-3xl font-black text-rose-600" id="parentDedicatedFlowerCount">🌸 12 Bông Hoa</span>
+            <span class="text-3xl font-black text-rose-600" id="parentDedicatedFlowerCount">❤️ 12 Tim</span>
           </div>
         </div>
       </div>
@@ -1177,7 +1177,7 @@ body.lhp-hide-nav>nav{display:none!important}
   <header class="bg-white/90 backdrop-blur-md border-b border-pink-200 sticky top-0 z-30 shadow-sm px-4 py-2.5">
     <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <span class="p-2 bg-pink-100 text-pink-600 rounded-2xl text-xl shadow-inner">🌸</span>
+        <span class="p-2 bg-pink-100 text-pink-600 rounded-2xl text-xl shadow-inner">❤️</span>
         <div>
           <div class="flex items-center gap-2">
             <button onclick="openEditClassTeacherModal()" class="group flex items-center gap-1.5 px-2.5 py-0.5 bg-pink-100 hover:bg-pink-200 text-pink-700 text-xs font-black rounded-lg border border-pink-200 transition-all shadow-2xs" title="Nhấp để sửa tên lớp và giáo viên">
@@ -1230,7 +1230,7 @@ body.lhp-hide-nav>nav{display:none!important}
         <span>🪑 Sơ đồ lớp</span>
       </button>
       <button onclick="switchMainTab('garden')" id="nav-garden" class="px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 hover:bg-pink-50">
-        <span>🌻 Vườn điểm tốt</span>
+        <span>❤️ Vườn trái tim</span>
       </button>
       <button onclick="switchMainTab('teams')" id="nav-teams" class="px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 hover:bg-pink-50">
         <span>🏆 Thi đua tổ</span>
@@ -1280,7 +1280,7 @@ body.lhp-hide-nav>nav{display:none!important}
           </div>
         </div>
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-pink-100 flex items-center gap-4">
-          <div class="w-14 h-14 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-2xl font-bold">🌸</div>
+          <div class="w-14 h-14 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-2xl font-bold">❤️</div>
           <div>
             <p class="text-xs text-gray-500 font-bold">Tổng tim thi đua</p>
             <h3 class="text-2xl font-black text-gray-800" id="statTotalFlowers">0 bông</h3>
@@ -1356,7 +1356,7 @@ body.lhp-hide-nav>nav{display:none!important}
                 <th class="py-3 px-4 text-center w-24">AVATAR</th>
                 <th class="py-3 px-4 text-center w-28">ẢNH 3D PIXAR</th>
                 <th class="py-3 px-4">HỌ VÀ TÊN & CHI TIẾT</th>
-                <th class="py-3 px-4 text-center w-24">ĐIỂM HOA</th>
+                <th class="py-3 px-4 text-center w-24">ĐIỂM TIM</th>
                 <th class="py-3 px-4 text-center w-36">THAO TÁC</th>
               </tr>
             </thead>
@@ -1389,14 +1389,14 @@ body.lhp-hide-nav>nav{display:none!important}
     <section id="tab-garden" class="hidden space-y-6">
       <div class="bg-gradient-to-r from-rose-400 via-pink-400 to-amber-300 p-6 rounded-3xl text-white shadow-md flex items-center justify-between">
         <div>
-          <h2 class="text-2xl font-black font-comfortaa">🌻 Vườn Hoa Việc Tốt Lớp Học</h2>
-          <p class="text-pink-50 text-xs font-bold mt-1">Mỗi bông hoa nở rộ tượng trưng cho một việc tốt, một nụ cười của các em!</p>
+          <h2 class="text-2xl font-black font-comfortaa">❤️ Vườn Trái Tim Việc Tốt Lớp Học</h2>
+          <p class="text-pink-50 text-xs font-bold mt-1">Mỗi tim nở rộ tượng trưng cho một việc tốt, một nụ cười của các em!</p>
         </div>
         <span class="text-4xl animate-bounce">🐝</span>
       </div>
 
       <div class="bg-white/90 p-4 rounded-3xl border border-pink-100 shadow-sm flex flex-wrap items-center justify-between gap-3">
-        <div><div class="text-sm font-black text-purple-800">🌷 VƯỜN HOA ĐIỂM TỐT – VINH DANH & NHẮC NHỞ</div><p class="text-xs text-gray-500 mt-1">Tích chọn học sinh, sau đó chọn hình thức phù hợp.</p><div class="text-xs font-black text-pink-600 mt-2" id="gardenHonorSelectionCount">Đã chọn: 0 học sinh</div></div><div class="flex flex-wrap gap-2"><button type="button" onclick="showGardenHonorStage('honor')" class="px-4 py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-pink-500 to-purple-600 text-white text-xs sm:text-sm font-black shadow-lg">🏅 VINH DANH</button><button type="button" onclick="showGardenHonorStage('remind')" class="px-4 py-3 rounded-2xl bg-gradient-to-r from-slate-500 to-indigo-600 text-white text-xs sm:text-sm font-black shadow-lg">😔 NHẮC NHỞ</button></div>
+        <div><div class="text-sm font-black text-purple-800">❤️ VƯỜN TRÁI TIM ĐIỂM TỐT – VINH DANH & NHẮC NHỞ</div><p class="text-xs text-gray-500 mt-1">Tích chọn học sinh, sau đó chọn hình thức phù hợp.</p><div class="text-xs font-black text-pink-600 mt-2" id="gardenHonorSelectionCount">Đã chọn: 0 học sinh</div></div><div class="flex flex-wrap gap-2"><button type="button" onclick="showGardenHonorStage('honor')" class="px-4 py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-pink-500 to-purple-600 text-white text-xs sm:text-sm font-black shadow-lg">🏅 VINH DANH</button><button type="button" onclick="showGardenHonorStage('remind')" class="px-4 py-3 rounded-2xl bg-gradient-to-r from-slate-500 to-indigo-600 text-white text-xs sm:text-sm font-black shadow-lg">😔 NHẮC NHỞ</button></div>
         <div class="flex flex-wrap gap-2">
           <button onclick="filterFlowerGarden('ALL')" id="gardenFilter-ALL" class="px-4 py-2 rounded-xl text-xs font-black bg-pink-500 text-white">Cả lớp</button>
           <button onclick="filterFlowerGarden('Tổ 1')" id="gardenFilter-Tổ 1" class="px-4 py-2 rounded-xl text-xs font-black bg-gray-100 text-gray-600">Tổ 1</button>
@@ -1419,13 +1419,13 @@ body.lhp-hide-nav>nav{display:none!important}
             <div id="gardenHonorClass" class="text-sm font-bold text-gray-600 mt-2">Lớp học</div>
             <div class="mx-auto my-5 w-32 h-1.5 rounded-full bg-gradient-to-r from-pink-400 via-amber-300 to-purple-400"></div>
             <div class="inline-flex flex-col items-center px-8 py-4 rounded-3xl bg-gradient-to-br from-amber-100 to-pink-100 border-2 border-amber-300 shadow-sm">
-              <span class="text-xs font-black text-amber-800 uppercase tracking-wider">Thành tích hoa điểm tốt</span>
-              <strong id="gardenHonorFlowers" class="text-4xl text-rose-600 font-black mt-1">🌸 0</strong>
+              <span class="text-xs font-black text-amber-800 uppercase tracking-wider">Thành tích tim điểm tốt</span>
+              <strong id="gardenHonorFlowers" class="text-4xl text-rose-600 font-black mt-1">❤️ 0</strong>
               <span class="text-xs text-purple-800 font-bold mt-1">Trái tim chăm ngoan</span>
             </div>
             <p id="gardenHonorPraise" class="text-base sm:text-lg leading-relaxed text-purple-900 font-bold mt-5">Chúc mừng em! Cô tự hào về những cố gắng của em.</p>
             <div id="gardenHonorReasons" class="text-xs text-gray-600 mt-3"></div>
-            <div class="text-3xl mt-5">🎉 🌸 👏 🌸 🎉</div>
+            <div class="text-3xl mt-5">🎉 ❤️ 👏 ❤️ 🎉</div>
             <button onclick="closeGardenHonor()" class="mt-5 px-8 py-3 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-black shadow-lg hover:scale-105 transition">ĐÓNG MÀN HÌNH VINH DANH</button>
           </div>
         </div>
@@ -1434,7 +1434,7 @@ body.lhp-hide-nav>nav{display:none!important}
         <div class="garden-tv-frame">
           <button type="button" onclick="closeGardenHonorStage()" class="garden-tv-close" aria-label="Đóng màn hình vinh danh">×</button>
           <div class="garden-tv-kicker" id="gardenStageKicker">LỚP HỌC HẠNH PHÚC</div>
-          <h2 class="garden-tv-title" id="gardenStageTitle">VINH DANH NHỮNG BÔNG HOA TỎA SÁNG</h2>
+          <h2 class="garden-tv-title" id="gardenStageTitle">VINH DANH NHỮNG TIM TỎA SÁNG</h2>
           <p class="garden-tv-subtitle" id="gardenStageSubtitle">Ghi nhận nỗ lực • Trân trọng cố gắng • Lan tỏa yêu thương</p>
           <div id="gardenHonorStageStudents" class="garden-tv-students"></div>
           <div class="garden-tv-footer" id="gardenStageFooter">🌟 CÔ CHÚC MỪNG CÁC EM! 🌟</div>
@@ -1453,7 +1453,7 @@ body.lhp-hide-nav>nav{display:none!important}
       <div class="bg-white p-5 rounded-3xl shadow-sm border border-pink-100 flex items-center justify-between">
         <div>
           <h2 class="text-lg font-black text-gray-800 font-comfortaa">Tiệm Quà Tặng Măng Non 🎁</h2>
-          <p class="text-xs text-gray-500 font-bold">Đổi hoa tích lũy lấy những phần quà nhỏ xinh khích lệ các em học tập</p>
+          <p class="text-xs text-gray-500 font-bold">Đổi tim tích lũy lấy những phần quà nhỏ xinh khích lệ các em học tập</p>
         </div>
         <button onclick="openEditRewardsModal()" class="px-3.5 py-2 bg-pink-100 text-pink-600 rounded-xl text-xs font-bold hover:bg-pink-200 transition-all">
           ✏️ Sửa Danh Mục Quà
@@ -2044,7 +2044,7 @@ body.lhp-hide-nav>nav{display:none!important}
       <div class="bg-white rounded-3xl border border-pink-100 shadow-sm p-5 space-y-4">
         <div class="flex flex-wrap items-center gap-3"><label class="font-bold">Kỳ tổng kết:</label><select id="competitionPeriod" onchange="renderCompetition()" class="border rounded-xl px-3 py-2 font-bold"><option value="week">Tuần này</option><option value="month">Tháng này</option><option value="year">Năm học hiện tại</option></select><button onclick="saveCompetitionSummary()" class="px-4 py-2 rounded-xl bg-pink-600 text-white font-bold">💾 Lưu kỳ tổng kết</button><button onclick="exportCompetitionCsv()" class="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold">⬇️ Xuất CSV</button></div>
         <div id="competitionPeriodLabel" class="text-sm text-gray-500 font-bold"></div><div id="competitionSummaryStats" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
-        <div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-pink-50"><tr><th class="p-3">Hạng</th><th class="p-3">Học sinh</th><th class="p-3">Điểm cộng</th><th class="p-3">Điểm trừ</th><th class="p-3">Điểm ròng</th><th class="p-3">Hoa hiện có</th></tr></thead><tbody id="competitionRankingBody"></tbody></table></div>
+        <div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-pink-50"><tr><th class="p-3">Hạng</th><th class="p-3">Học sinh</th><th class="p-3">Điểm cộng</th><th class="p-3">Điểm trừ</th><th class="p-3">Điểm ròng</th><th class="p-3">Tim hiện có</th></tr></thead><tbody id="competitionRankingBody"></tbody></table></div>
       </div><div class="bg-white rounded-3xl border border-pink-100 shadow-sm p-5"><h3 class="font-black text-gray-800 text-lg mb-3">📚 Lịch sử các kỳ đã lưu</h3><div id="competitionHistoryList" class="space-y-2 text-sm"></div></div>
     </section>
     <section id="tab-traffic" class="hidden space-y-5"><div class="bg-gradient-to-r from-sky-500 to-indigo-600 p-6 rounded-3xl text-white shadow-md"><h2 class="text-2xl font-black">📈 Thống kê lưu lượng truy cập</h2><p class="text-sm mt-2">Ghi nhận lượt mở ứng dụng của tài khoản giáo viên đã đăng nhập; không thu thập ảnh, camera hay nội dung cá nhân.</p></div><div class="bg-white rounded-3xl border border-sky-100 shadow-sm p-5 space-y-4"><div class="flex items-center justify-between gap-3 flex-wrap"><h3 class="font-black text-gray-800">Tổng quan truy cập</h3><button onclick="loadTrafficStats()" class="px-4 py-2 rounded-xl bg-sky-600 text-white font-bold">🔄 Làm mới</button></div><div id="trafficStatsCards" class="grid grid-cols-1 sm:grid-cols-3 gap-3"><p class="text-gray-500">Đang tải...</p></div><div id="trafficRecentList" class="text-sm text-gray-600"></div></div></section>
@@ -2234,7 +2234,7 @@ body.lhp-hide-nav>nav{display:none!important}
             <input type="number" id="formStudentDesk" min="1" max="19" value="1" class="w-full px-3 py-2 border rounded-xl font-bold" />
           </div>
           <div>
-            <label class="block font-black text-gray-600 mb-1">Hoa ban đầu:</label>
+            <label class="block font-black text-gray-600 mb-1">Tim ban đầu:</label>
             <input type="number" id="formStudentFlowers" min="0" value="10" class="w-full px-3 py-2 border rounded-xl font-bold" />
           </div>
         </div>
@@ -2467,7 +2467,7 @@ body.lhp-hide-nav>nav{display:none!important}
 
   <!-- TOAST THÔNG BÁO -->
   <div id="toastNotification" class="fixed bottom-6 right-6 z-50 hidden bg-gray-900/90 backdrop-blur-md text-white px-5 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-2 border border-pink-400">
-    <span id="toastIcon">🌸</span>
+    <span id="toastIcon">❤️</span>
     <span id="toastMessage">Thông báo</span>
   </div>
 
@@ -2608,7 +2608,7 @@ body.lhp-hide-nav>nav{display:none!important}
       document.getElementById('parentDedicatedAvatarImg').src = getStudentAvatarUrl(student);
       document.getElementById('parentDedicatedTeamDisplay').innerText = `${teamEmoji} ${student.team}`;
       document.getElementById('parentDedicatedDeskDisplay').innerText = `Bàn số ${student.desk || 1}`;
-      document.getElementById('parentDedicatedFlowerCount').innerText = `🌸 ${student.flowers} Bông Hoa`;
+      document.getElementById('parentDedicatedFlowerCount').innerText = `❤️ ${student.flowers} Tim`;
 
       const rankBadge = student.flowers >= 14 ? '🏆 Xuất sắc' : student.flowers >= 11 ? '⭐ Chăm ngoan' : '🌱 Cố gắng';
       document.getElementById('parentDedicatedRankDisplay').innerText = rankBadge;
@@ -2753,7 +2753,7 @@ body.lhp-hide-nav>nav{display:none!important}
         }
         if (base.includes('googhttp')) base = base.replace(/https?:\/\/[^/]+(?=https?:\/\/)/i, '');
         const parentDirectLink = base.replace(/\/+$/, '') + '/?ph=' + encodeURIComponent(s.parentViewToken);
-        const shareContent = `🌸 SỔ LIÊN LẠC ĐIỆN TỬ - ${currentClassName}
+        const shareContent = `❤️ SỔ LIÊN LẠC ĐIỆN TỬ - ${currentClassName}
 Kính gửi phụ huynh bé: ${s.name}
 Cô giáo gửi đường link riêng để xem thông tin học tập và gửi lời nhắn:
 👉 ${parentDirectLink}
@@ -3892,7 +3892,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     }
 
     function downloadStudentTemplate() {
-      const csv = '\uFEFFSTT,Mã học sinh,Họ và tên,Giới tính,Tổ,Bàn,Điểm hoa\r\n1,HS01,Nguyễn Văn A,Nam,Tổ 1,1,10\r\n';
+      const csv = '\uFEFFSTT,Mã học sinh,Họ và tên,Giới tính,Tổ,Bàn,Tim tích lũy\r\n1,HS01,Nguyễn Văn A,Nam,Tổ 1,1,10\r\n';
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob); const a = document.createElement('a');
       a.href = url; a.download = 'Mau_danh_sach_hoc_sinh.csv'; a.click(); URL.revokeObjectURL(url);
@@ -3923,7 +3923,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
           if (/\.json$/i.test(file.name)) {
             const parsed = JSON.parse(content); const arr = Array.isArray(parsed) ? parsed : parsed.students;
             if (!Array.isArray(arr)) throw new Error('JSON không có danh sách students.');
-            importStudentRows(arr.map(s => ({ id: s.id || s.maHocSinh || s['Mã học sinh'], name: s.name || s.hoTen || s['Họ và tên'], gender: s.gender || s['Giới tính'], team: s.team || s['Tổ'], desk: s.desk || s['Bàn'], flowers: s.flowers ?? s['Điểm hoa'] })));
+            importStudentRows(arr.map(s => ({ id: s.id || s.maHocSinh || s['Mã học sinh'], name: s.name || s.hoTen || s['Họ và tên'], gender: s.gender || s['Giới tính'], team: s.team || s['Tổ'], desk: s.desk || s['Bàn'], flowers: s.flowers ?? s['Tim tích lũy'] })));
           } else {
             const rows = parseCSV(content); if (rows.length < 2) throw new Error('File chưa có dòng dữ liệu học sinh.');
             const headers = rows[0].map(h => h.toLocaleLowerCase('vi').replace(/\s+/g, ' ').trim());
@@ -3931,7 +3931,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
             const idCol = findCol(['mã học sinh','mã hs','ma hoc sinh','ma hs','id']);
             const nameCol = findCol(['họ và tên','họ tên','ho va ten','ho ten','tên học sinh','ten hoc sinh']);
             const genderCol = findCol(['giới tính','gioi tinh']); const teamCol = findCol(['tổ','to']);
-            const deskCol = findCol(['bàn','ban']); const flowersCol = findCol(['điểm hoa','diem hoa','hoa']);
+            const deskCol = findCol(['bàn','ban']); const flowersCol = findCol(['tim tích lũy','điểm tim','tim','tim tích lũy','diem hoa','hoa']);
             if (idCol < 0 || nameCol < 0) throw new Error('Không nhận diện được cột bắt buộc. Cần có “Mã học sinh” và “Họ và tên”. Hãy dùng file mẫu.');
             const data = rows.slice(1).map(r => ({ id: r[idCol] || '', name: r[nameCol] || '', gender: genderCol >= 0 ? r[genderCol] : '', team: teamCol >= 0 ? r[teamCol] : '', desk: deskCol >= 0 ? r[deskCol] : '', flowers: flowersCol >= 0 ? r[flowersCol] : '' }));
             importStudentRows(data);
@@ -4746,7 +4746,7 @@ function switchCallingMode(mode) {
       ctx.font = 'bold 16px Nunito, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('🌸', cx, cy);
+      ctx.fillText('❤️', cx, cy);
     }
 
     // Chỉ phát nhạc nhẹ khi có học sinh được chọn; không tạo flash/nhấp nháy.
@@ -5131,7 +5131,7 @@ function shootDuck(idx) {
                   <div class="text-center p-1.5 rounded-xl bg-pink-50/50 hover:bg-pink-100 transition-all cursor-pointer">
                     <img src="${getStudentAvatarUrl(s)}" class="w-12 h-12 rounded-full mx-auto object-cover border-2 border-pink-300 shadow-sm" />
                     <div class="text-[11px] font-bold text-gray-800 truncate mt-1">${s.name}</div>
-                    <span class="text-[10px] text-amber-600 font-black">🌸 ${s.flowers}</span>
+                    <span class="text-[10px] text-amber-600 font-black">❤️ ${s.flowers}</span>
                   </div>
                 `;
               }).join('')}
@@ -5164,10 +5164,10 @@ function shootDuck(idx) {
       const visible = currentFlowerGardenFilter === 'ALL' ? students : students.filter(s => s.team === currentFlowerGardenFilter);
       container.innerHTML = visible.map(s => '<label class="garden-student-card p-3 text-center cursor-pointer">' +
         '<input type="checkbox" class="garden-honor-check" value="'+String(s.id).replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'" '+(gardenHonorSelectedIds.has(String(s.id))?'checked':'')+' onchange="toggleGardenHonorSelection(this.value,this.checked)">' +
-        '<div class="relative w-20 h-20 mx-auto"><img src="'+getStudentAvatarUrl(s)+'" alt="" class="w-20 h-20 rounded-full object-cover border-4 border-amber-200 shadow-md" /><span class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-gradient-to-br from-amber-300 to-pink-400 border-2 border-white flex items-center justify-center">🌸</span></div>' +
+        '<div class="relative w-20 h-20 mx-auto"><img src="'+getStudentAvatarUrl(s)+'" alt="" class="w-20 h-20 rounded-full object-cover border-4 border-amber-200 shadow-md" /><span class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-gradient-to-br from-amber-300 to-pink-400 border-2 border-white flex items-center justify-center">❤️</span></div>' +
         '<div class="text-sm font-black text-purple-900 truncate mt-3">'+s.name+'</div>' +
         '<div class="text-[11px] font-bold text-gray-500 mt-1">'+(s.team||'Học sinh')+' • '+(currentClassName||'Lớp học')+'</div>' +
-        '<div class="inline-flex mt-2 px-3 py-1 rounded-full bg-rose-50 text-rose-600 text-xs font-black">🌸 '+(Number(s.flowers)||0)+' bông hoa</div>' +
+        '<div class="inline-flex mt-2 px-3 py-1 rounded-full bg-rose-50 text-rose-600 text-xs font-black">❤️ '+(Number(s.flowers)||0)+' tim</div>' +
         '<div class="text-[10px] font-black text-pink-500 mt-2 tracking-wide">TÍCH CHỌN ĐỂ VINH DANH ✨</div></label>').join('');
       ['ALL','Tổ 1','Tổ 2','Tổ 3','Tổ 4'].forEach(team => {
         const b=document.getElementById('gardenFilter-'+team);
@@ -5186,7 +5186,7 @@ function shootDuck(idx) {
       const host=document.getElementById('gardenHonorStageStudents');
       const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
       const reminding=mode==='remind';
-      document.getElementById('gardenStageTitle').textContent=reminding?'CÔ NHẮC NHỞ – CỐ GẮNG LẦN SAU NHÉ!':'VINH DANH NHỮNG BÔNG HOA TỎA SÁNG';
+      document.getElementById('gardenStageTitle').textContent=reminding?'CÔ NHẮC NHỞ – CỐ GẮNG LẦN SAU NHÉ!':'VINH DANH NHỮNG TIM TỎA SÁNG';
       document.getElementById('gardenStageSubtitle').textContent=reminding?'Ai cũng có lúc mắc lỗi • Biết sửa sai là tiến bộ • Cô luôn tin em':'Ghi nhận nỗ lực • Trân trọng cố gắng • Lan tỏa yêu thương';
       document.getElementById('gardenStageFooter').textContent=reminding?'💙 CÔ TIN CÁC EM SẼ CỐ GẮNG HƠN! 💙':'🌟 CÔ CHÚC MỪNG CÁC EM! 🌟';
       document.getElementById('gardenStageDone').textContent=reminding?'ĐÃ NHẬN LỜI NHẮC':'HOÀN TẤT VINH DANH';
@@ -5194,7 +5194,7 @@ function shootDuck(idx) {
       host.classList.toggle('garden-reminder-mode',reminding);
       host.innerHTML=selected.map((st,index)=>reminding
         ? '<article class="garden-tv-student garden-reminder-card" style="animation-delay:'+(index*.12)+'s"><div class="garden-reminder-face" aria-hidden="true">😔</div><div class="garden-tv-name">'+esc(st.name)+'</div><div class="garden-tv-class">'+esc(currentClassName||'Lớp học')+' • '+esc(st.team||'Học sinh')+'</div><div class="garden-reminder-note">Em hãy bình tĩnh nhìn lại việc mình vừa làm, sửa lỗi và cố gắng tốt hơn nhé. Cô luôn sẵn sàng giúp em!</div></article>'
-        : '<article class="garden-tv-student" style="animation-delay:'+(index*.12)+'s"><div class="garden-tv-portrait"><span class="garden-tv-crown">🌸</span><img src="'+safePhoto(st)+'" alt="Ảnh '+esc(st.name)+'"><span class="garden-tv-laurel" aria-hidden="true"></span><span class="garden-tv-bouquet" aria-label="Bó hoa chúc mừng">💐</span></div><div class="garden-tv-name">'+esc(st.name)+'</div><div class="garden-tv-class">'+esc(currentClassName||'Lớp học')+' • '+esc(st.team||'Học sinh')+'</div><div class="garden-tv-achievement">🌸 '+(Number(st.flowers)||0)+' BÔNG HOA ĐIỂM TỐT</div></article>'
+        : '<article class="garden-tv-student" style="animation-delay:'+(index*.12)+'s"><div class="garden-tv-portrait"><span class="garden-tv-crown">❤️</span><img src="'+safePhoto(st)+'" alt="Ảnh '+esc(st.name)+'"><span class="garden-tv-laurel" aria-hidden="true"></span><span class="garden-tv-bouquet" aria-label="Bó hoa chúc mừng">❤️</span></div><div class="garden-tv-name">'+esc(st.name)+'</div><div class="garden-tv-class">'+esc(currentClassName||'Lớp học')+' • '+esc(st.team||'Học sinh')+'</div><div class="garden-tv-achievement">❤️ '+(Number(st.flowers)||0)+' TIM ĐIỂM TỐT</div></article>'
       ).join('');
       const stage=document.getElementById('gardenHonorStage');stage.classList.add('show');stage.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';
       if(!reminding&&typeof playApplauseSound==='function')playApplauseSound();
@@ -5207,13 +5207,13 @@ function shootDuck(idx) {
       document.getElementById('gardenHonorAvatar').src=getStudentAvatarUrl(student);
       document.getElementById('gardenHonorName').textContent=student.name;
       document.getElementById('gardenHonorClass').textContent=(currentClassName||'Lớp học')+' • '+(student.team||'');
-      document.getElementById('gardenHonorFlowers').textContent='🌸 '+(Number(student.flowers)||0)+' bông hoa';
+      document.getElementById('gardenHonorFlowers').textContent='❤️ '+(Number(student.flowers)||0)+' tim';
       const count=Number(student.flowers)||0;
       const praise=count>=30?'Thành tích thật đáng tự hào! Em đã kiên trì làm nhiều việc tốt và lan tỏa niềm vui đến mọi người.':count>=15?'Cô ghi nhận sự chăm chỉ và những tiến bộ đáng quý của em. Hãy tiếp tục phát huy nhé!':'Mỗi cố gắng nhỏ đều đáng trân trọng. Cô tin em sẽ tiếp tục tỏa sáng mỗi ngày!';
       document.getElementById('gardenHonorPraise').textContent=praise;
       let reasons=[];
       try { reasons=readJsonStore(COMPETITION_LEDGER_KEY,[]).filter(x=>String(x.studentId)===String(student.id)&&x.delta>0).slice(-3).reverse().map(x=>x.reason); } catch(e) {}
-      document.getElementById('gardenHonorReasons').textContent=reasons.length?'Cô ghi nhận: '+reasons.join(' • '):'Thành tích được ghi nhận qua số hoa điểm tốt hiện có của em.';
+      document.getElementById('gardenHonorReasons').textContent=reasons.length?'Cô ghi nhận: '+reasons.join(' • '):'Thành tích được ghi nhận qua số tim điểm tốt hiện có của em.';
       const confetti=document.getElementById('gardenHonorConfetti');
       confetti.innerHTML=Array.from({length:34},(_,i)=>'<i style="left:'+((i*37)%100)+'%;background:'+['#f472b6','#fbbf24','#a78bfa','#34d399','#60a5fa'][i%5]+';animation-delay:-'+((i%9)*.35)+'s"></i>').join('');
       overlay.classList.add('show');
@@ -5246,7 +5246,7 @@ function shootDuck(idx) {
         <div class="bg-white p-5 rounded-3xl border-2 ${rankIdx === 0 ? 'border-amber-400 bg-amber-50/20 shadow-md' : 'border-pink-100'} text-center space-y-3">
           <div class="text-4xl">${r.emoji}</div>
           <h3 class="text-lg font-black text-gray-800 font-comfortaa">${r.team}</h3>
-          <div class="text-2xl font-black text-pink-600">🌸 ${r.totalFlowers} Hoa</div>
+          <div class="text-2xl font-black text-pink-600">❤️ ${r.totalFlowers} Hoa</div>
           <p class="text-xs text-gray-400 font-bold">${r.members.length} Thành viên</p>
         </div>
       `).join('');
@@ -5274,11 +5274,11 @@ function shootDuck(idx) {
 
     function redeemRewardPrompt(rewardId) {
       const r = customRewards.find(x => x.id === rewardId);
-      const studentName = prompt(`Nhập tên bé muốn đổi phần quà "${r.name}" (${r.flowers} hoa):`);
+      const studentName = prompt(`Nhập tên bé muốn đổi phần quà "${r.name}" (${r.flowers} tim):`);
       if (!studentName) return;
       const s = students.find(x => x.name.toLowerCase().includes(studentName.toLowerCase()));
       if (!s) return alert('Không tìm thấy học sinh này!');
-      if (s.flowers < r.flowers) return alert(`Bé ${s.name} chỉ có ${s.flowers} hoa, chưa đủ ${r.flowers} hoa để đổi.`);
+      if (s.flowers < r.flowers) return alert(`Bé ${s.name} chỉ có ${s.flowers} tim, chưa đủ ${r.flowers} hoa để đổi.`);
 
       const beforeFlowers = Number(s.flowers) || 0;
       s.flowers -= r.flowers;
@@ -5292,7 +5292,7 @@ function shootDuck(idx) {
     function openEditRewardsModal() {
       const newName = prompt("Nhập tên quà tặng mới muốn thêm vào tiệm:");
       if (!newName) return;
-      const newFlowers = parseInt(prompt("Nhập số bông hoa cần đổi:", "20")) || 20;
+      const newFlowers = parseInt(prompt("Nhập số tim cần đổi:", "20")) || 20;
       const newIcon = prompt("Nhập emoji cho món quà (ví dụ 🎁, 🧸, 📚):", "🎁") || "🎁";
       customRewards.push({
         id: `rew_${Date.now()}`,
@@ -5539,7 +5539,7 @@ function shootDuck(idx) {
     async function saveCompetitionSummary(){if(!window.secureAuth?.cloudReady){alert('Cần đăng nhập và kết nối Firebase trước khi lưu.');return;}const period=document.getElementById('competitionPeriod').value,snap=buildCompetitionSnapshot(period),all=readJsonStore(COMPETITION_SUMMARIES_KEY,[]),key=snap.classId+'_'+period+'_'+snap.start.slice(0,10),idx=all.findIndex(x=>x.key===key);if(idx>=0){if(!confirm('Kỳ này đã có bản lưu. Cập nhật bản tổng kết của kỳ hiện tại?'))return;all[idx]={...snap,key};}else all.unshift({...snap,key});appStorage.setItem(COMPETITION_SUMMARIES_KEY,JSON.stringify(all));try{await window.secureAuth.syncAllData();renderCompetition();showToast('Đã đồng bộ bản tổng kết lên Firebase.');}catch(e){alert('Bản tổng kết đang lưu trên thiết bị nhưng chưa đồng bộ được lên Firebase: '+(e.message||''));}}
     function renderCompetitionHistory(){const el=document.getElementById('competitionHistoryList');if(!el)return;const rows=readJsonStore(COMPETITION_SUMMARIES_KEY,[]).filter(x=>x.classId===competitionClassId()).slice(0,30);el.innerHTML=rows.map(x=>'<div class="flex flex-wrap justify-between gap-2 p-3 rounded-xl bg-gray-50"><span><b>'+({week:'Tuần',month:'Tháng',year:'Năm học'}[x.period]||x.period)+'</b> • '+x.start.slice(0,10)+' → '+x.end.slice(0,10)+' • '+escapeHtml(x.className)+'</span><button class="text-pink-700 font-bold" onclick="viewSavedCompetition(\''+x.key+'\')">Xem lại</button></div>').join('')||'<p class="text-gray-400">Chưa có kỳ tổng kết nào được lưu.</p>';}
     function viewSavedCompetition(key){const x=readJsonStore(COMPETITION_SUMMARIES_KEY,[]).find(r=>r.key===key);if(!x)return;document.getElementById('competitionPeriodLabel').textContent='BẢN LƯU • '+x.className+' • '+x.start.slice(0,10)+' đến '+x.end.slice(0,10);document.getElementById('competitionSummaryStats').innerHTML=[['Lượt ghi nhận',x.transactions],['Điểm cộng',x.ranking.reduce((a,r)=>a+r.positive,0)],['Điểm trừ',x.ranking.reduce((a,r)=>a+r.negative,0)]].map(r=>'<div class="p-4 rounded-2xl bg-pink-50"><div class="text-xs text-gray-500">'+r[0]+'</div><div class="text-2xl font-black text-pink-700">'+r[1]+'</div></div>').join('');document.getElementById('competitionRankingBody').innerHTML=x.ranking.map((r,i)=>'<tr class="border-b"><td class="p-3">'+(i+1)+'</td><td class="p-3">'+escapeHtml(r.studentName)+'</td><td class="p-3">+'+r.positive+'</td><td class="p-3">-'+r.negative+'</td><td class="p-3">'+r.net+'</td><td class="p-3">'+r.currentFlowers+'</td></tr>').join('');}
-    function exportCompetitionCsv(){const x=buildCompetitionSnapshot(document.getElementById('competitionPeriod').value),rows=[['Hạng','Mã học sinh','Họ tên','Điểm cộng','Điểm trừ','Điểm ròng','Hoa hiện có'],...x.ranking.map((r,i)=>[i+1,r.studentId,r.studentName,r.positive,r.negative,r.net,r.currentFlowers])],csv='\\uFEFF'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\\r\n'),blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Tong-ket-thi-dua-'+x.period+'-'+x.start.slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url);}
+    function exportCompetitionCsv(){const x=buildCompetitionSnapshot(document.getElementById('competitionPeriod').value),rows=[['Hạng','Mã học sinh','Họ tên','Điểm cộng','Điểm trừ','Điểm ròng','Tim hiện có'],...x.ranking.map((r,i)=>[i+1,r.studentId,r.studentName,r.positive,r.negative,r.net,r.currentFlowers])],csv='\\uFEFF'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\\r\n'),blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Tong-ket-thi-dua-'+x.period+'-'+x.start.slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url);}
     async function recordAppVisitOnce(){if(!window.secureAuth?.user||!window.secureAuth.cloudReady)return;const key='lhp_visit_recorded_'+window.secureAuth.user.uid;if(sessionStorage.getItem(key))return;try{await firebase.firestore().collection('appVisits').add({teacherUid:window.secureAuth.user.uid,teacherName:currentTeacherName||window.secureAuth.user.displayName||'Giáo viên',className:currentClassName||'',visitedAt:firebase.firestore.FieldValue.serverTimestamp()});sessionStorage.setItem(key,'1');}catch(e){console.warn('Không ghi nhận được lượt truy cập:',e);}}
     async function loadTrafficStats(){const cards=document.getElementById('trafficStatsCards'),list=document.getElementById('trafficRecentList');if(!cards||!list)return;if(!window.secureAuth?.user||!window.secureAuth.cloudReady){cards.textContent='Vui lòng đăng nhập để xem thống kê.';return;}if(!window.secureAuth.isAdmin){cards.innerHTML='<p class="text-gray-500">Thống kê tổng chỉ dành cho quản trị viên.</p>';list.textContent='';return;}cards.textContent='Đang tải...';try{const snap=await firebase.firestore().collection('appVisits').orderBy('visitedAt','desc').limit(500).get(),rows=snap.docs.map(d=>d.data()),now=new Date(),day=new Date(now.getFullYear(),now.getMonth(),now.getDate()),week=new Date(day);week.setDate(day.getDate()-((day.getDay()+6)%7));const month=new Date(now.getFullYear(),now.getMonth(),1),valid=rows.filter(r=>r.visitedAt&&r.visitedAt.toDate),today=valid.filter(r=>r.visitedAt.toDate()>=day).length,thisWeek=valid.filter(r=>r.visitedAt.toDate()>=week).length,thisMonth=valid.filter(r=>r.visitedAt.toDate()>=month).length;cards.innerHTML=[['Tổng lượt (500 gần nhất)',rows.length],['Hôm nay',today],['Tuần này / tháng này',thisWeek+' / '+thisMonth]].map(x=>'<div class="p-4 rounded-2xl bg-sky-50"><div class="text-xs text-gray-500">'+x[0]+'</div><div class="text-2xl font-black text-sky-700">'+x[1]+'</div></div>').join('');list.innerHTML='<h4 class="font-black mt-5 mb-2">Truy cập gần đây</h4>'+valid.slice(0,30).map(r=>'<div class="border-b py-2">'+escapeHtml(r.teacherName||'Giáo viên')+' • '+escapeHtml(r.className||'')+' • '+r.visitedAt.toDate().toLocaleString('vi-VN')+'</div>').join('');}catch(e){cards.innerHTML='<p class="text-rose-600">Không tải được thống kê: '+escapeHtml(e.message||'')+'</p>';}}
     function renderOverviewStats() {
