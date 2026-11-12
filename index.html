@@ -3644,34 +3644,136 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       { id: 'rew_6', name: 'Huy hiệu Ong Vàng Danh Dự', flowers: 50, icon: '🎖️' }
     ];
 
-    // Nạp các lớp được quản trị viên giao từ kho dữ liệu tập trung.
-    // Mỗi giáo viên chỉ truy vấn được các lớp có teacherUid trùng UID đăng nhập (Firestore Rules).
+    // Quản trị viên đọc dữ liệu đã đồng bộ của từng giáo viên và chuyển danh mục lớp cũ
+    // sang kho classes tập trung. Chỉ tạo bản sao; không xóa hay sửa kho userData gốc.
+    async function migrateAllTeachersClassesToCentral() {
+      const auth=window.secureAuth;
+      if(!auth?.isAdmin||!isAuthorizedAdmin(auth.user)) throw new Error('Chỉ tài khoản quản trị viên mới được tổng hợp lớp toàn hệ thống.');
+      const db=firebase.firestore();
+      const usersSnap=await db.collection('users').get();
+      let migrated=0, skipped=0, studentTotal=0, teacherScanned=0;
+      for(const userDoc of usersSnap.docs) {
+        const teacherUid=userDoc.id;
+        if(teacherUid===auth.user.uid) continue;
+        const profile=userDoc.data()||{};
+        const dataSnap=await db.collection('userData').doc(teacherUid).collection('items').get();
+        if(dataSnap.empty) continue;
+        teacherScanned++;
+        const items=new Map();
+        dataSnap.forEach(doc=>items.set(doc.id,doc.data()||{}));
+        const values=new Map();
+        for(const [docId,item] of items.entries()) {
+          if(!item||item.chunkParent||typeof item.key!=='string'||!item.key) continue;
+          if(item.chunked===true) {
+            const count=Number(item.chunkCount);
+            if(!Number.isInteger(count)||count<1||count>10000) continue;
+            const parts=[]; let valid=true;
+            for(let n=0;n<count;n++) {
+              const part=items.get(encodeKey(item.key)+'__chunk_'+n);
+              if(!part||part.chunkParent!==item.key||Number(part.chunkIndex)!==n||typeof part.value!=='string'){valid=false;break;}
+              parts.push(part.value);
+            }
+            if(valid) values.set(item.key,parts.join(''));
+          } else if(typeof item.value==='string') values.set(item.key,item.value);
+        }
+        let records=[], schoolsForTeacher=[];
+        try { records=JSON.parse(values.get(MULTI_CLASS_KEY)||'[]'); } catch(e) { records=[]; }
+        try { schoolsForTeacher=JSON.parse(values.get(MULTI_SCHOOLS_KEY)||'[]'); } catch(e) { schoolsForTeacher=[]; }
+        if(!Array.isArray(records)) records=[];
+        if(!records.length && values.has('lophanhphuc_students_v4')) {
+          let roster=[];
+          try { roster=JSON.parse(values.get('lophanhphuc_students_v4')||'[]'); } catch(e) { roster=[]; }
+          let pos=[],neg=[],rewards=[];
+          try {pos=JSON.parse(values.get('lophanhphuc_crit_pos_v4')||'[]');}catch(e){}
+          try {neg=JSON.parse(values.get('lophanhphuc_crit_neg_v4')||'[]');}catch(e){}
+          try {rewards=JSON.parse(values.get('lophanhphuc_rewards_v4')||'[]');}catch(e){}
+          const legacyName=values.get('lophanhphuc_class_name')||'';
+          if(legacyName||roster.length) records.push({
+            id:'legacy_single_'+teacherUid,schoolId:'legacy_school_'+teacherUid,
+            className:legacyName||'Lớp của '+(profile.displayName||profile.email||'giáo viên'),
+            teacherName:values.get('lophanhphuc_teacher_name')||profile.displayName||'Giáo viên',
+            year:'2026-2027',
+            data:{className:legacyName,teacherName:values.get('lophanhphuc_teacher_name')||profile.displayName||'Giáo viên',
+              students:Array.isArray(roster)?roster:[],criteriaPos:Array.isArray(pos)?pos:[],
+              criteriaNeg:Array.isArray(neg)?neg:[],rewards:Array.isArray(rewards)?rewards:[],
+              customBaseUrl:values.get('lophanhphuc_base_url')||''}
+          });
+        }
+        for(const record of records) {
+          if(!record?.id) continue;
+          const stored=record.data&&typeof record.data==='object'?record.data:{};
+          const roster=Array.isArray(stored.students)?stored.students:[];
+          const className=String(stored.className||record.className||'').trim();
+          if(!className){skipped++;continue;}
+          const school=Array.isArray(schoolsForTeacher)?schoolsForTeacher.find(x=>x?.id===record.schoolId):null;
+          const schoolName=String(school?.name||'Trường của '+(profile.displayName||'giáo viên'));
+          const safeSourceId=encodeURIComponent(String(record.id)).replace(/%/g,'_').slice(0,90);
+          const cloudId='legacy_'+teacherUid+'_'+safeSourceId;
+          const classRef=db.collection('classes').doc(cloudId);
+          const existing=await classRef.get();
+          if(existing.exists){skipped++;continue;}
+          const teacherName=String(stored.teacherName||record.teacherName||profile.displayName||'Giáo viên');
+          await classRef.set({
+            className,schoolName,year:String(record.year||'2026-2027'),teacherUid,teacherName,
+            studentCount:roster.length,dataVersion:2,migratedFromLocal:true,sourceLocalClassId:String(record.id),
+            createdBy:teacherUid,createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+          });
+          const itemsRef=classRef.collection('items'), entries=[], usedIds=new Set();
+          roster.forEach((student,index)=>{
+            const raw=String(student?.id||('student_'+(index+1)));
+            let docId='student_'+encodeURIComponent(raw).replace(/%/g,'_');
+            if(usedIds.has(docId)) docId+='_'+index;
+            usedIds.add(docId);
+            entries.push({ref:itemsRef.doc(docId),data:{kind:'student',student:cloneData(student),updatedAt:firebase.firestore.FieldValue.serverTimestamp()}});
+          });
+          entries.push({ref:itemsRef.doc('_settings'),data:{
+            kind:'settings',className,teacherName,
+            criteriaPos:cloneData(stored.criteriaPos||DEFAULT_CRITERIA_POS),
+            criteriaNeg:cloneData(stored.criteriaNeg||DEFAULT_CRITERIA_NEG),
+            rewards:cloneData(stored.rewards||DEFAULT_REWARDS),
+            customBaseUrl:String(stored.customBaseUrl||''),
+            updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+          }});
+          for(let offset=0;offset<entries.length;offset+=400) {
+            const batch=db.batch();
+            entries.slice(offset,offset+400).forEach(item=>batch.set(item.ref,item.data));
+            await batch.commit();
+          }
+          migrated++;studentTotal+=roster.length;
+        }
+      }
+      return {migrated,skipped,studentTotal,teacherScanned};
+    }
+
+    // Nạp toàn bộ lớp cho đúng tài khoản quản trị; giáo viên chỉ nạp lớp được giao.
     async function hydrateAssignedClassesFromCloud() {
       const user=window.secureAuth?.user;
       if(!user || !window.secureAuth.cloudReady) return;
       const db=firebase.firestore();
-      const isAdminAccount=!!window.secureAuth.isAdmin;
-      // Quản trị viên được tải toàn bộ lớp để chọn lớp cần quản lý sổ đầu bài.
-      // Giáo viên thông thường chỉ tải lớp có teacherUid đúng UID đăng nhập.
+      const isAdminAccount=!!window.secureAuth.isAdmin&&isAuthorizedAdmin(user);
+      if(isAdminAccount) {
+        const result=await migrateAllTeachersClassesToCentral();
+        if(result.migrated) showToast('Đã tổng hợp '+result.migrated+' lớp từ '+result.teacherScanned+' tài khoản giáo viên ('+result.studentTotal+' học sinh).');
+      }
       const assigned=isAdminAccount
         ? await db.collection('classes').get()
         : await db.collection('classes').where('teacherUid','==',user.uid).get();
       if(assigned.empty) {
-        if(isAdminAccount) showToast('Firebase chưa có lớp nào trong danh sách classes.');
-        return; // Không đụng vào dữ liệu riêng hiện có nếu chưa có lớp tập trung.
+        if(isAdminAccount) showToast('Chưa tìm thấy lớp đã lưu trên Firebase. Giáo viên cần đăng nhập và đồng bộ dữ liệu trước.');
+        return;
       }
       const oldState=JSON.stringify({schools,classRecords,activeClassId});
       try { if(!appStorage.getItem('lophanhphuc_pre_cloud_classes_backup_v1')) appStorage.setItem('lophanhphuc_pre_cloud_classes_backup_v1',oldState); } catch(e) { console.warn('Không tạo được bản sao lưu cục bộ trước khi nạp lớp tập trung:',e); }
       const cloudSchools=[],cloudClasses=[];
-      for(const classDoc of assigned.docs){
+      for(const classDoc of assigned.docs) {
         const meta=classDoc.data()||{};
         const items=await classDoc.ref.collection('items').get();
-        const roster=[];
-        let settings={};
+        const roster=[]; let settings={};
         items.forEach(doc=>{
           const item=doc.data()||{};
           if(doc.id==='_settings') settings=item;
-          else if(item.kind==='student' && item.student && typeof item.student==='object') roster.push(item.student);
+          else if(item.kind==='student'&&item.student&&typeof item.student==='object') roster.push(item.student);
         });
         roster.sort((a,b)=>String(a.id||'').localeCompare(String(b.id||''),'vi',{numeric:true}));
         const schoolName=meta.schoolName||'Trường của tôi';
@@ -3688,37 +3790,17 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
           competitionWeeks:settings.competitionWeeks||{},
           selectedCompetitionWeek:Number(settings.selectedCompetitionWeek)||1
         };
-        cloudClasses.push({
-          id:'cloud_'+classDoc.id,cloudClassId:classDoc.id,schoolId,
+        cloudClasses.push({id:'cloud_'+classDoc.id,cloudClassId:classDoc.id,schoolId,
           className:meta.className||data.className,teacherName:meta.teacherName||data.teacherName,
-          year:meta.year||'2026-2027',createdAt:meta.createdAt||new Date().toISOString(),data
-        });
+          year:meta.year||'2026-2027',createdAt:meta.createdAt||new Date().toISOString(),data});
       }
       schools=cloudSchools;
       classRecords=cloudClasses;
-      activeClassId=cloudClasses[0]?.id||'';
+      if(!classRecords.some(c=>c.id===activeClassId)) activeClassId=classRecords[0]?.id||'';
       if(activeClassId) loadClassSnapshot(getActiveClassRecord());
       persistClassRegistry();
+      renderClassManagerList();
       updateClassTeacherDisplay();
-      showToast(isAdminAccount?'Quản trị viên đã tải '+cloudClasses.length+' lớp từ Firebase.':'Đã tải '+cloudClasses.length+' lớp được phân công từ dữ liệu tập trung.');
-    }
-
-    let centralClassSyncTimer=null;
-    function scheduleCentralClassSync() {
-      const active=getActiveClassRecord();
-      if(!active?.cloudClassId || !window.secureAuth?.cloudReady || !window.secureAuth.user) return;
-      clearTimeout(centralClassSyncTimer);
-      centralClassSyncTimer=setTimeout(async()=>{
-        try {
-          const ref=firebase.firestore().collection('classes').doc(active.cloudClassId);
-          const meta=await ref.get();
-          if(!meta.exists) throw new Error('Không tìm thấy hồ sơ lớp tập trung.');
-          const info=meta.data()||{};
-          if(!window.secureAuth.isAdmin && info.teacherUid!==window.secureAuth.user.uid) throw new Error('Tài khoản không còn được phân công lớp này.');
-          await writeClassSnapshotToCloud(active.cloudClassId,currentClassSnapshot());
-          await ref.update({studentCount:students.length,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
-        } catch(error){console.error('Không đồng bộ được dữ liệu lớp tập trung:',error);showToast('Chưa đồng bộ được lớp lên máy chủ. Kiểm tra kết nối/quyền lớp.');}
-      },900);
     }
 
     function loadInitialData() {
