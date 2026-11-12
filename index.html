@@ -5016,7 +5016,14 @@ function shootDuck(idx) {
     shooter.classList.add('duck-shooter-firing');
     setTimeout(() => shooter.classList.remove('duck-shooter-firing'), 500);
   }
-  setTimeout(() => target.remove(), 480);
+  setTimeout(() => {
+    target.remove();
+    if (!board.classList.contains('hidden') && !board.querySelector('.duck-target')) {
+      const status = document.getElementById('duckGameStatus');
+      if (status) status.textContent = '🏆 Hoàn thành lượt chơi! Cả lớp cùng chúc mừng!';
+      playCelebrationSound().catch(err => console.warn('Lỗi vỗ tay kết thúc Bắn Vịt:', err));
+    }
+  }, 480);
   wheelWinnerStudent = s;
 
   const img = document.getElementById('wheelWinnerImg');
@@ -6614,6 +6621,24 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     }
     // THUYỀN GỖ VIỆT NAM: thân cong, mạn thuyền chắc, sàn ván và mái mui vải cong.
     const boat=new T.Group();scene.add(boat);boat.position.set(-10,0,1);
+    // Bọt nước bắn lên sát mạn thuyền khi sóng lớn, không tạo hiệu ứng giả trên mặt boong.
+    const splashGroup=new T.Group();boat.add(splashGroup);
+    const splashParticles=[];
+    for(let i=0;i<22;i++){
+      const side=i%2?1:-1;
+      const p=ball(splashGroup,.105+(i%3)*.025,M.foam,-6.2+(i%11)*1.22,.45,side*(2.45+(i%3)*.12),.9,1.35,.75);
+      splashParticles.push({mesh:p,phase:i*.83,side});
+    }
+    const bowSpray=[];
+    for(let side of [-1,1]){
+      const curve=new T.CatmullRomCurve3([
+        new T.Vector3(-6.8,.25,side*2.35),new T.Vector3(-4.5,.48,side*2.72),
+        new T.Vector3(0,.32,side*2.82),new T.Vector3(4.8,.52,side*2.62),
+        new T.Vector3(6.8,.34,side*2.3)
+      ]);
+      const spray=add(splashGroup,new T.TubeGeometry(curve,60,.065,8,false),M.foam);
+      bowSpray.push(spray);
+    }
     const hullShape=new T.Shape();
     hullShape.moveTo(-7.65,-1.82);hullShape.quadraticCurveTo(-7.25,-2.55,-5.4,-2.62);
     hullShape.lineTo(5.15,-2.62);hullShape.quadraticCurveTo(7.15,-2.5,7.85,-1.55);
@@ -6913,6 +6938,14 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       boat.rotation.z=Math.sin(elapsed*(storm?5.2:1.2))*(storm?.22:.014);
       boat.rotation.x=Math.sin(elapsed*(storm?4.4:1.0))*(storm?.16:.009);
       boat.position.y=storm?Math.sin(elapsed*3.8)*.17:Math.sin(elapsed*1.2)*.035;
+      splashGroup.visible=storm;
+      splashParticles.forEach(p=>{
+        const pulse=(Math.sin(elapsed*5.4+p.phase)+1)*.5;
+        p.mesh.position.y=.22+pulse*.95;
+        p.mesh.position.x+=Math.sin(elapsed*3+p.phase)*.002;
+        p.mesh.scale.setScalar(.35+pulse*.95);
+      });
+      bowSpray.forEach((spray,i)=>{spray.visible=storm;spray.scale.y=storm?1+.12*Math.sin(elapsed*5+i):.001;});
       const targetSky=storm?skyStorm:(calm?skyClear:skyCalm);scene.background.lerp(targetSky,Math.min(1,dt*(calm?.48:.32)));scene.fog.color.lerp(targetSky,Math.min(1,dt*(calm?.18:.32)));
        if(rainbow.visible&&rainbowRevealStart>=0){const reveal=Math.min(1,(elapsed-rainbowRevealStart)/2.6);rainbow.scale.setScalar(.015+reveal*.985);}
       // Camera bám theo thuyền, giữ cô giáo và học sinh ở trung tâm khung hình.
