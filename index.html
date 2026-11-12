@@ -3233,14 +3233,17 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
           const resumePromise = ctx.resume();
           if (resumePromise && typeof resumePromise.catch === 'function') resumePromise.catch(() => {});
         }
-        // Mở khóa hai trình phát trong thao tác đầu tiên, hoàn toàn im lặng.
+        // Mở khóa mỗi trình phát đúng một lần, hoàn toàn im lặng; không chạm vào nhạc đang chạy.
+        window.__lhpAudioPrimed = window.__lhpAudioPrimed || {};
         ['victory', 'applause'].forEach(key => {
           try {
             const player = getPersistentClassroomAudio(key);
+            if (window.__lhpAudioPrimed[key] || !player.paused) return;
             player.muted = true;
             const p = player.play();
             if (p && typeof p.then === 'function') {
               p.then(() => {
+                window.__lhpAudioPrimed[key] = true;
                 player.pause();
                 player.currentTime = 0;
                 player.muted = false;
@@ -3266,9 +3269,9 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       }
     }
 
-    // Mở khóa sớm ở lần chạm đầu tiên để Chrome/Safari trên điện thoại cho phép phát tiếng.
+    // Mở khóa sớm ở lần chạm đầu tiên cho cả Web Audio và hai trình phát thu âm.
     (function bindClassroomAudioUnlock() {
-      const unlock = () => { unlockClassroomAudio().catch(() => {}); };
+      const unlock = () => { primeClassroomAudioFromGesture(); unlockClassroomAudio().catch(() => {}); };
       document.addEventListener('pointerdown', unlock, { once: true, capture: true });
       document.addEventListener('keydown', unlock, { once: true, capture: true });
     })();
@@ -6263,7 +6266,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
         if (!event.target.closest('.duck-target')) return;
         // Không phát chuỗi nốt cao chói tai khi bắn trúng vịt.
         if (typeof primeClassroomAudioFromGesture === 'function') primeClassroomAudioFromGesture();
-      });;
+      });
     }
   }
 
