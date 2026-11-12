@@ -4828,13 +4828,9 @@ function switchCallingMode(mode) {
     }
 
     function rewardWheelWinner() {
-      if (wheelWinnerStudent) {
-        wheelWinnerStudent.flowers += 1;
-        saveStudentsToStorage();
-        renderAllViews();
-        showToast(`Đã thưởng 1 bông hoa cho bạn ${wheelWinnerStudent.name}! 🌸`);
+      if (wheelWinnerStudent && typeof window.openQuickGameScore === 'function') {
+        window.openQuickGameScore(wheelWinnerStudent, 'positive');
       }
-      closeWheelWinnerModal();
     }
 
     function closeWheelWinnerModal() {
