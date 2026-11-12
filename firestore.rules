@@ -10,7 +10,6 @@ service cloud.firestore {
     // Quyền quản trị gắn với UID đã xác minh, không dựa vào trường role do người dùng tự sửa.
     function isAdmin() {
       return signedIn()
-        && request.auth.uid == 'dqVutQQEqVWlAEqvA2C89cLhDw63'
         && request.auth.token.email_verified == true
         && request.auth.token.email == 'khachungvietanh8790@gmail.com';
     }
