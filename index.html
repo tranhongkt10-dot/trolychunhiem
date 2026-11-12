@@ -6048,7 +6048,9 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       const auth=window.secureAuth;
       if(!auth?.user||!auth.cloudReady) throw new Error('Vui lòng đăng nhập và chờ Firebase kết nối.');
       const db=firebase.firestore();
-      let snap=await db.collection('classes').get();
+      let snap=auth.isAdmin&&isAuthorizedAdmin(auth.user)
+        ? await db.collection('classes').get()
+        : await db.collection('classes').where('teacherUid','==',auth.user.uid).get();
       if(snap.empty&&auth.isAdmin&&isAuthorizedAdmin(auth.user)){
         lbStatus('Đang chuyển bản sao dữ liệu lớp hiện có lên Firebase tập trung. Dữ liệu gốc không bị xóa...');
         const result=await migrateLocalClassesToCentralForLessonBook();
