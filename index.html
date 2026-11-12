@@ -3118,41 +3118,48 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     function playThunderSound(delay=.22){try{const ctx=ensureClassroomAudioContext();if(!ctx)return false;if(ctx.state!=='running'){ctx.resume().catch(e=>console.warn(e));return false;}const start=ctx.currentTime+delay,out=getClassroomAudioOutput(ctx);const osc=ctx.createOscillator(),filter=ctx.createBiquadFilter(),gain=ctx.createGain();osc.type='triangle';osc.frequency.setValueAtTime(92,start);osc.frequency.exponentialRampToValueAtTime(48,start+2.2);filter.type='lowpass';filter.frequency.setValueAtTime(190,start);filter.frequency.exponentialRampToValueAtTime(85,start+2.5);gain.gain.setValueAtTime(.0001,start);gain.gain.linearRampToValueAtTime(.075,start+.18);gain.gain.exponentialRampToValueAtTime(.0001,start+2.5);osc.connect(filter);filter.connect(gain);gain.connect(out);osc.start(start);osc.stop(start+2.55);return true;}catch(e){console.warn('Lỗi phát tiếng sấm:',e);return false;}}
 
     // Âm thanh trò chơi: giai điệu chiến thắng vui tươi, tách riêng tiếng vỗ tay.
+    // Hiệu ứng chúc mừng dạng trống sân khấu, không dùng chuông/ting cao gây cảm giác rích rắc.
     function playApplauseSound() {
       try {
-        const ctx=ensureClassroomAudioContext();
-        if(!ctx)return false;
+        const ctx=ensureClassroomAudioContext();if(!ctx)return false;
         if(ctx.state!=='running'){ctx.resume().catch(()=>{});return false;}
-        const out=getClassroomAudioOutput(ctx),start=ctx.currentTime+0.025;
-        const notes=[659.25,783.99,987.77,783.99,880,1174.66];
-        notes.forEach((frequency,i)=>{
-          const at=start+i*0.105,osc=ctx.createOscillator(),gain=ctx.createGain(),filter=ctx.createBiquadFilter();
-          osc.type='sine';osc.frequency.setValueAtTime(frequency,at);
-          filter.type='lowpass';filter.frequency.value=2200;
-          gain.gain.setValueAtTime(0.0001,at);
-          gain.gain.linearRampToValueAtTime(0.075,at+0.018);
-          gain.gain.exponentialRampToValueAtTime(0.0001,at+0.32);
-          osc.connect(filter);filter.connect(gain);gain.connect(out);
-          osc.start(at);osc.stop(at+0.34);
-        });
+        const out=getClassroomAudioOutput(ctx),start=ctx.currentTime+.02;
+        const kick=(t,level=.42)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(120,t);o.frequency.exponentialRampToValueAtTime(42,t+.16);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(level,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+.2);o.connect(g);g.connect(out);o.start(t);o.stop(t+.21);};
+        const clap=t=>{const n=ctx.createBufferSource(),buf=ctx.createBuffer(1,Math.floor(ctx.sampleRate*.16),ctx.sampleRate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);n.buffer=buf;const f=ctx.createBiquadFilter(),g=ctx.createGain();f.type='bandpass';f.frequency.value=1250;f.Q.value=.7;g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.28,t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+.15);n.connect(f);f.connect(g);g.connect(out);n.start(t);n.stop(t+.16);};
+        for(let i=0;i<8;i++){const t=start+i*.19;if(i%2===0)kick(t,.36);clap(t+.095);}
         return true;
-      }catch(error){console.warn('Lỗi âm thanh tuyên dương:',error);return false;}
+      }catch(error){console.warn('Lỗi hiệu ứng chúc mừng:',error);return false;}
     }
 
+    // Nhạc chiến thắng pop-rock sôi động: trống kick/snare, bass dày, guitar synth và hợp âm mạnh; không có chuỗi ting/chuông.
     async function playCelebrationSound() {
       try {
-        const ctx=ensureClassroomAudioContext();if(!ctx)return false;if(ctx.state!=='running')await ctx.resume();if(ctx.state!=='running')return false;
-        const out=getClassroomAudioOutput(ctx),start=ctx.currentTime+.035,beat=60/142,bar=beat*4;
-        const kick=(t)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(145,t);o.frequency.exponentialRampToValueAtTime(48,t+.13);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.38,t+.006);g.gain.exponentialRampToValueAtTime(.0001,t+.17);o.connect(g);g.connect(out);o.start(t);o.stop(t+.18);};
-        const noise=(t,high=false)=>{const n=ctx.createBufferSource(),b=ctx.createBuffer(1,Math.floor(ctx.sampleRate*(high?.045:.12)),ctx.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);n.buffer=b;const f=ctx.createBiquadFilter(),g=ctx.createGain();f.type=high?'highpass':'bandpass';f.frequency.value=high?6500:1800;g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(high?.06:.22,t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+(high?.04:.12));n.connect(f);f.connect(g);g.connect(out);n.start(t);n.stop(t+(high?.05:.13));};
-        const chords=[[261.63,329.63,392],[220,261.63,329.63],[174.61,220,261.63],[196,246.94,293.66]],melody=[659.25,783.99,987.77,783.99,880,987.77,1174.66,987.77,783.99,880,1046.5,1174.66,1318.51,1174.66,1567.98,1318.51];
-        for(let step=0;step<32;step++){const t=start+step*beat/2;if(step%4===0)kick(t);if(step%8===4)noise(t);if(step%2===1)noise(t,true);
-          if(step%8===0)chords[Math.floor(step/8)%4].forEach(f=>{const o=ctx.createOscillator(),g=ctx.createGain(),filter=ctx.createBiquadFilter();o.type='sawtooth';o.frequency.value=f;filter.type='lowpass';filter.frequency.value=1900;g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.045,t+.025);g.gain.setValueAtTime(.032,t+bar*.72);g.gain.exponentialRampToValueAtTime(.0001,t+bar);o.connect(filter);filter.connect(g);g.connect(out);o.start(t);o.stop(t+bar+.02);});
-          const o=ctx.createOscillator(),g=ctx.createGain();o.type='square';o.frequency.value=melody[step%melody.length];g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.075,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+beat*.36);o.connect(g);g.connect(out);o.start(t);o.stop(t+beat*.38);
+        const ctx=ensureClassroomAudioContext();if(!ctx)return false;
+        if(ctx.state!=='running')await ctx.resume();if(ctx.state!=='running')return false;
+        const out=getClassroomAudioOutput(ctx),start=ctx.currentTime+.04,bpm=132,beat=60/bpm,bar=beat*4;
+        const kick=(t,level=.62)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(135,t);o.frequency.exponentialRampToValueAtTime(43,t+.18);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(level,t+.006);g.gain.exponentialRampToValueAtTime(.0001,t+.24);o.connect(g);g.connect(out);o.start(t);o.stop(t+.25);};
+        const snare=t=>{const n=ctx.createBufferSource(),buf=ctx.createBuffer(1,Math.floor(ctx.sampleRate*.19),ctx.sampleRate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);n.buffer=buf;const f=ctx.createBiquadFilter(),g=ctx.createGain();f.type='bandpass';f.frequency.value=1500;f.Q.value=.65;g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.42,t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+.18);n.connect(f);f.connect(g);g.connect(out);n.start(t);n.stop(t+.2);};
+        const hat=t=>{const n=ctx.createBufferSource(),buf=ctx.createBuffer(1,Math.floor(ctx.sampleRate*.035),ctx.sampleRate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);n.buffer=buf;const f=ctx.createBiquadFilter(),g=ctx.createGain();f.type='highpass';f.frequency.value=7200;g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.045,t+.002);g.gain.exponentialRampToValueAtTime(.0001,t+.03);n.connect(f);f.connect(g);g.connect(out);n.start(t);n.stop(t+.04);};
+        const bassNotes=[55,55,73.42,82.41,65.41,65.41,82.41,98];
+        const progressions=[[130.81,164.81,196],[110,130.81,164.81],[87.31,110,130.81],[98,123.47,146.83]];
+        for(let step=0;step<32;step++){
+          const t=start+step*beat/2,barIndex=Math.floor(step/8)%4;
+          if(step%4===0)kick(t,.66);
+          if(step%8===4)snare(t);
+          if(step%2===1)hat(t);
+          // Bass line syncopated, low register to create weight instead of bright tinkling.
+          if(step%2===0){const o=ctx.createOscillator(),g=ctx.createGain(),f=ctx.createBiquadFilter();o.type='sawtooth';o.frequency.setValueAtTime(bassNotes[(step+barIndex*2)%bassNotes.length],t);f.type='lowpass';f.frequency.value=380;g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.22,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+beat*.42);o.connect(f);f.connect(g);g.connect(out);o.start(t);o.stop(t+beat*.44);}
+          // Guitar-like power chords: three notes played together and held, not a tinkly arpeggio.
+          if(step%8===0){progressions[barIndex].forEach(freq=>{const o=ctx.createOscillator(),g=ctx.createGain(),f=ctx.createBiquadFilter();o.type='sawtooth';o.frequency.value=freq;f.type='lowpass';f.frequency.value=1250;g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.105,t+.025);g.gain.setValueAtTime(.078,t+bar*.72);g.gain.exponentialRampToValueAtTime(.0001,t+bar*.96);o.connect(f);f.connect(g);g.connect(out);o.start(t);o.stop(t+bar);});}
         }
-        [1046.5,1318.51,1567.98].forEach((f,i)=>{const t=start+32*beat/2+i*.055,o=ctx.createOscillator(),g=ctx.createGain();o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.11,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.72);o.connect(g);g.connect(out);o.start(t);o.stop(t+.74);});return true;
+        // Big brass-like final hit, warm midrange, short and emphatic.
+        const hit=start+4*bar;
+        [196,246.94,293.66,392].forEach(freq=>{const o=ctx.createOscillator(),g=ctx.createGain(),f=ctx.createBiquadFilter();o.type='sawtooth';o.frequency.value=freq;f.type='lowpass';f.frequency.value=950;g.gain.setValueAtTime(.0001,hit);g.gain.linearRampToValueAtTime(.16,hit+.025);g.gain.setValueAtTime(.13,hit+.22);g.gain.exponentialRampToValueAtTime(.0001,hit+.85);o.connect(f);f.connect(g);g.connect(out);o.start(hit);o.stop(hit+.88);});
+        kick(hit,.7);snare(hit+.02);
+        return true;
       }catch(error){console.error('Lỗi phát nhạc game:',error);return false;}
     }
+
     function playWheelTick(progress) {
       const ctx=classroomAudioContext;
       if(!ctx||ctx.state!=='running')return;
@@ -7048,6 +7055,8 @@ document.addEventListener('DOMContentLoaded',function(){
   if(img)img.src=getStudentAvatarUrl(student);
   if(name)name.textContent=student.name||'';
   if(team)team.textContent=(student.team||'')+' · '+(source||'Được chọn');
+  const winnerTitle=modal?.querySelector('h3');
+  if(winnerTitle)winnerTitle.textContent=String(source||'').toLowerCase().includes('lái đò')?'BẠN NGỦ QUÊN!':'BẠN ĐƯỢC CHỌN!';
   if(modal)modal.classList.remove('hidden');
   if($('wheelWinnerModal')){
    const old=$('wheelWinnerModal').querySelector('.flex.gap-2.pt-2');
