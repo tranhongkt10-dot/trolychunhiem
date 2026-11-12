@@ -260,6 +260,10 @@ body.lhp-hide-nav>nav{display:none!important}
       appId: "1:740083815651:web:0d2bc650f8ef9442c7e1d6"
     };
     const ADMIN_UID = "dqVutQQEqVWlAEqvA2C89cLhDw63";
+    const ADMIN_EMAIL = "khachungvietanh8790@gmail.com";
+    function isAuthorizedAdmin(user) {
+      return !!user && user.uid === ADMIN_UID && String(user.email || "").trim().toLowerCase() === ADMIN_EMAIL;
+    }
 
     // App data được tách theo UID. Firebase SDK vẫn dùng localStorage gốc của trình duyệt.
     const appStorage = {
@@ -436,7 +440,7 @@ body.lhp-hide-nav>nav{display:none!important}
       async function syncProfile(user) {
         const ref = profileRef(user.uid);
         const snap = await ref.get();
-        const isVerifiedAdmin = user.uid === ADMIN_UID;
+        const isVerifiedAdmin = isAuthorizedAdmin(user);
         if (!snap.exists) {
           const profile = { uid: user.uid, email: user.email || '', displayName: user.displayName || (isVerifiedAdmin ? 'Cô Lê Thị Việt Anh' : 'Giáo viên'), role: isVerifiedAdmin ? 'admin' : 'teacher', createdAt: firebase.firestore.FieldValue.serverTimestamp() };
           await ref.set(profile);
@@ -545,7 +549,7 @@ body.lhp-hide-nav>nav{display:none!important}
 
         // Firestore chưa có tài liệu: giữ và chuyển dữ liệu hiện có lên cloud bằng cơ chế chia phần.
         const legacyValues = new Map();
-        const isAdminAccount = user.uid === ADMIN_UID;
+        const isAdminAccount = isAuthorizedAdmin(user);
         if (isAdminAccount) {
           for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
@@ -745,7 +749,7 @@ body.lhp-hide-nav>nav{display:none!important}
           }
         },
         async openAdminPanel() {
-          if (!this.isAdmin || !this.user || this.user.uid !== ADMIN_UID) { alert('Tài khoản không có quyền quản trị.'); return; }
+          if (!this.isAdmin || !isAuthorizedAdmin(this.user)) { alert('Tài khoản không có quyền quản trị.'); return; }
           const modal = document.getElementById('adminAccountsModal');
           modal.classList.remove('hidden'); modal.classList.add('flex');
           await renderAdminManagement();
@@ -798,7 +802,7 @@ body.lhp-hide-nav>nav{display:none!important}
           const profile = await syncProfile(user);
           window.secureAuth.profile = profile;
           if (typeof currentTeacherName !== 'undefined' && profile.displayName) currentTeacherName = profile.displayName;
-          window.secureAuth.isAdmin = user.uid === ADMIN_UID;
+          window.secureAuth.isAdmin = isAuthorizedAdmin(user);
           await readAndPrepareUserData(user, profile);
           window.secureAuth.cloudReady = true;
           // Nạp lớp sau khi giáo viên đăng nhập thành công.
@@ -3797,7 +3801,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     async function renderAdminManagement() {
       const accounts=document.getElementById('adminAccountsList'), classes=document.getElementById('adminClassesList');
       const teacherSelect=document.getElementById('adminNewClassTeacher');
-      if(!window.secureAuth?.isAdmin || window.secureAuth.user?.uid!==ADMIN_UID) return;
+      if(!window.secureAuth?.isAdmin || !isAuthorizedAdmin(window.secureAuth.user)) return;
       if(accounts) accounts.textContent='Đang tải tài khoản...';
       if(classes) classes.textContent='Đang tải lớp...';
       try {
@@ -3821,11 +3825,23 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
           cs.forEach(d=>{const c=d.data()||{},row=document.createElement('div');row.className='p-3 border border-slate-200 rounded-xl space-y-2';
             const info=document.createElement('div');info.innerHTML='<div class="font-black text-sm">'+escapeHtml(c.className||'Lớp chưa đặt tên')+'</div><div class="text-xs text-slate-500">'+escapeHtml(c.schoolName||'Chưa có trường')+' · '+escapeHtml(c.year||'')+' · '+Number(c.studentCount||0)+' học sinh</div>';
             const controls=document.createElement('div');controls.className='flex flex-col sm:flex-row gap-2';
+            const localClass=classRecords.find(rec=>rec.cloudClassId===d.id);
+            const openClassBtn=document.createElement('button');
+            openClassBtn.type='button';
+            openClassBtn.className='px-3 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black';
+            openClassBtn.textContent=localClass?'Mở không gian lớp':'Đang nạp dữ liệu lớp…';
+            openClassBtn.disabled=!localClass;
+            if(localClass) openClassBtn.addEventListener('click',()=>{
+              if(!isAuthorizedAdmin(window.secureAuth?.user)){alert('Chỉ tài khoản '+ADMIN_EMAIL+' mới được mở dữ liệu tất cả các lớp.');return;}
+              switchActiveClass(localClass.id);
+              window.secureAuth.closeAdminPanel();
+              showToast('Đã mở '+(localClass.className||c.className)+' với đầy đủ chức năng quản lý lớp.');
+            });
             const sel=document.createElement('select');sel.className='flex-1 min-w-0 rounded-lg border border-slate-200 px-2 py-2 text-xs';
             sel.innerHTML='<option value="">Chưa phân công</option>'+adminTeacherCache.map(t=>'<option value="'+escapeHtml(t.uid)+'">'+escapeHtml(t.name+(t.email?' · '+t.email:''))+'</option>').join('');
             sel.value=c.teacherUid||'';
             const btn=document.createElement('button');btn.className='px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-bold';btn.textContent='Lưu phân công';btn.addEventListener('click',()=>adminAssignClassTeacher(d.id,sel.value));
-            controls.append(sel,btn);
+            controls.append(openClassBtn,sel,btn);
             const sourceWrap=document.createElement('div');sourceWrap.className='flex flex-col sm:flex-row gap-2 border-t border-slate-100 pt-2';
             const source=document.createElement('select');source.className='flex-1 min-w-0 rounded-lg border border-slate-200 px-2 py-2 text-xs';
             source.innerHTML='<option value="">Chọn lớp dữ liệu trên tài khoản quản trị</option>'+classRecords.map(rec=>'<option value="'+escapeHtml(rec.id)+'">'+escapeHtml((rec.className||'Lớp')+' · '+(rec.teacherName||'')+' · '+(Array.isArray(rec.data?.students)?rec.data.students.length:0)+' HS')+'</option>').join('');
@@ -5968,7 +5984,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
     function lbRosterCount(){const n=Number(lessonBookSelectedClassMeta?.studentCount);return Number.isFinite(n)&&n>=0?n:(lbClass()?.cloudClassId===lbClassId()?students.length:0);}
     async function migrateLocalClassesToCentralForLessonBook(){
       const auth=window.secureAuth;
-      if(!auth?.isAdmin||auth.user?.uid!==ADMIN_UID) throw new Error('Chỉ tài khoản quản trị viên mới được chuyển dữ liệu lớp.');
+      if(!auth?.isAdmin||!isAuthorizedAdmin(auth.user)) throw new Error('Chỉ tài khoản quản trị viên mới được chuyển dữ liệu lớp.');
       const db=firebase.firestore();
       const records=Array.isArray(classRecords)?classRecords.slice():[];
       if(!records.length) throw new Error('Không tìm thấy danh sách lớp cũ trên thiết bị này. Dữ liệu gốc vẫn được giữ nguyên.');
@@ -6033,7 +6049,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
       if(!auth?.user||!auth.cloudReady) throw new Error('Vui lòng đăng nhập và chờ Firebase kết nối.');
       const db=firebase.firestore();
       let snap=await db.collection('classes').get();
-      if(snap.empty&&auth.isAdmin&&auth.user.uid===ADMIN_UID){
+      if(snap.empty&&auth.isAdmin&&isAuthorizedAdmin(auth.user)){
         lbStatus('Đang chuyển bản sao dữ liệu lớp hiện có lên Firebase tập trung. Dữ liệu gốc không bị xóa...');
         const result=await migrateLocalClassesToCentralForLessonBook();
         snap=await db.collection('classes').get();
@@ -6108,7 +6124,7 @@ window.saveFaceGameResult=()=>{const sel=$('faceStudentSelect'),opt=sel.options[
 
   function requireAdmin() {
     const auth = window.secureAuth;
-    if (!auth || !auth.user || auth.user.uid !== ADMIN_UID || !auth.isAdmin || !auth.cloudReady) {
+    if (!auth || !auth.user || !isAuthorizedAdmin(auth.user) || !auth.isAdmin || !auth.cloudReady) {
       throw new Error('Chỉ tài khoản quản trị đã đăng nhập và kết nối Firebase mới được dùng chức năng này.');
     }
     return firebase.firestore();
