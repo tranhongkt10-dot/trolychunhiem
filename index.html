@@ -262,7 +262,7 @@ body.lhp-hide-nav>nav{display:none!important}
     const ADMIN_UID = "dqVutQQEqVWlAEqvA2C89cLhDw63";
     const ADMIN_EMAIL = "khachungvietanh8790@gmail.com";
     function isAuthorizedAdmin(user) {
-      return !!user && user.uid === ADMIN_UID && String(user.email || "").trim().toLowerCase() === ADMIN_EMAIL;
+      return !!user && user.emailVerified === true && String(user.email || "").trim().toLowerCase() === ADMIN_EMAIL;
     }
 
     // App data được tách theo UID. Firebase SDK vẫn dùng localStorage gốc của trình duyệt.
