@@ -3213,33 +3213,47 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     // Âm thanh thu âm dùng chung, độc lập với giao diện trò chơi.
     // Lưu Audio trên window để khi đóng/ẩn game, trình phát không bị hủy theo DOM.
     const LHP_RECORDED_AUDIO = {
-      victory: 'https://upload.wikimedia.org/wikipedia/commons/8/86/Jubilant_Fanfare.mp3',
+      // Tất cả tên gọi nhạc chiến thắng đều quy về đúng một bản vỗ tay sân khấu.
+      victory: 'https://upload.wikimedia.org/wikipedia/commons/5/5b/Applause_i.ogg',
       applause: 'https://upload.wikimedia.org/wikipedia/commons/5/5b/Applause_i.ogg',
       duckPond: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Pekin_duck_%26_mallard.ogg'
     };
+    function normalizeClassroomAudioKey(key) {
+      return key === 'victory' || key === 'win' || key === 'celebration' ? 'applause' : key;
+    }
     function getPersistentClassroomAudio(key) {
+      key = normalizeClassroomAudioKey(key);
       window.__lhpPersistentAudio = window.__lhpPersistentAudio || {};
       if (!window.__lhpPersistentAudio[key]) {
         const player = new Audio(LHP_RECORDED_AUDIO[key]);
         player.preload = 'auto';
         player.loop = key === 'duckPond';
-        player.volume = key === 'duckPond' ? 0.30 : (key === 'victory' ? 0.72 : 0.68);
+        player.volume = key === 'duckPond' ? 0.30 : 0.68;
         window.__lhpPersistentAudio[key] = player;
       }
       return window.__lhpPersistentAudio[key];
     }
     async function playPersistentClassroomAudio(key) {
+      const requestedKey = key;
+      key = normalizeClassroomAudioKey(key);
       const player = getPersistentClassroomAudio(key);
       try {
+        // Dừng các bản nhạc chúc mừng cũ trước khi phát đúng tiếng vỗ tay chuẩn.
+        const allPlayers = window.__lhpPersistentAudio || {};
+        Object.keys(allPlayers).forEach(existingKey => {
+          if (existingKey !== key && existingKey !== 'duckPond') {
+            try { allPlayers[existingKey].pause(); allPlayers[existingKey].currentTime = 0; } catch (_) {}
+          }
+        });
         player.pause();
         player.currentTime = 0;
         player.muted = false;
         player.loop = key === 'duckPond';
-        player.volume = key === 'duckPond' ? 0.30 : (key === 'victory' ? 0.72 : 0.68);
+        player.volume = key === 'duckPond' ? 0.30 : 0.68;
         await player.play();
         return true;
       } catch (error) {
-        console.warn('Trình duyệt chưa cho phép phát âm thanh ' + key + ':', error);
+        console.warn('Trình duyệt chưa cho phép phát âm thanh ' + requestedKey + ':', error);
         return false;
       }
     }
@@ -3266,10 +3280,7 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     }
 
     async function playCelebrationSound() {
-      // Mọi trò chơi dùng cùng hiệu ứng vỗ tay sân khấu khi kết thúc/lộ diện người thắng.
-      const players = window.__lhpPersistentAudio || {};
-      const victory = players.victory;
-      if (victory) { try { victory.pause(); victory.currentTime = 0; } catch (_) {} }
+      // Điểm kết thúc DUY NHẤT cho mọi trò chơi: tiếng vỗ tay giống hệt trò Máy Ảnh.
       return await playPersistentClassroomAudio('applause');
     }
 
