@@ -5022,7 +5022,7 @@ function shootDuck(idx) {
       if(!board||!message)return;
       board.classList.remove('show');board.style.display='block';board.offsetHeight;board.classList.add('show');
       message.textContent='';if(name)name.textContent='CÔ MỜI: '+(studentName||'BẠN NHỎ');
-      const words='ĐÃ ĐẾN BẾN!\nMỜI EM XUỐNG THUYỀN\nVÀ LÊN BẢNG!';
+      const words='ĐÃ ĐẾN BẾN!\nCÔ MỜI EM\nCÙNG CẬP BẾN!';
       for(let i=0;i<words.length;i++){message.textContent+=words[i];await new Promise(resolve=>setTimeout(resolve,75));}
       await new Promise(resolve=>setTimeout(resolve,1100));
     }
