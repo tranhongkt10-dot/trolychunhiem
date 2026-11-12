@@ -3144,87 +3144,89 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       }
     }
 
-    async function playCelebrationSound() {
-      try {
-        const ctx = ensureClassroomAudioContext();
-        if (!ctx) {
-          showToast('Thiết bị chưa hỗ trợ phát âm thanh.');
-          return false;
-        }
-        if (ctx.state !== 'running') await ctx.resume();
-        if (ctx.state !== 'running') {
-          showToast('Trình duyệt đang chặn âm thanh. Cô chạm màn hình rồi thử lại nhé.');
-          return false;
-        }
-
-        const start = ctx.currentTime + 0.045;
-        // Jingle chiến thắng kiểu trò chơi thiếu nhi: nhanh, sáng, nhịp vui.
-        const notes = [
-          { f: 659.25, t: 0.00, d: 0.16 },
-          { f: 783.99, t: 0.16, d: 0.16 },
-          { f: 987.77, t: 0.32, d: 0.20 },
-          { f: 1318.51, t: 0.56, d: 0.30 },
-          { f: 1174.66, t: 0.90, d: 0.16 },
-          { f: 1318.51, t: 1.08, d: 0.18 },
-          { f: 1567.98, t: 1.30, d: 0.42 }
-        ];
-        notes.forEach((note, index) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          const filter = ctx.createBiquadFilter();
-          osc.type = index % 2 ? 'triangle' : 'sine';
-          osc.frequency.setValueAtTime(note.f, start + note.t);
-          filter.type = 'lowpass';
-          filter.frequency.value = 4200;
-          gain.gain.setValueAtTime(0.0001, start + note.t);
-          gain.gain.linearRampToValueAtTime(0.19, start + note.t + 0.012);
-          gain.gain.exponentialRampToValueAtTime(0.0001, start + note.t + note.d);
-          osc.connect(filter);
-          filter.connect(gain);
-          gain.connect(getClassroomAudioOutput(ctx));
-          osc.start(start + note.t);
-          osc.stop(start + note.t + note.d + 0.02);
-        });
-
-        // Điểm nhấn leng keng ở cuối câu nhạc.
-        [1318.51, 1567.98, 1975.53].forEach((frequency, index) => {
-          const at = start + 1.34 + index * 0.035;
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.value = frequency;
-          gain.gain.setValueAtTime(0.0001, at);
-          gain.gain.linearRampToValueAtTime(0.085, at + 0.01);
-          gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.48);
-          osc.connect(gain);
-          gain.connect(getClassroomAudioOutput(ctx));
-          osc.start(at);
-          osc.stop(at + 0.5);
-        });
-        return true;
-      } catch (error) {
-        console.error('Lỗi phát nhạc chúc mừng:', error);
-        showToast('Chưa phát được nhạc. Cô kiểm tra âm lượng và chế độ im lặng của thiết bị nhé.');
-        return false;
-      }
-    }
+    async async function playCelebrationSound() {
+  try {
+    const ctx = ensureClassroomAudioContext();
+    if (!ctx) return false;
+    if (ctx.state !== 'running') await ctx.resume();
+    if (ctx.state !== 'running') return false;
+    const out = getClassroomAudioOutput(ctx);
+    const start = ctx.currentTime + 0.04;
+    // Giai điệu chiến thắng nguyên bản: hợp âm nền, bass và melody sáng kiểu game phiêu lưu.
+    const beat = 0.19;
+    const progression = [
+      { t: 0, notes: [261.63, 329.63, 392.00], bass: 130.81 },
+      { t: 4, notes: [220.00, 261.63, 329.63], bass: 110.00 },
+      { t: 8, notes: [174.61, 220.00, 261.63], bass: 87.31 },
+      { t: 12, notes: [196.00, 246.94, 293.66], bass: 98.00 }
+    ];
+    progression.forEach(ch => {
+      const at = start + ch.t * beat;
+      ch.notes.forEach((f, j) => {
+        const osc = ctx.createOscillator(), g = ctx.createGain(), filter = ctx.createBiquadFilter();
+        osc.type = 'triangle'; osc.frequency.setValueAtTime(f, at);
+        filter.type = 'lowpass'; filter.frequency.value = 2400;
+        g.gain.setValueAtTime(0.0001, at);
+        g.gain.linearRampToValueAtTime(0.045, at + 0.045);
+        g.gain.setValueAtTime(0.038, at + 0.42);
+        g.gain.exponentialRampToValueAtTime(0.0001, at + 0.82);
+        osc.connect(filter); filter.connect(g); g.connect(out);
+        osc.start(at); osc.stop(at + 0.85);
+      });
+      const bass = ctx.createOscillator(), bg = ctx.createGain();
+      bass.type = 'sine'; bass.frequency.setValueAtTime(ch.bass, at);
+      bg.gain.setValueAtTime(0.0001, at);
+      bg.gain.linearRampToValueAtTime(0.13, at + 0.025);
+      bg.gain.exponentialRampToValueAtTime(0.0001, at + 0.42);
+      bass.connect(bg); bg.connect(out); bass.start(at); bass.stop(at + 0.45);
+    });
+    const melody = [
+      [659.25,0],[783.99,1],[987.77,2],[783.99,3],
+      [880.00,4],[987.77,5],[1174.66,6],[987.77,7],
+      [783.99,8],[880.00,9],[987.77,10],[1174.66,11],
+      [1318.51,12],[1174.66,13],[1567.98,14],[1975.53,16]
+    ];
+    melody.forEach(([f,step],i) => {
+      const at = start + step * beat, osc = ctx.createOscillator(), g = ctx.createGain();
+      osc.type = i % 3 === 0 ? 'sine' : 'triangle';
+      osc.frequency.setValueAtTime(f,at);
+      g.gain.setValueAtTime(0.0001,at);
+      g.gain.linearRampToValueAtTime(i===15?0.18:0.105,at+0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001,at+0.22);
+      osc.connect(g);g.connect(out);osc.start(at);osc.stop(at+0.24);
+    });
+    // Lấp lánh cuối câu nhạc.
+    [1567.98,1975.53,2349.32].forEach((f,i)=>{
+      const at=start+3.15+i*0.045,osc=ctx.createOscillator(),g=ctx.createGain();
+      osc.type='sine';osc.frequency.value=f;
+      g.gain.setValueAtTime(0.0001,at);g.gain.linearRampToValueAtTime(0.07,at+0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001,at+0.65);
+      osc.connect(g);g.connect(out);osc.start(at);osc.stop(at+0.68);
+    });
+    return true;
+  } catch (error) { console.error('Lỗi phát nhạc game:',error); return false; }
+}
 
     function playWheelTick(progress) {
-      const ctx = classroomAudioContext;
-      if (!ctx || ctx.state !== 'running') return;
-      try {
-        const at = ctx.currentTime + 0.005;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(620 + Math.max(0, 1 - progress) * 360, at);
-        gain.gain.setValueAtTime(0.0001, at);
-        gain.gain.linearRampToValueAtTime(0.12, at + 0.004);
-        gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.045);
-        osc.connect(gain); gain.connect(getClassroomAudioOutput(ctx));
-        osc.start(at); osc.stop(at + 0.05);
-      } catch (error) { console.warn('Không phát được tiếng nấc vòng quay:', error); }
-    }
+  const ctx = classroomAudioContext;
+  if (!ctx || ctx.state !== 'running') return;
+  try {
+    const at=ctx.currentTime+0.004, out=getClassroomAudioOutput(ctx);
+    const osc=ctx.createOscillator(),g=ctx.createGain(),filter=ctx.createBiquadFilter();
+    const pitch=520+Math.max(0,1-progress)*520;
+    osc.type='triangle';osc.frequency.setValueAtTime(pitch,at);
+    osc.frequency.exponentialRampToValueAtTime(pitch*0.72,at+0.055);
+    filter.type='lowpass';filter.frequency.value=3200;
+    g.gain.setValueAtTime(0.0001,at);g.gain.linearRampToValueAtTime(0.16,at+0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001,at+0.075);
+    osc.connect(filter);filter.connect(g);g.connect(out);osc.start(at);osc.stop(at+0.08);
+    const sub=ctx.createOscillator(),sg=ctx.createGain();
+    sub.type='sine';sub.frequency.value=pitch*2;
+    sg.gain.setValueAtTime(0.0001,at);sg.gain.linearRampToValueAtTime(0.035,at+0.003);
+    sg.gain.exponentialRampToValueAtTime(0.0001,at+0.035);
+    sub.connect(sg);sg.connect(out);sub.start(at);sub.stop(at+0.04);
+  } catch(error){console.warn('Không phát được tiếng vòng quay:',error);}
+}
 
     // Một AudioContext dùng chung. Khởi tạo và resume đồng bộ ngay trong cú chạm/bấm,
     // không chờ await trước khi trình duyệt ghi nhận thao tác người dùng.
@@ -3308,36 +3310,27 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     })();
 
     function playChimeSound(type) {
-      try {
-        const ctx = classroomAudioContext;
-        if (!ctx || ctx.state !== 'running') {
-          console.warn('Âm thanh chưa được mở khóa. Giáo viên hãy bấm Bắt đầu đồng hồ trước.');
-          return false;
-        }
-        const now = ctx.currentTime + 0.03;
-        const notes = type === 'ting'
-          ? [{ offset: 0, frequency: 880, duration: 0.65 }]
-          : [{ offset: 0, frequency: 659.25, duration: 0.75 }, { offset: 0.32, frequency: 783.99, duration: 0.9 }, { offset: 0.68, frequency: 987.77, duration: 1.15 }];
-        notes.forEach(note => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          const start = now + note.offset;
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(note.frequency, start);
-          gain.gain.setValueAtTime(0.0001, start);
-          gain.gain.linearRampToValueAtTime(0.22, start + 0.035);
-          gain.gain.exponentialRampToValueAtTime(0.0001, start + note.duration);
-          osc.connect(gain);
-          gain.connect(getClassroomAudioOutput(ctx));
-          osc.start(start);
-          osc.stop(start + note.duration + 0.02);
-        });
-        return true;
-      } catch (error) {
-        console.error('Không phát được chuông lớp học:', error);
-        return false;
-      }
-    }
+  try {
+    const ctx=classroomAudioContext;
+    if(!ctx||ctx.state!=='running')return false;
+    const out=getClassroomAudioOutput(ctx),now=ctx.currentTime+0.025;
+    const notes=type==='ting'?[{f:1046.5,t:0,d:.42},{f:1568,t:.06,d:.5}]:
+      type==='bell'?[{f:784,t:0,d:.55},{f:1174.66,t:.035,d:.68},{f:1568,t:.07,d:.8}]:
+      [{f:523.25,t:0,d:.28},{f:659.25,t:.17,d:.3},{f:783.99,t:.34,d:.34},{f:1046.5,t:.55,d:.72}];
+    notes.forEach((n,i)=>{
+      const at=now+n.t,osc=ctx.createOscillator(),g=ctx.createGain(),partial=ctx.createOscillator(),pg=ctx.createGain();
+      osc.type='sine';osc.frequency.value=n.f;
+      partial.type='sine';partial.frequency.value=n.f*2.01;
+      g.gain.setValueAtTime(.0001,at);g.gain.linearRampToValueAtTime(.13,at+.012);
+      g.gain.exponentialRampToValueAtTime(.0001,at+n.d);
+      pg.gain.setValueAtTime(.0001,at);pg.gain.linearRampToValueAtTime(.025,at+.01);
+      pg.gain.exponentialRampToValueAtTime(.0001,at+n.d*.62);
+      osc.connect(g);g.connect(out);partial.connect(pg);pg.connect(out);
+      osc.start(at);osc.stop(at+n.d+.02);partial.start(at);partial.stop(at+n.d*.65);
+    });
+    return true;
+  }catch(error){console.warn('Không phát được hiệu ứng chuông:',error);return false;}
+}
 
     // Tiếng tích tắc đồng hồ: tiếng gõ ngắn, rõ, phát mỗi giây khi đồng hồ chạy.
     function playClockTick() {
