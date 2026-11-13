@@ -3882,6 +3882,22 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       }
     }
 
+    // Đồng bộ nền có trì hoãn: tránh gọi hàm chưa được khai báo và gom nhiều lần lưu liên tiếp.
+    let centralClassSyncTimer = null;
+    function scheduleCentralClassSync() {
+      if (centralClassSyncTimer) clearTimeout(centralClassSyncTimer);
+      if (!window.secureAuth || !window.secureAuth.user || !window.secureAuth.cloudReady ||
+          typeof window.secureAuth.syncAllData !== 'function') return;
+      centralClassSyncTimer = setTimeout(async () => {
+        centralClassSyncTimer = null;
+        try {
+          await window.secureAuth.syncAllData();
+        } catch (error) {
+          console.warn('Dữ liệu đã lưu trên thiết bị nhưng đồng bộ Firebase chưa hoàn tất:', error);
+        }
+      }, 1200);
+    }
+
     function saveStudentsToStorage() {
       try { appStorage.setItem('lophanhphuc_students_v4', JSON.stringify(students)); } catch (e) {}
       saveActiveClassSnapshot();
