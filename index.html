@@ -611,19 +611,14 @@ body.lhp-hide-nav>nav{display:none!important}
           const password = document.getElementById('authPasswordInput').value || '';
           const teacherName = (document.getElementById('authTeacherNameInput')?.value || '').trim();
           const confirmPassword = document.getElementById('authConfirmPasswordInput')?.value || '';
+          // Ứng dụng khóa đăng ký: chỉ tài khoản quản trị duy nhất được phép đăng nhập.
           if (this.mode === 'register') {
-            this.registrationInProgress = true;
-            if (!teacherName) { this.registrationInProgress = false; status('Vui lòng nhập họ và tên giáo viên.', true); return; }
-            if (password.length < 8) { this.registrationInProgress = false; status('Mật khẩu phải có ít nhất 8 ký tự.', true); return; }
-            if (password !== confirmPassword) { this.registrationInProgress = false; status('Mật khẩu nhập lại chưa khớp.', true); return; }
-            try {
-              const credential = await this.auth.createUserWithEmailAndPassword(email, password);
-              await credential.user.updateProfile({ displayName: teacherName });
-              await credential.user.sendEmailVerification();
-              this.registrationInProgress = false;
-              await this.auth.signOut();
-              status('Đã tạo tài khoản. Hãy mở email để xác minh, sau đó quay lại đăng nhập. Kiểm tra cả thư mục Spam/Thư rác.');
-            } catch (err) { this.registrationInProgress = false; status(this.friendlyError(err), true); }
+            this.mode = 'login';
+            status('Chức năng đăng ký đã tắt. Chỉ tài khoản quản trị được sử dụng ứng dụng.', true);
+            return;
+          }
+          if (email !== ADMIN_EMAIL) {
+            status('Ứng dụng chỉ cho phép tài khoản quản trị ' + ADMIN_EMAIL + ' đăng nhập.', true);
             return;
           }
           try {
@@ -1230,9 +1225,8 @@ body.lhp-hide-nav>nav{display:none!important}
         </div>
       </div>
 
-      <div class="flex bg-pink-50 p-1 rounded-2xl mb-3 text-xs font-bold">
-        <button onclick="switchAuthTab('login')" id="tabBtnLogin" class="flex-1 py-2 rounded-xl bg-white text-pink-600 shadow-sm">Giáo Viên Đăng Nhập</button>
-        <button onclick="switchAuthTab('register')" id="tabBtnRegister" class="flex-1 py-2 rounded-xl text-gray-500 hover:text-pink-600">Đăng Ký Mới</button>
+      <div class="bg-pink-50 p-3 rounded-2xl mb-3 text-center text-xs font-bold text-pink-700">
+        🔐 ĐĂNG NHẬP QUẢN TRỊ · CHỈ DÀNH CHO TÀI KHOẢN VIỆT ANH
       </div>
 
       <form onsubmit="handleAuthSubmit(event)" class="space-y-2.5 text-left" autocomplete="off">
@@ -4247,25 +4241,18 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
     }
 
     function switchAuthTab(mode) {
-      if (window.secureAuth) window.secureAuth.mode = mode;
-      const btnLog = document.getElementById('tabBtnLogin');
-      const btnReg = document.getElementById('tabBtnRegister');
+      // Khóa cứng chế độ đăng nhập; không còn giao diện hay luồng tạo tài khoản.
+      if (window.secureAuth) window.secureAuth.mode = 'login';
       const nameWrap = document.getElementById('authTeacherNameWrap');
       const confirmWrap = document.getElementById('authConfirmPasswordWrap');
-      const submit = document.getElementById('authSubmitButton');
-      const reset = document.querySelector('[onclick="secureAuth.resetPassword()"]');
-      const isRegister = mode === 'register';
-      if (btnLog) btnLog.className = isRegister ? 'flex-1 py-2 rounded-xl text-gray-500 hover:text-pink-600' : 'flex-1 py-2 rounded-xl bg-white text-pink-600 shadow-sm';
-      if (btnReg) btnReg.className = isRegister ? 'flex-1 py-2 rounded-xl bg-white text-pink-600 shadow-sm' : 'flex-1 py-2 rounded-xl text-gray-500 hover:text-pink-600';
-      if (nameWrap) nameWrap.classList.toggle('hidden', !isRegister);
-      if (confirmWrap) confirmWrap.classList.toggle('hidden', !isRegister);
       const nameInput = document.getElementById('authTeacherNameInput');
       const confirmInput = document.getElementById('authConfirmPasswordInput');
-      if (nameInput) nameInput.required = isRegister;
-      if (confirmInput) confirmInput.required = isRegister;
-      if (submit) submit.innerText = isRegister ? '📝 TẠO TÀI KHOẢN GIÁO VIÊN' : '🔐 ĐĂNG NHẬP AN TOÀN';
-      if (reset) reset.classList.toggle('hidden', isRegister);
-      const status = document.getElementById('authStatusMessage'); if (status) status.textContent = '';
+      if (nameWrap) nameWrap.classList.add('hidden');
+      if (confirmWrap) confirmWrap.classList.add('hidden');
+      if (nameInput) nameInput.required = false;
+      if (confirmInput) confirmInput.required = false;
+      const submit = document.getElementById('authSubmitButton');
+      if (submit) submit.innerText = '🔐 ĐĂNG NHẬP AN TOÀN';
     }
 
     function togglePasswordVisibility() {
