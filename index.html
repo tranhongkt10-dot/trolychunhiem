@@ -7339,19 +7339,24 @@ document.addEventListener('DOMContentLoaded',function(){
   const st=activeGameScoreStudent;if(!st)return;
   const chosen=criteriaArray().filter(c=>selectedGameCriteria.has(String(c.id)));
   if(!chosen.length){showToast('Cô hãy chọn ít nhất một tiêu chí.');return;}
-  const week=String(Math.max(1,Math.min(36,(typeof selectedCompetitionWeek!=='undefined'?selectedCompetitionWeek:1))));
-  if(!st.weeklyHearts||typeof st.weeklyHearts!=='object')st.weeklyHearts={};
-  const before=Math.max(0,Number(st.weeklyHearts[week])||0);
+  const week=String(Math.max(1,Math.min(36,Number(selectedCompetitionWeek)||1)));
+  if(!st.weeklyHearts||typeof st.weeklyHearts!=='object'||Array.isArray(st.weeklyHearts))st.weeklyHearts={};
+  const before=typeof getStudentWeekHearts==='function'?getStudentWeekHearts(st,week):Math.max(0,Number(st.weeklyHearts[week])||0);
   const requested=chosen.reduce((sum,c)=>sum+(Number(c.points)||0),0);
   const after=Math.max(0,before+requested),actual=after-before;
-  if(!actual){showToast('Số tim của học sinh đã là 0, không thể trừ thêm.');return;}
+  if(!actual){showToast('Số tim tuần này của học sinh đang là 0 nên không thể trừ thêm.');return;}
   st.weeklyHearts[week]=after;
   st.flowers=typeof getStudentYearHearts==='function'?getStudentYearHearts(st):Math.max(0,(Number(st.flowers)||0)+actual);
-  const reasons=chosen.map(c=>c.name);
-  try{if(typeof recordCompetitionTransaction==='function')recordCompetitionTransaction(st,actual,reasons.join(' • '));}catch(error){console.warn('Không lưu được lịch sử thi đua:',error);}
-  try{saveStudentsToStorage();renderAllViews();}catch(error){console.error('Lỗi lưu điểm tim:',error);showToast('Chưa lưu được điểm. Cô kiểm tra kết nối và thử lại.');return;}
-  if(actual>0)playApplauseSound();
-  showToast((actual>0?'Đã cộng ':'Đã trừ ')+Math.abs(actual)+' tim cho '+st.name+' · '+reasons.join(', '));
+  const reasons=chosen.map(c=>c.name),reasonText=reasons.join(' • ');
+  try{if(typeof recordCompetitionTransaction==='function')recordCompetitionTransaction(st,actual,reasonText);}catch(error){console.error('Lỗi lưu lịch sử thi đua:',error);}
+  try{saveStudentsToStorage();}catch(error){console.error('Lỗi lưu dữ liệu học sinh:',error);showToast('Không lưu được dữ liệu. Cô kiểm tra bộ nhớ/kết nối rồi thử lại.');return;}
+  // Cập nhật riêng từng khu vực để một lỗi ở bảng khác không chặn việc hiện số tim mới.
+  ['renderStudentsTable','renderFlowerGarden','renderCompetition','renderTeamRanking','renderOverviewStats'].forEach(name=>{
+    try{if(typeof window[name]==='function')window[name]();}catch(error){console.error('Không cập nhật được '+name+':',error);}
+  });
+  try{if(typeof renderAllViews==='function')renderAllViews();}catch(error){console.warn('Một phần màn hình chưa kịp làm mới:',error);}
+  if(actual>0){try{playApplauseSound();}catch(_){}}
+  showToast('Đã lưu '+(actual>0?'cộng ':'trừ ')+Math.abs(actual)+' tim cho '+st.name+' · Tuần '+week+'. '+reasonText);
   closeQuickGameScore();
  }
  function persistCriteria(){
