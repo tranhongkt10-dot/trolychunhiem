@@ -272,8 +272,17 @@ body.lhp-hide-nav>nav{display:none!important}
       getItem(key) { return localStorage.getItem(this._prefix() + key); },
       setItem(key, value) {
         const stringValue = String(value);
-        localStorage.setItem(this._prefix() + key, stringValue);
-        if (window.secureAuth && window.secureAuth.cloudReady && window.secureAuth.user) window.secureAuth.queueWrite(key, stringValue).catch(err => console.warn('Dữ liệu vẫn nằm trên thiết bị; đồng bộ Firebase cần thử lại.', err));
+        try {
+          localStorage.setItem(this._prefix() + key, stringValue);
+        } catch (storageError) {
+          // Không để đầy localStorage làm hỏng phiên đăng nhập. Firebase vẫn nhận bản lưu cloud.
+          if (storageError && (storageError.name === 'QuotaExceededError' || storageError.name === 'NS_ERROR_DOM_QUOTA_REACHED' || storageError.code === 22 || storageError.code === 1014)) {
+            console.warn('Bộ nhớ cục bộ đã đầy; chuyển mục dữ liệu sang lưu Firebase:', key);
+          } else {
+            throw storageError;
+          }
+        }
+        if (window.secureAuth && window.secureAuth.cloudReady && window.secureAuth.user) window.secureAuth.queueWrite(key, stringValue).catch(err => console.warn('Dữ liệu chưa đồng bộ được lên Firebase; hãy thử Đồng Bộ Firebase.', err));
       },
       removeItem(key) {
         localStorage.removeItem(this._prefix() + key);
@@ -529,10 +538,19 @@ body.lhp-hide-nav>nav{display:none!important}
           // Bước 3: chỉ khôi phục sau khi dữ liệu cloud đã được xác thực đầy đủ.
           // Bản máy khác biệt đã được giữ ở khóa dự phòng phía trên.
           for (const [key, value] of restoredValues.entries()) {
-            // Bản dự phòng xung đột cũ chỉ lưu trữ trên Firebase, không khôi phục
-            // vào localStorage vì có thể rất lớn và làm vượt giới hạn bộ nhớ trình duyệt.
+            // Bản dự phòng xung đột và registry lớp lớn được giữ trên Firebase;
+            // danh sách lớp sẽ được nạp trực tiếp từ collection classes sau đăng nhập.
             if (key.startsWith('__recovery_conflict__')) continue;
-            localStorage.setItem(prefix + key, value);
+            if (isAuthorizedAdmin(user) && key === 'lophanhphuc_multi_classes_v1') continue;
+            try {
+              localStorage.setItem(prefix + key, value);
+            } catch (storageError) {
+              if (storageError && (storageError.name === 'QuotaExceededError' || storageError.name === 'NS_ERROR_DOM_QUOTA_REACHED' || storageError.code === 22 || storageError.code === 1014)) {
+                console.warn('Bỏ qua bản cache cục bộ do hết dung lượng; dữ liệu gốc vẫn ở Firebase:', key);
+                continue;
+              }
+              throw storageError;
+            }
           }
           if (conflictCount) {
             status('Đã phát hiện ' + conflictCount + ' mục dữ liệu khác nhau giữa thiết bị và Firebase. Bản trên thiết bị đã được giữ trong bản dự phòng khôi phục.', true);
@@ -3751,13 +3769,13 @@ Bố mẹ vui lòng giữ riêng đường link này và không chia sẻ công 
       if(!user || !window.secureAuth.cloudReady) return;
       const db=firebase.firestore();
       const isAdminAccount=!!window.secureAuth.isAdmin&&isAuthorizedAdmin(user);
-      if(isAdminAccount) {
-        const result=await migrateAllTeachersClassesToCentral();
-        if(result.migrated) showToast('Đã tổng hợp '+result.migrated+' lớp từ '+result.teacherScanned+' tài khoản giáo viên ('+result.studentTotal+' học sinh).');
-      }
-      const assigned=isAdminAccount
-        ? await db.collection('classes').get()
-        : await db.collection('classes').where('teacherUid','==',user.uid).get();
+      // Tài khoản quản trị chỉ nạp lớp 2A7 đã xác định; không tự động quét/gộp
+      // dữ liệu của mọi tài khoản giáo viên vào trình duyệt quản trị.
+      const assignedSnapshot = await db.collection('classes').where('teacherUid','==',user.uid).get();
+      const assignedDocs = isAdminAccount
+        ? assignedSnapshot.docs.filter(doc => doc.id === 'legacy_dqVutQQEqVWlAEqvA2C89cLhDw63_class_mvtc4q24_5rjajk')
+        : assignedSnapshot.docs;
+      const assigned = { empty: assignedDocs.length === 0, docs: assignedDocs };
       if(assigned.empty) {
         if(isAdminAccount) showToast('Chưa tìm thấy lớp đã lưu trên Firebase. Giáo viên cần đăng nhập và đồng bộ dữ liệu trước.');
         return;
