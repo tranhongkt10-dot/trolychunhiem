@@ -7303,6 +7303,8 @@ document.addEventListener('DOMContentLoaded',function(){
  function openQuickGameScore(student,mode){
   if(!student)return;
   activeGameScoreStudent=student;ensureModal();
+  const confirmButton=$('quickScoreConfirm');
+  if(confirmButton)confirmButton.onclick=function(event){if(event)event.preventDefault();applyQuickGameScore();};
   $('quickScoreAvatar').src=getStudentAvatarUrl(student);
   $('quickScoreStudentName').textContent=student.name||'Học sinh';
   $('quickScoreManagePanel').classList.add('hidden');
@@ -7327,7 +7329,7 @@ document.addEventListener('DOMContentLoaded',function(){
    const icon=document.createElement('span');icon.className='quick-score-criterion-icon';icon.textContent=c.icon|| (activeGameScoreMode==='positive'?'⭐':'⚠️');
    const name=document.createElement('span');name.className='quick-score-criterion-name';name.textContent=c.name;
    const pts=document.createElement('b');pts.className='quick-score-criterion-points';pts.textContent=(activeGameScoreMode==='positive'?'+':'')+c.points+' điểm';
-   const mark=document.createElement('span');mark.className='quick-score-check';mark.textContent='☐';btn.append(mark,icon,name,pts);btn.dataset.criterionId=String(c.id);btn.onclick=()=>{const id=String(c.id);if(selectedGameCriteria.has(id))selectedGameCriteria.delete(id);else selectedGameCriteria.add(id);btn.classList.toggle('selected',selectedGameCriteria.has(id));mark.textContent=selectedGameCriteria.has(id)?'☑':'☐';updateQuickScoreConfirm();};$('quickScoreCriteriaList').appendChild(btn);
+   const mark=document.createElement('span');mark.className='quick-score-check';mark.textContent='☐';btn.append(mark,icon,name,pts);btn.dataset.criterionId=String(c.id);btn.setAttribute('aria-pressed','false');btn.addEventListener('click',()=>{const id=String(c.id);if(selectedGameCriteria.has(id))selectedGameCriteria.delete(id);else selectedGameCriteria.add(id);const checked=selectedGameCriteria.has(id);btn.classList.toggle('selected',checked);btn.setAttribute('aria-pressed',String(checked));mark.textContent=checked?'☑':'☐';updateQuickScoreConfirm();});$('quickScoreCriteriaList').appendChild(btn);
   });
   if(!criteriaArray().length)$('quickScoreCriteriaList').textContent='Chưa có tiêu chí. Cô hãy vào Chỉnh sửa tiêu chí để thêm.';
   updateQuickScoreConfirm();
@@ -7345,8 +7347,9 @@ document.addEventListener('DOMContentLoaded',function(){
   if(!actual){showToast('Số tim của học sinh đã là 0, không thể trừ thêm.');return;}
   st.weeklyHearts[week]=after;
   st.flowers=typeof getStudentYearHearts==='function'?getStudentYearHearts(st):Math.max(0,(Number(st.flowers)||0)+actual);
-  const reasons=chosen.map(c=>c.name);if(typeof recordCompetitionTransaction==='function')recordCompetitionTransaction(st,actual,reasons.join(' • '));
-  saveStudentsToStorage();renderAllViews();
+  const reasons=chosen.map(c=>c.name);
+  try{if(typeof recordCompetitionTransaction==='function')recordCompetitionTransaction(st,actual,reasons.join(' • '));}catch(error){console.warn('Không lưu được lịch sử thi đua:',error);}
+  try{saveStudentsToStorage();renderAllViews();}catch(error){console.error('Lỗi lưu điểm tim:',error);showToast('Chưa lưu được điểm. Cô kiểm tra kết nối và thử lại.');return;}
   if(actual>0)playApplauseSound();
   showToast((actual>0?'Đã cộng ':'Đã trừ ')+Math.abs(actual)+' tim cho '+st.name+' · '+reasons.join(', '));
   closeQuickGameScore();
