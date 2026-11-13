@@ -582,8 +582,19 @@ body.lhp-hide-nav>nav{display:none!important}
           await writeUserDataValue(col, key, value);
         }
         for (const [key, value] of legacyValues.entries()) {
-          localStorage.setItem(prefix + key, value);
+          // Ghi bản gốc lên Firestore trước; không nhân đôi registry nhiều lớp/ảnh vào localStorage.
+          // Lớp quản trị được nạp từ collection classes sau khi xác thực, không cần cache registry lớn.
           await writeUserDataValue(col, key, value);
+          if (isAdminAccount && key === 'lophanhphuc_multi_classes_v1') continue;
+          try {
+            localStorage.setItem(prefix + key, value);
+          } catch (storageError) {
+            if (storageError && (storageError.name === 'QuotaExceededError' || storageError.name === 'NS_ERROR_DOM_QUOTA_REACHED' || storageError.code === 22 || storageError.code === 1014)) {
+              console.warn('Bỏ qua bản cache cục bộ do hết dung lượng; bản dữ liệu đã được lưu trên Firebase:', key);
+              continue;
+            }
+            throw storageError;
+          }
         }
       }
 
